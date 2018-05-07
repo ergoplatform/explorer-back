@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ergo
+      POSTGRES_PASSWORD: pass
+      PGDATA: /data/postgres
+      POSTGRES_DB: explorer
+    volumes:
+       - /tmp/postgres:/data/postgres
+    ports:
+      - "5432:5432"
