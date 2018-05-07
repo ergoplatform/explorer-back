@@ -7,8 +7,9 @@ version := "0.0.1"
 scalaVersion := "2.12.5"
 
 libraryDependencies ++= Seq(
+  "com.github.pureconfig" %% "pureconfig" % "0.9.1",
   "org.scorexfoundation" %% "scrypto" % "2.1.1",
-  "org.postgresql" % "postgresql" % "42.2.2"
+  "org.postgresql" % "postgresql" % "42.2.2",
 )
 
 enablePlugins(FlywayPlugin)
@@ -22,3 +23,16 @@ flywaySchemas := Seq("public")
 flywayTable := "schema_history"
 flywayLocations := Seq("filesystem:sql")
 flywaySqlMigrationSeparator := "__"
+
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-encoding", "UTF-8",
+  "-language:experimental.macros",
+  "-feature",
+  "-unchecked",
+  "-Xfatal-warnings",
+  "-Xfuture",
+  "-Xlint",
+  "-Yno-adapted-args",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard")
