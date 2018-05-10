@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.models
 
-case class Block(
+case class Header(
                   id: String,
                   parentId: String,
                   version: Short,
@@ -11,7 +11,9 @@ case class Block(
                   timestamp: Long,
                   nBits: Long,
                   nonce: Long,
+                  blockSize: Long,
                   votes: List[Byte] = List.empty[Byte],
-                  equihashSolution: List[Int] = List.empty[Int]
+                  equihashSolution: List[Int] = List.empty[Int],
+                  adProofs: Option[Array[Byte]]
                 ) extends Entity[String]
 

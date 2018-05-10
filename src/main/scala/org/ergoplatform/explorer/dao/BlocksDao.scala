@@ -1,8 +1,8 @@
 package org.ergoplatform.explorer.dao
 
-import org.ergoplatform.explorer.models.Block
+import org.ergoplatform.explorer.models.Header
 
-class BlocksDao extends BaseDoobieDao[String, Block] {
+class BlocksDao extends BaseDoobieDao[String, Header] {
 
   override val table: String = "blocks"
   override val fields: Seq[String] = Seq(
