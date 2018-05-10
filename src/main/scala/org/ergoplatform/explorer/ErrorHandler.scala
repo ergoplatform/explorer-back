@@ -1,4 +1,4 @@
-package org.ergoplatform.explorer.models
+package org.ergoplatform.explorer
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._

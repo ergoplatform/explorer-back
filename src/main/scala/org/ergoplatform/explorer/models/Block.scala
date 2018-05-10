@@ -13,5 +13,5 @@ case class Block(
                   nonce: Long,
                   votes: List[Byte] = List.empty[Byte],
                   equihashSolution: List[Int] = List.empty[Int]
-                )
+                ) extends Entity[String]
 

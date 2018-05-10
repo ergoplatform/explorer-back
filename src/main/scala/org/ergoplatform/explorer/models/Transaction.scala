@@ -5,4 +5,4 @@ case class Transaction(
                         blockId: String,
                         inputs: List[Long] = List.empty[Long],
                         outputs: List[Long] = List.empty[Long]
-                      )
+                      ) extends Entity[String]

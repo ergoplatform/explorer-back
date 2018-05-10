@@ -57,7 +57,7 @@ scalacOptions ++= Seq(
   "-language:postfixOps",
   "-feature",
   "-unchecked",
-  "-Xfatal-warnings",
+//  "-Xfatal-warnings",
   "-Xfuture",
   "-Xlint",
   "-Yno-adapted-args",

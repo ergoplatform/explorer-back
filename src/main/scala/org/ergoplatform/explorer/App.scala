@@ -6,7 +6,6 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.Logger
 import org.ergoplatform.explorer.config.ExplorerConfig
-import org.ergoplatform.explorer.models.ErrorHandler
 import pureconfig.loadConfigOrThrow
 
 import scala.concurrent.Await

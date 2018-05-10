@@ -9,6 +9,6 @@ services:
       PGDATA: /data/postgres
       POSTGRES_DB: explorer
     volumes:
-       - /tmp/postgres:/data/postgres
+       - ~/postgres:/data/postgres
     ports:
       - "5432:5432"
