@@ -6,20 +6,37 @@ version := "0.0.1"
 
 scalaVersion := "2.12.5"
 
-lazy val doobieVersion = "0.5.2"
+resolvers += Resolver.bintrayRepo("hseeberger", "maven")
 
-libraryDependencies ++= Seq(
-  "com.github.pureconfig" %% "pureconfig" % "0.9.1",
-  "org.scorexfoundation" %% "scrypto" % "2.1.1",
+lazy val doobieVersion = "0.5.2"
+lazy val akkaHttpVersion = "10.1.1"
+lazy val akkaVersion = "2.5.12"
+
+lazy val doobieDeps = Seq(
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "org.tpolecat" %% "doobie-specs2"   % doobieVersion,
-  "io.monix" %% "monix" % "3.0.0-RC1",
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "org.tpolecat" %% "doobie-specs2"   % doobieVersion
 )
 
+lazy val loggingDeps = Seq(
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
+)
 
+lazy val akkaDeps = Seq(
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
+)
+
+lazy val otherDeps = Seq(
+  "com.github.pureconfig" %% "pureconfig" % "0.9.1",
+  "org.scorexfoundation" %% "scrypto" % "2.1.1",
+  "io.monix" %% "monix" % "3.0.0-RC1",
+  "de.heikoseeberger" %% "akka-http-circe" % "1.20.1"
+)
+
+libraryDependencies ++= (otherDeps ++ doobieDeps ++ loggingDeps ++ akkaDeps)
 
 enablePlugins(FlywayPlugin)
 
@@ -37,9 +54,10 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-encoding", "UTF-8",
   "-language:experimental.macros",
+  "-language:postfixOps",
   "-feature",
   "-unchecked",
-//  "-Xfatal-warnings",
+  "-Xfatal-warnings",
   "-Xfuture",
   "-Xlint",
   "-Yno-adapted-args",
