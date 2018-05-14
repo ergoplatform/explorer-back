@@ -14,6 +14,6 @@ case class Header(
                   blockSize: Long,
                   votes: List[Byte] = List.empty[Byte],
                   equihashSolution: List[Int] = List.empty[Int],
-                  adProofs: Option[Array[Byte]]
+                  adProofs: Option[Array[Byte]] = None
                 ) extends Entity[String]
 

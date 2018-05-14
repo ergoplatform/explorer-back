@@ -2,10 +2,10 @@ package org.ergoplatform.explorer.dao
 
 import org.ergoplatform.explorer.models.Header
 
-class BlocksDao extends BaseDoobieDao[String, Header] {
+class HeadersDao extends BaseDoobieDao[String, Header] {
 
-  override val table: String = "blocks"
-  override val fields: Seq[String] = Seq(
+  override def table: String = "headers"
+  override def fields: Seq[String] = Seq(
     "id",
     "parent_id",
     "version",
@@ -16,7 +16,9 @@ class BlocksDao extends BaseDoobieDao[String, Header] {
     "ts",
     "n_bits",
     "nonce",
+    "block_size",
     "votes",
-    "equihash_solution"
+    "equihash_solution",
+    "ad_proofs"
   )
 }

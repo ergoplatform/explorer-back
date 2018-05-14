@@ -36,7 +36,12 @@ lazy val otherDeps = Seq(
   "de.heikoseeberger" %% "akka-http-circe" % "1.20.1"
 )
 
-libraryDependencies ++= (otherDeps ++ doobieDeps ++ loggingDeps ++ akkaDeps)
+lazy val testDeps = Seq(
+  "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
+  "org.scalactic" %% "scalactic" % "3.0.5" % Test
+)
+
+libraryDependencies ++= (otherDeps ++ doobieDeps ++ loggingDeps ++ akkaDeps ++ testDeps)
 
 enablePlugins(FlywayPlugin)
 
