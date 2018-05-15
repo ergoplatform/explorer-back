@@ -10,9 +10,8 @@ case class Header(
                   transactionsRoot: String,
                   timestamp: Long,
                   nBits: Long,
-                  nonce: Long,
+                  extensionHash: String,
                   blockSize: Long,
-                  votes: List[Byte] = List.empty[Byte],
                   equihashSolution: List[Int] = List.empty[Int],
                   adProofs: Option[Array[Byte]] = None
                 ) extends Entity[String]

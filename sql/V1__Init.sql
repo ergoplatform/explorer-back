@@ -8,9 +8,8 @@ CREATE TABLE headers (
   transactions_root VARCHAR(64) NOT NULL,
   ts BIGINT NOT NULL,
   n_bits BIGINT NOT NULL,
-  nonce BIGINT NOT NULL,
+  extension_hash VARCHAR(64) NOT NULL,
   block_size BIGINT NOT NULL,
-  votes BYTEA NOT NULL,
   equihash_solution INTEGER ARRAY NOT NULL,
   ad_proofs BYTEA
 );
@@ -29,7 +28,9 @@ CREATE TABLE interlinks (
 
 ALTER TABLE  interlinks OWNER TO ergo;
 
-CREATE INDEX "interlinks__block_id" on interlinks (block_id);
+CREATE INDEX "interlinks__block_id" ON interlinks (block_id);
+
+CREATE UNIQUE INDEX "interlinks__one_per_blockId" ON interlinks (modifier_id, block_id)
 
 CREATE TABLE transactions (
   id VARCHAR(64) NOT NULL PRIMARY KEY,

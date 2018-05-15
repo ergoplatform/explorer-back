@@ -102,7 +102,7 @@ ALTER TABLE total_tx_count OWNER TO ergo;
 CREATE INDEX "total_tx_count__ts" ON total_tx_count (ts);
 
 /*
-  Quick block info, usefull to show on main page as "last blocks"
+  Quick block info, useful to show on main page as "last blocks"
  */
 CREATE TABLE block_summary (
   id       VARCHAR(64)  NOT NULL PRIMARY KEY,

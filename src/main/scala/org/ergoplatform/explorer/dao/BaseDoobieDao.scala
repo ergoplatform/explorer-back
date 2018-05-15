@@ -51,10 +51,7 @@ abstract class BaseDoobieDao[ID, E <: Entity[ID]] {
     }
   }
 
-  def getLastN(field: String = idFieldName, count: Int = 20)(implicit e: Composite[E]): ConnectionIO[List[E]] = {
-    val sql = selectAllFromFr ++ sortBy(field) ++ limitFr(count)
-    sql.query[E].stream.compile.toList
-  }
+
 
   def list(offset: Int = 0, limit: Int = 20)(implicit e: Composite[E]): ConnectionIO[List[E]] = {
     val sql = selectAllFromFr ++ limitFr(limit) ++ offsetFr(offset)

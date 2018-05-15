@@ -37,8 +37,9 @@ lazy val otherDeps = Seq(
 )
 
 lazy val testDeps = Seq(
-  "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
-  "org.scalactic" %% "scalactic" % "3.0.5" % Test
+  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "org.scalactic" %% "scalactic" % "3.0.5",
+  "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )
 
 libraryDependencies ++= (otherDeps ++ doobieDeps ++ loggingDeps ++ akkaDeps ++ testDeps)
