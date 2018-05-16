@@ -2,10 +2,14 @@ package org.ergoplatform.explorer.generators
 
 import org.ergoplatform.explorer.models.Header
 import org.scalacheck.Arbitrary._
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Gen
 import scorex.crypto.encode.Base16
 
 object HeadersGen {
+
+  val rootId = Base16.encode(Array.fill(32)(1: Byte))
+
+  val initBlock = headerGen(rootId, -1).sample.get.copy(id = rootId)
 
   def headerGen(parentId: String, height: Int): Gen[Header] = for {
     id <- generateDigestString(32)
@@ -22,10 +26,10 @@ object HeadersGen {
     ad <- Gen.oneOf(Gen.const(None), Gen.listOfN(32, arbByte.arbitrary).map(v => Some(v.toArray)))
   } yield Header(id, pId, version, h, adp, s, tr, System.currentTimeMillis(), nBits, eHash, bz, es, ad)
 
-  val rootParentId = Base16.encode(Array.fill(32)(1: Byte))
 
-  def generateHeaders(cnt: Int = 50): List[Header] = (0 until cnt).foldLeft(List.empty[Header]) { case (l, h) =>
-    val pId = l.headOption.fold(rootParentId) { _.id }
+
+  def generateHeaders(cnt: Int = 50): List[Header] = (0 until cnt).foldLeft(List(initBlock)) { case (l, h) =>
+    val pId = l.headOption.fold(rootId) { _.id }
     headerGen(pId, h).sample.get :: l
   }
 
