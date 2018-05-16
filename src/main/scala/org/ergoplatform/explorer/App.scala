@@ -11,14 +11,14 @@ import pureconfig.loadConfigOrThrow
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object App extends Setup with Rest {
+object App extends Setup with Rest with Configuration {
 
   override implicit val system = ActorSystem("explorer-system")
   override implicit val mat = ActorMaterializer()
   override implicit val ec = system.dispatcher
 
   val logger = Logger("server")
-  val cfg: ExplorerConfig = loadConfigOrThrow[ExplorerConfig]
+  override val cfg: ExplorerConfig = loadConfigOrThrow[ExplorerConfig]
 
   def main(args: Array[String]): Unit = {
     sys.addShutdownHook {

@@ -15,7 +15,8 @@ lazy val akkaVersion = "2.5.12"
 lazy val doobieDeps = Seq(
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "org.tpolecat" %% "doobie-specs2"   % doobieVersion
+  "org.tpolecat" %% "doobie-specs2"   % doobieVersion,
+  "org.tpolecat" %% "doobie-hikari"   % doobieVersion
 )
 
 lazy val loggingDeps = Seq(
@@ -32,8 +33,8 @@ lazy val akkaDeps = Seq(
 lazy val otherDeps = Seq(
   "com.github.pureconfig" %% "pureconfig" % "0.9.1",
   "org.scorexfoundation" %% "scrypto" % "2.1.1",
-  "io.monix" %% "monix" % "3.0.0-RC1",
-  "de.heikoseeberger" %% "akka-http-circe" % "1.20.1"
+  "de.heikoseeberger" %% "akka-http-circe" % "1.20.1",
+  "io.circe" %% "circe-core" % "0.9.3"
 )
 
 lazy val testDeps = Seq(
