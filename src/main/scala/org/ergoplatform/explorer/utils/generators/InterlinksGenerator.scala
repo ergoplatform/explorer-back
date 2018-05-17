@@ -1,6 +1,6 @@
-package org.ergoplatform.explorer.generators
+package org.ergoplatform.explorer.utils.generators
 
-import org.ergoplatform.explorer.models.{Header, Interlink}
+import org.ergoplatform.explorer.db.models.Header
 import org.scalacheck.Gen
 
 object InterlinksGenerator {

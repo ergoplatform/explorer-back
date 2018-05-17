@@ -7,9 +7,9 @@ import doobie._, doobie.implicits._, doobie.postgres.implicits._
 import com.typesafe.scalalogging.Logger
 
 import org.ergoplatform.explorer.config.ExplorerConfig
-import org.ergoplatform.explorer.dao._
-import org.ergoplatform.explorer.models.Header
-import org.ergoplatform.explorer.generators.{HeadersGen, InterlinksGenerator, TransactionsGenerator}
+import org.ergoplatform.explorer.db.dao._
+import org.ergoplatform.explorer.db.models.Header
+import org.ergoplatform.explorer.utils.generators.{HeadersGen, InterlinksGenerator, TransactionsGenerator}
 
 import pureconfig.loadConfigOrThrow
 

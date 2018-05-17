@@ -6,6 +6,7 @@ CREATE TABLE headers (
   ad_proofs_root VARCHAR(64) NOT NULL,
   state_root VARCHAR(66) NOT NULL,
   transactions_root VARCHAR(64) NOT NULL,
+  votes VARCHAR NOT NULL,
   ts BIGINT NOT NULL,
   n_bits BIGINT NOT NULL,
   extension_hash VARCHAR(64) NOT NULL,
@@ -30,7 +31,7 @@ ALTER TABLE  interlinks OWNER TO ergo;
 
 CREATE INDEX "interlinks__block_id" ON interlinks (block_id);
 
-CREATE UNIQUE INDEX "interlinks__one_per_blockId" ON interlinks (modifier_id, block_id)
+CREATE UNIQUE INDEX "interlinks__one_per_blockId" ON interlinks (modifier_id, block_id);
 
 CREATE TABLE transactions (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
@@ -46,6 +47,7 @@ CREATE TABLE outputs (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   tx_id VARCHAR(64) NOT NULL REFERENCES transactions (id),
   value BIGINT,
+  spent BOOLEAN NOT NULL DEFAULT FALSE,
   script VARCHAR
 );
 

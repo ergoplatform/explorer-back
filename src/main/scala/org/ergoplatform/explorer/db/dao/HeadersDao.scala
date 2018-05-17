@@ -1,8 +1,8 @@
-package org.ergoplatform.explorer.dao
+package org.ergoplatform.explorer.db.dao
 
 import doobie.Composite
 import doobie.free.connection.ConnectionIO
-import org.ergoplatform.explorer.models.Header
+import org.ergoplatform.explorer.db.models.Header
 
 class HeadersDao extends BaseDoobieDao[String, Header] {
 
@@ -16,6 +16,7 @@ class HeadersDao extends BaseDoobieDao[String, Header] {
     "ad_proofs_root",
     "state_root",
     "transactions_root",
+    "votes",
     "ts",
     "n_bits",
     "extension_hash",

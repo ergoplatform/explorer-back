@@ -1,7 +1,7 @@
-package org.ergoplatform.explorer.protocol
+package org.ergoplatform.explorer.http.protocol
 
-import io.circe.{Encoder, Json}
 import io.circe.syntax._
+import io.circe.{Encoder, Json}
 
 case class SearchBlock(id: String,
                        height: Int,
@@ -13,7 +13,7 @@ case class SearchBlock(id: String,
 
 object SearchBlock {
 
-  implicit val ecoderSearchBlock: Encoder[SearchBlock] = (b: SearchBlock) => Json.obj(
+  implicit val encoderSearchBlock: Encoder[SearchBlock] = (b: SearchBlock) => Json.obj(
     ("id", Json.fromString(b.id)),
     ("height", Json.fromInt(b.height)),
     ("timestamp", Json.fromLong(b.timestamp)),

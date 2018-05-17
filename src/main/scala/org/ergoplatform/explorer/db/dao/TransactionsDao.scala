@@ -1,7 +1,7 @@
-package org.ergoplatform.explorer.dao
+package org.ergoplatform.explorer.db.dao
 
 import doobie.{Composite, ConnectionIO, Fragment}
-import org.ergoplatform.explorer.models.{Interlink, Transaction}
+import org.ergoplatform.explorer.db.models.Transaction
 
 class TransactionsDao extends BaseDoobieDao[String, Transaction] {
   override def table: String = "transactions"

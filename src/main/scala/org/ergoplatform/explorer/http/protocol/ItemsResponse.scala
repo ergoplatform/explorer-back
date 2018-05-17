@@ -1,7 +1,7 @@
-package org.ergoplatform.explorer.protocol
+package org.ergoplatform.explorer.http.protocol
 
-import io.circe.{Encoder, Json}
 import io.circe.syntax._
+import io.circe.{Encoder, Json}
 
 case class ItemsResponse[A](items: List[A], total: Int)
 

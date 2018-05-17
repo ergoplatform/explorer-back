@@ -2,23 +2,19 @@ package org.ergoplatform.explorer
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.ExceptionHandler
+import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.Logger
-import org.ergoplatform.explorer.config.ExplorerConfig
-import pureconfig.loadConfigOrThrow
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object App extends Setup with Rest with Configuration {
+object App extends Configuration with DbTransactor with Services with Rest {
 
-  override implicit val system = ActorSystem("explorer-system")
-  override implicit val mat = ActorMaterializer()
-  override implicit val ec = system.dispatcher
-
+  implicit val system = ActorSystem("explorer-system")
+  implicit val mat = ActorMaterializer()
+  implicit val ec = system.dispatcher
   val logger = Logger("server")
-  override val cfg: ExplorerConfig = loadConfigOrThrow[ExplorerConfig]
 
   def main(args: Array[String]): Unit = {
     sys.addShutdownHook {
@@ -27,6 +23,7 @@ object App extends Setup with Rest with Configuration {
     }
 
     implicit def eh: ExceptionHandler = ErrorHandler.exceptionHandler
+    implicit def rh: RejectionHandler = ErrorHandler.rejectionHandler
     val host = cfg.http.host
     val port = cfg.http.port
 

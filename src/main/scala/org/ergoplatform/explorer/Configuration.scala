@@ -1,7 +1,8 @@
 package org.ergoplatform.explorer
 
 import org.ergoplatform.explorer.config.ExplorerConfig
+import pureconfig.loadConfigOrThrow
 
 trait Configuration {
-  def cfg: ExplorerConfig
+  val cfg: ExplorerConfig = loadConfigOrThrow[ExplorerConfig]
 }

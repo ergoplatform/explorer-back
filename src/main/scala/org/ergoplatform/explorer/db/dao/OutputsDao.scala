@@ -1,8 +1,7 @@
-package org.ergoplatform.explorer.dao
+package org.ergoplatform.explorer.db.dao
 
 import doobie.{Composite, ConnectionIO, Fragment}
-import org.ergoplatform.explorer.models.Output
-import org.specs2.specification.core.Fragments
+import org.ergoplatform.explorer.db.models.Output
 
 class OutputsDao extends BaseDoobieDao[String, Output] {
   override def table: String = "outputs"
@@ -11,6 +10,7 @@ class OutputsDao extends BaseDoobieDao[String, Output] {
     "id",
     "tx_id",
     "value",
+    "spent",
     "script"
   )
 

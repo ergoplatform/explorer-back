@@ -1,6 +1,6 @@
-package org.ergoplatform.explorer.generators
+package org.ergoplatform.explorer.utils.generators
 
-import org.ergoplatform.explorer.models.Header
+import org.ergoplatform.explorer.db.models.Header
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
 import scorex.crypto.encode.Base16
@@ -12,19 +12,20 @@ object HeadersGen {
   val initBlock = headerGen(rootId, -1).sample.get.copy(id = rootId)
 
   def headerGen(parentId: String, height: Int): Gen[Header] = for {
-    id <- generateDigestString(32)
+    id <- generateDigestStringBase16(32)
     pId = parentId
     version = 1: Short
     h = height
-    adp <- generateDigestString(32)
-    s <- generateDigestString(33)
-    tr <- generateDigestString(32)
+    adp <- generateDigestStringBase16(32)
+    s <- generateDigestStringBase16(33)
+    tr <- generateDigestStringBase16(32)
+    votes <- generateDigestStringBase16(16)
     nBits <- arbLong.arbitrary
-    eHash <- generateDigestString(32)
+    eHash <- generateDigestStringBase16(32)
     bz <- arbLong.arbitrary
     es <- Gen.listOfN(10, arbInt.arbitrary)
     ad <- Gen.oneOf(Gen.const(None), Gen.listOfN(32, arbByte.arbitrary).map(v => Some(v.toArray)))
-  } yield Header(id, pId, version, h, adp, s, tr, System.currentTimeMillis(), nBits, eHash, bz, es, ad)
+  } yield Header(id, pId, version, h, adp, s, tr, votes, System.currentTimeMillis(), nBits, eHash, bz, es, ad)
 
 
 

@@ -1,4 +1,4 @@
-package org.ergoplatform.explorer.protocol
+package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
 import scorex.crypto.encode.Base16

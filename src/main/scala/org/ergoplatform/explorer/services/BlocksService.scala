@@ -6,15 +6,20 @@ import cats.implicits._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
-import org.ergoplatform.explorer.dao._
-import org.ergoplatform.explorer.models.Block
+import org.ergoplatform.explorer.db.dao._
+import org.ergoplatform.explorer.http.protocol.FullBlockInfo
+import scorex.crypto.encode.{Base16, Base58}
 
 import scala.concurrent.ExecutionContext
 
 
 trait BlockService[F[_]] {
 
-  def getBlock(id: String): F[Block]
+  /**
+    * @param id base58 representation of id byte array
+    * @return fullBlockInfo
+    */
+  def getBlock(id: String): F[FullBlockInfo]
 }
 
 class BlocksServiceImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -26,19 +31,21 @@ class BlocksServiceImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
 
+  private def base58ToBase16(base58: String): String = Base16.encode(Base58.decode(base58).get)
 
-  override def getBlock(id: String): F[Block] = for {
+  override def getBlock(id: String): F[FullBlockInfo] = for {
     _ <- Async.shift[F](ec)
-    result <- getBlockResult(id)
+    base16Id <- F.pure(base58ToBase16(id))
+    result <- getBlockResult(base16Id)
   } yield result
 
-  private def getBlockResult(id: String): F[Block] = (for {
+  private def getBlockResult(id: String): F[FullBlockInfo] = (for {
     h <- headersDao.get(id)
     links <- interlinksDao.findAllByBLockId(h.id)
     txs <- transactionsDap.findAllByBLockId(h.id)
     txsIds = txs.map(_.id)
     is <- inputDao.findAllByTxsId(txsIds)
     os <- outputDao.findAllByTxsId(txsIds)
-  } yield Block(h, links, txs, is, os)).transact[F](xa)
+  } yield FullBlockInfo(h, links, txs, is, os)).transact[F](xa)
 
 }

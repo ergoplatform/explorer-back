@@ -1,11 +1,9 @@
-package org.ergoplatform.explorer.dao
+package org.ergoplatform.explorer.db.dao
 
 import doobie.free.connection.ConnectionIO
-import org.ergoplatform.explorer.models.Entity
-import doobie._
-import doobie.implicits._
-import cats.data._
-import cats.implicits._
+import org.ergoplatform.explorer.db.models.Entity
+import doobie._ ,doobie.implicits._
+import cats.data._ ,cats.implicits._
 
 abstract class BaseDoobieDao[ID, E <: Entity[ID]] {
 

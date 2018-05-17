@@ -1,9 +1,9 @@
-package org.ergoplatform.explorer.dao
+package org.ergoplatform.explorer.db.dao
 
 import doobie.free.connection.ConnectionIO
 import doobie.util.composite.Composite
 import doobie.util.fragment.Fragment
-import org.ergoplatform.explorer.models.Input
+import org.ergoplatform.explorer.db.models.Input
 
 class InputsDao extends BaseDoobieDao[String, Input] {
   override def table: String = "inputs"

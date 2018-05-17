@@ -1,10 +1,8 @@
-package org.ergoplatform.explorer.dao
+package org.ergoplatform.explorer.db.dao
 
-import doobie._
-import doobie.implicits._
-import cats.data._
-import cats.implicits._
-import org.ergoplatform.explorer.models.Interlink
+import doobie._ ,doobie.implicits._
+import cats.data._ ,cats.implicits._
+import org.ergoplatform.explorer.db.models.Interlink
 
 class InterlinksDao extends BaseDoobieDao[Long, Interlink] {
 

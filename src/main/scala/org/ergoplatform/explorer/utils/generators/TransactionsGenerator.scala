@@ -1,6 +1,6 @@
-package org.ergoplatform.explorer.generators
+package org.ergoplatform.explorer.utils.generators
 
-import org.ergoplatform.explorer.models.{Header, Input, Output, Transaction}
+import org.ergoplatform.explorer.db.models.{Header, Input, Output, Transaction}
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
 import scorex.crypto.encode.Base16
@@ -12,16 +12,16 @@ object TransactionsGenerator {
   type TxData = (List[Transaction], List[Output], List[Input])
 
   def initTx: Gen[Transaction] = for {
-    id <- generateDigestString(32)
+    id <- generateDigestStringBase16(32)
   } yield Transaction(id, HeadersGen.rootId, false)
 
 
   def initOutputs(txId: String): Gen[List[Output]] = for {
     number <- Gen.chooseNum(1, 10)
     values <- Gen.listOfN(number, Gen.chooseNum(10000L, 100000L))
-    ids <- Gen.listOfN(number, generateDigestString(32))
+    ids <- Gen.listOfN(number, generateDigestStringBase16(32))
     outputs = ids.zip(values).map { case (id, v) =>
-      Output(id, txId, v, "")
+      Output(id, txId, v, false, "")
     }
   } yield outputs
 
@@ -46,24 +46,24 @@ object TransactionsGenerator {
     blocks.sortBy(_.height).foreach { h =>
 
       if (h.height == -1) {
-        val txId = generateDigestString(32).sample.get
+        val txId = generateDigestStringBase16(32).sample.get
         val os = initOutputs(txId).sample.get
         val tx = Transaction(txId, h.id, false)
         txs.append(tx)
         osNotSpent = os
       } else {
         val data = osNotSpent.map { o =>
-          val txId = generateDigestString(32).sample.get
-          val id = generateDigestString(32).sample.get
+          val txId = generateDigestStringBase16(32).sample.get
+          val id = generateDigestStringBase16(32).sample.get
           val i = Input(id, txId, o.id, "")
 
-          val oId1 = generateDigestString(32).sample.get
+          val oId1 = generateDigestStringBase16(32).sample.get
           val v1 = o.value / 2
-          val o1 = Output(oId1, txId, v1, "")
+          val o1 = Output(oId1, txId, v1, false, "")
 
-          val oId2 = generateDigestString(32).sample.get
+          val oId2 = generateDigestStringBase16(32).sample.get
           val v2 = o.value - v1
-          val o2 = Output(oId2, txId, v2, "")
+          val o2 = Output(oId2, txId, v2, false, "")
 
           (i , List(o1, o2))
         }
@@ -75,15 +75,11 @@ object TransactionsGenerator {
         }
 
         txs ++= newTxs
-        osSpent ++= osNotSpent
+        osSpent ++= osNotSpent.map(_.copy(spent = true))
         osNotSpent = outputs
         is ++= inputs
       }
     }
     (txs.toList, (osSpent ++= osNotSpent).toList, is.toList)
   }
-
-
-
-
 }
