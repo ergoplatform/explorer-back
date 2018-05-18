@@ -20,12 +20,14 @@ case class HeaderInfo(id: String,
 
 object HeaderInfo {
 
+  import org.ergoplatform.explorer.utils.Converter._
+
   def apply(h: Header, interlinks: List[Interlink]): HeaderInfo = {
     val links = interlinks.filter(_.blockId == h.id).map(_.modifierId)
 
     //TODO: Need to figure out how to properly convert equihash solutions into string
     new HeaderInfo(
-      h.id,
+      from16to58(h.id),
       h.parentId,
       h.version,
       h.height,

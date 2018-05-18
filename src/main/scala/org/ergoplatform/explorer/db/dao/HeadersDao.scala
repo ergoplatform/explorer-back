@@ -27,7 +27,7 @@ class HeadersDao extends BaseDoobieDao[String, Header] {
 
   def getLastN(count: Int = 20)
               (implicit e: Composite[Header]): ConnectionIO[List[Header]] = {
-    val sql = selectAllFromFr ++ sortBy("height") ++ limitFr(count)
+    val sql = selectAllFromFr ++ sortByFr("height", "DESC") ++ limitFr(count)
     sql.query[Header].stream.compile.toList
   }
 

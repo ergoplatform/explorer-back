@@ -5,16 +5,24 @@ import cats.effect.IO
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import org.ergoplatform.explorer.http.directives.CommonDirectives
 import org.ergoplatform.explorer.services.BlockService
+import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 
 class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with CommonDirectives {
 
   val route = pathPrefix("blocks") {
-    getBlockById
+    getBlockById ~ getBlocks
   }
 
   val getBlockById = (get & base58IdPath) { base58String =>
     val f = bs.getBlock(base58String).unsafeToFuture()
+    onSuccess(f) { info => complete(info) }
+  }
+
+  val getBlocks = (get & paging & sorting) { (o, l, field, so) =>
+    val p = Paging(offset = o, limit = l)
+    val s = Sorting(sortBy = field, order = so)
+    val f = bs.getBlocks(p, s).unsafeToFuture()
     onSuccess(f) { info => complete(info) }
   }
 

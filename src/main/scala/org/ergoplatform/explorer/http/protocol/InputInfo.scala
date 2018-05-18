@@ -7,7 +7,9 @@ case class InputInfo(id: String, outputId: String, signature: String)
 
 object InputInfo {
 
-  def apply(i: Input): InputInfo = InputInfo(i.id, i.outputId, i.signature)
+  import org.ergoplatform.explorer.utils.Converter._
+
+  def apply(i: Input): InputInfo = InputInfo(from16to58(i.id), i.outputId, i.signature)
 
   implicit val encoder: Encoder[InputInfo] = (i: InputInfo) => Json.obj(
     ("id,", Json.fromString(i.id)),

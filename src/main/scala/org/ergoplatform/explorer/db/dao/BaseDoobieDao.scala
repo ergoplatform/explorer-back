@@ -27,7 +27,7 @@ abstract class BaseDoobieDao[ID, E <: Entity[ID]] {
 
   def offsetFr(offset: Int): Fragment = fr"OFFSET" ++ Fragment.const(offset.toString)
 
-  def sortBy(field: String, order: String = "DESC"): Fragment =
+  def sortByFr(field: String, order: String): Fragment =
     fr"ORDER BY" ++ Fragment.const(field) ++ Fragment.const(order)
 
   val updateSql = s"UPDATE $table SET ${fields.map(f => s"$f = ?").mkString(", ")} where $idFieldName = ?"
@@ -49,10 +49,9 @@ abstract class BaseDoobieDao[ID, E <: Entity[ID]] {
     }
   }
 
-
-
-  def list(offset: Int = 0, limit: Int = 20)(implicit e: Composite[E]): ConnectionIO[List[E]] = {
-    val sql = selectAllFromFr ++ limitFr(limit) ++ offsetFr(offset)
+  def list(offset: Int = 0, limit: Int = 20, sortBy: String = idFieldName, sortOder: String = "ASC")
+          (implicit e: Composite[E]): ConnectionIO[List[E]] = {
+    val sql = selectAllFromFr ++ sortByFr(sortBy, sortOder) ++ limitFr(limit) ++ offsetFr(offset)
     sql.query[E].stream.compile.toList
   }
 
