@@ -1,8 +1,10 @@
 package org.ergoplatform.explorer.http.protocol
 
+import com.google.common.primitives.Ints
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models.{Header, Interlink}
+import scorex.crypto.encode.Base58
 
 case class HeaderInfo(id: String,
                       parentId: String,
@@ -24,8 +26,9 @@ object HeaderInfo {
 
   def apply(h: Header, interlinks: List[Interlink]): HeaderInfo = {
     val links = interlinks.filter(_.blockId == h.id).map(_.modifierId)
+    val equihashSolutions: Array[Byte] = h.equihashSolution.flatMap { Ints.toByteArray }.toArray
+    val equihashSolutionsString = Base58.encode(equihashSolutions)
 
-    //TODO: Need to figure out how to properly convert equihash solutions into string
     new HeaderInfo(
       from16to58(h.id),
       h.parentId,
@@ -38,7 +41,7 @@ object HeaderInfo {
       h.timestamp,
       h.nBits,
       h.extensionHash,
-      "", //h.equihashSolution.toString(),
+      equihashSolutionsString,
       links
     )
   }
