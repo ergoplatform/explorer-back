@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer
 
 import cats.effect.IO
-import org.ergoplatform.explorer.services.{BlocksServiceIOImpl, TransactionsServiceIOImpl}
+import org.ergoplatform.explorer.services.{AddressesServiceIOImpl, BlocksServiceIOImpl, TransactionsServiceIOImpl}
 
 import scala.concurrent.ExecutionContext
 
@@ -11,4 +11,5 @@ trait Services { self: DbTransactor with Configuration =>
 
   val blocksService = new BlocksServiceIOImpl[IO](transactor, servicesEc)
   val txService = new TransactionsServiceIOImpl[IO](transactor, servicesEc)
+  val addressesService = new AddressesServiceIOImpl[IO](transactor, servicesEc)
 }

@@ -50,8 +50,8 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def getBlockResult(id: String): F[FullBlockInfo] = (for {
     h <- headersDao.get(id)
-    links <- interlinksDao.findAllByBLockId(h.id)
-    txs <- transactionsDao.findAllByBLockId(h.id)
+    links <- interlinksDao.findAllByBlockId(h.id)
+    txs <- transactionsDao.findAllByBlockId(h.id)
     txsIds = txs.map(_.id)
     is <- inputDao.findAllByTxsId(txsIds)
     os <- outputDao.findAllByTxsId(txsIds)

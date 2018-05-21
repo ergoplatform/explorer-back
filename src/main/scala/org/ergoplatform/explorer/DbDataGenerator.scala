@@ -45,7 +45,7 @@ object DbDataGenerator extends App {
     val blocks: List[Header] = HeadersGen.generateHeaders(10)
     val blocksCount = dao.insertMany(blocks).transact(xa).unsafeRunSync().length
 
-    logger.info("interlins...")
+    logger.info("interlinks...")
     val interlinksData = InterlinksGenerator.generateInterlinks(blocks)
     val linksCount = linksDao.insertManyData(interlinksData).transact(xa).unsafeRunSync().length
 

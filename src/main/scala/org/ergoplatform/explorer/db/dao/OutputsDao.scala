@@ -11,7 +11,8 @@ class OutputsDao extends BaseDoobieDao[String, Output] {
     "tx_id",
     "value",
     "spent",
-    "script"
+    "script",
+    "hash"
   )
 
   def findAllByTxId(txId: String)(implicit c: Composite[Output]): ConnectionIO[List[Output]] = {
@@ -21,5 +22,9 @@ class OutputsDao extends BaseDoobieDao[String, Output] {
   def findAllByTxsId(txsId: List[String])(implicit c: Composite[Output]): ConnectionIO[List[Output]] = {
     val inList = txsId.map { v => "'" + v + "'" }.mkString("(", ", ", ")")
     (selectAllFromFr ++ Fragment.const(s"WHERE tx_id in $inList")).query[Output].to[List]
+  }
+
+  def findAllByAddressId(addressId: String)(implicit c: Composite[Output]): ConnectionIO[List[Output]] = {
+    (selectAllFromFr ++ Fragment.const(s"WHERE hash = '$addressId'")).query[Output].to[List]
   }
 }

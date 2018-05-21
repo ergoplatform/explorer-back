@@ -12,7 +12,7 @@ class TransactionsDao extends BaseDoobieDao[String, Transaction] {
     "is_coinbase"
   )
 
-  def findAllByBLockId(blockId: String)(implicit c: Composite[Transaction]): ConnectionIO[List[Transaction]] = {
+  def findAllByBlockId(blockId: String)(implicit c: Composite[Transaction]): ConnectionIO[List[Transaction]] = {
     (selectAllFromFr ++ Fragment.const(s"WHERE block_id = '$blockId'")).query[Transaction].to[List]
   }
 

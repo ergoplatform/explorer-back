@@ -48,7 +48,8 @@ CREATE TABLE outputs (
   tx_id VARCHAR(64) NOT NULL REFERENCES transactions (id),
   value BIGINT,
   spent BOOLEAN NOT NULL DEFAULT FALSE,
-  script VARCHAR
+  script VARCHAR,
+  hash VARCHAR
 );
 
 ALTER TABLE outputs OWNER to ergo;

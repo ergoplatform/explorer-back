@@ -30,7 +30,7 @@ class InterlinksDao extends BaseDoobieDao[Long, Interlink] {
       .toList
   }
 
-  def findAllByBLockId(blockId: String)(implicit c: Composite[Interlink]): ConnectionIO[List[Interlink]] = {
+  def findAllByBlockId(blockId: String)(implicit c: Composite[Interlink]): ConnectionIO[List[Interlink]] = {
     (selectAllFromFr ++ Fragment.const(s"WHERE block_id = '$blockId'")).query[Interlink].to[List]
   }
 }

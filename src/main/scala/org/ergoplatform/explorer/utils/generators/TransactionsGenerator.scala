@@ -20,8 +20,9 @@ object TransactionsGenerator {
     number <- Gen.chooseNum(1, 10)
     values <- Gen.listOfN(number, Gen.chooseNum(10000L, 100000L))
     ids <- Gen.listOfN(number, generateDigestStringBase16(32))
-    outputs = ids.zip(values).map { case (id, v) =>
-      Output(id, txId, v, false, "")
+    addresses <- Gen.listOfN(number, generateDigestStringBase16(32))
+    outputs = ids.zip(addresses).zip(values).map { case ((id, a), v) =>
+      Output(id, txId, v, false, "", a)
     }
   } yield outputs
 
@@ -59,11 +60,12 @@ object TransactionsGenerator {
 
           val oId1 = generateDigestStringBase16(32).sample.get
           val v1 = o.value / 2
-          val o1 = Output(oId1, txId, v1, false, "")
+          val o1 = Output(oId1, txId, v1, false, "", o.hash)
 
           val oId2 = generateDigestStringBase16(32).sample.get
+          val a2 = generateDigestStringBase16(32).sample.get
           val v2 = o.value - v1
-          val o2 = Output(oId2, txId, v2, false, "")
+          val o2 = Output(oId2, txId, v2, false, "", a2)
 
           (i , List(o1, o2))
         }

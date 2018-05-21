@@ -49,7 +49,7 @@ object HeaderInfo {
   implicit val encoder: Encoder[HeaderInfo] = (h: HeaderInfo) => Json.obj(
     ("id", Json.fromString(h.id)),
     ("parentId", Json.fromString(h.parentId)),
-    ("version", Json.fromInt(h.version)),
+    ("version", Json.fromInt(h.version.toInt)),
     ("height", Json.fromInt(h.height)),
     ("interlinks", h.interlinks.asJson),
     ("adProofsRoot", Json.fromString(h.adProofsRoot)),
