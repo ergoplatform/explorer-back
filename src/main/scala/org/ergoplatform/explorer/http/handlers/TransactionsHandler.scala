@@ -16,4 +16,5 @@ class TransactionsHandler(txs: TransactionsService[IO]) extends FailFastCirceSup
     val f = txs.getTxInfo(id).unsafeToFuture()
     onSuccess(f) { info => complete(info) }
   }
+
 }

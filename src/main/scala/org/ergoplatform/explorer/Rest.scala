@@ -8,6 +8,6 @@ trait Rest { self: Services =>
   val routes = List(
     new BlocksHandler(blocksService).route,
     new TransactionsHandler(txService).route,
-    new AddressesHandler(addressesService).route
+    new AddressesHandler(addressesService, txService).route
   ).reduce(_ ~ _)
 }

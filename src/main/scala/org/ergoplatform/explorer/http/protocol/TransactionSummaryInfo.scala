@@ -14,14 +14,15 @@ object TransactionSummaryInfo {
 
   import org.ergoplatform.explorer.utils.Converter._
 
-  def fromDb(tx: Transaction, height: Int): TransactionSummaryInfo = TransactionSummaryInfo(
-    id = from16to58(tx.id),
-    miniBlockInfo = MiniBlockInfo(tx.blockId, height),
-    //TODO Need to add this data to tx
-    timestamp = System.currentTimeMillis(),
-    size = 0,
-    confirmationsCount = 0
-  )
+  def fromDb(tx: Transaction, height: Int, confirmationsCount: Int = 0): TransactionSummaryInfo =
+    TransactionSummaryInfo(
+      id = from16to58(tx.id),
+      miniBlockInfo = MiniBlockInfo(tx.blockId, height),
+      timestamp = tx.timestamp,
+      confirmationsCount = confirmationsCount,
+      //TODO Need to add this data to tx
+      size = 0
+    )
 
   implicit val encoder: Encoder[TransactionSummaryInfo] = (ts: TransactionSummaryInfo) => Json.obj(
     ("id", Json.fromString(ts.id)),

@@ -13,7 +13,7 @@ object TransactionsGenerator {
 
   def initTx: Gen[Transaction] = for {
     id <- generateDigestStringBase16(32)
-  } yield Transaction(id, HeadersGen.rootId, false)
+  } yield Transaction(id, HeadersGen.rootId, false, System.currentTimeMillis())
 
 
   def initOutputs(txId: String): Gen[List[Output]] = for {
@@ -29,7 +29,7 @@ object TransactionsGenerator {
 
 
   def generate(blockId: String, isCoinbase: Boolean = false): Gen[Transaction] =
-    Gen.listOfN(32, arbByte.arbitrary).map { l => Transaction(Base16.encode(l.toArray), blockId, isCoinbase) }
+    Gen.listOfN(32, arbByte.arbitrary).map { l => Transaction(Base16.encode(l.toArray), blockId, isCoinbase, System.currentTimeMillis()) }
 
   def generateForBlock(blockId: String): Gen[List[Transaction]] = for {
     cb <- generate(blockId, true)
@@ -49,7 +49,7 @@ object TransactionsGenerator {
       if (h.height == -1) {
         val txId = generateDigestStringBase16(32).sample.get
         val os = initOutputs(txId).sample.get
-        val tx = Transaction(txId, h.id, false)
+        val tx = Transaction(txId, h.id, false, System.currentTimeMillis())
         txs.append(tx)
         osNotSpent = os
       } else {
@@ -73,7 +73,7 @@ object TransactionsGenerator {
         val inputs = data.map(_._1)
         val outputs = data.flatMap(_._2)
         val newTxs = inputs.map { i =>
-          Transaction(i.txId, h.id, false)
+          Transaction(i.txId, h.id, false, System.currentTimeMillis())
         }
 
         txs ++= newTxs

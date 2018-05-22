@@ -82,3 +82,8 @@ abstract class BaseDoobieDao[ID, E <: Entity[ID]] {
     Update[(E, ID)](updateSql).updateManyWithGeneratedKeys[E](fields: _*)(list.map(e => e -> e.id)).compile.toList
   }
 }
+
+object BaseDoobieDao {
+
+  def collectionToInArgument(list: List[String]): String = list.map(v => "'" + v + "'").mkString("(", ", ", ")")
+}

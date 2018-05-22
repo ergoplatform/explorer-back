@@ -36,7 +36,8 @@ CREATE UNIQUE INDEX "interlinks__one_per_blockId" ON interlinks (modifier_id, bl
 CREATE TABLE transactions (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   block_id VARCHAR(64) NOT NULL REFERENCES headers (id),
-  is_coinbase BOOLEAN NOT NULL
+  is_coinbase BOOLEAN NOT NULL,
+  ts BIGINT NOT NULL
 );
 
 ALTER TABLE transactions OWNER to ergo;
