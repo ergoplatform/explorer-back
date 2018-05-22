@@ -37,4 +37,9 @@ class HeadersDao extends BaseDoobieDao[String, Header] {
     Fragment.const(sql).query[Int].unique
   }
 
+  def findNextBlockId(id: String): ConnectionIO[Option[String]] = {
+    val sql = s"SELECT id from $table WHERE parent_id = '$id'"
+    Fragment.const(sql).query[String].option
+  }
+
 }

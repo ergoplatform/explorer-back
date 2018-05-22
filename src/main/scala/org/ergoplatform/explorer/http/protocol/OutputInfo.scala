@@ -9,7 +9,13 @@ object OutputInfo {
 
   import org.ergoplatform.explorer.utils.Converter._
 
-  def apply(o: Output): OutputInfo = OutputInfo(from16to58(o.id), o.value, o.script, o.hash, o.spent)
+  def apply(o: Output): OutputInfo = OutputInfo(
+    from16to58(o.id),
+    o.value,
+    from16to58(o.script),
+    from16to58(o.hash),
+    o.spent
+  )
 
   implicit val encoder: Encoder[OutputInfo] = (o: OutputInfo) => Json.obj(
     ("id,", Json.fromString(o.id)),

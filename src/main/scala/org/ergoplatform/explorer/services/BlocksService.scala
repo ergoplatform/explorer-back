@@ -7,7 +7,7 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.http.protocol.{FullBlockInfo, SearchBlock}
+import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, SearchBlock}
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 import org.ergoplatform.explorer.utils.Converter._
 
@@ -19,7 +19,7 @@ trait BlockService[F[_]] {
     * @param id base58 representation of id byte array
     * @return fullBlockInfo
     */
-  def getBlock(id: String): F[FullBlockInfo]
+  def getBlock(id: String): F[BlockSummaryInfo]
 
   /**
     * Getting list of blocks
@@ -42,20 +42,22 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
 
-  override def getBlock(id: String): F[FullBlockInfo] = for {
+  override def getBlock(id: String): F[BlockSummaryInfo] = for {
     _ <- Async.shift[F](ec)
     base16Id <- F.pure(from58to16(id))
     result <- getBlockResult(base16Id)
   } yield result
 
-  private def getBlockResult(id: String): F[FullBlockInfo] = (for {
+  private def getBlockResult(id: String): F[BlockSummaryInfo] = (for {
     h <- headersDao.get(id)
+    nextIdOpt <- headersDao.findNextBlockId(h.id)
+    references = BlockReferencesInfo(h.parentId, nextIdOpt)
     links <- interlinksDao.findAllByBlockId(h.id)
     txs <- transactionsDao.findAllByBlockId(h.id)
     txsIds = txs.map(_.id)
     is <- inputDao.findAllByTxsId(txsIds)
     os <- outputDao.findAllByTxsId(txsIds)
-  } yield FullBlockInfo(h, links, txs, is, os)).transact[F](xa)
+  } yield BlockSummaryInfo(FullBlockInfo(h, links, txs, is, os), references)).transact[F](xa)
 
   override def getBlocks(p: Paging, s: Sorting): F[List[SearchBlock]] = for {
     _ <- Async.shift[F](ec)
