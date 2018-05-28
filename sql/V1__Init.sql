@@ -23,15 +23,13 @@ CREATE INDEX "headers__height" ON headers (height);
 
 CREATE TABLE interlinks (
   id BIGSERIAL NOT NULL PRIMARY KEY,
-  modifier_id VARCHAR(64) NOT NULL REFERENCES headers (id),
-  block_id VARCHAR(64) NOT NULL REFERENCES headers (id)
+  modifier_id VARCHAR(64) NOT NULL,
+  block_id VARCHAR(64) NOT NULL
 );
 
 ALTER TABLE  interlinks OWNER TO ergo;
 
 CREATE INDEX "interlinks__block_id" ON interlinks (block_id);
-
-CREATE UNIQUE INDEX "interlinks__one_per_blockId" ON interlinks (modifier_id, block_id);
 
 CREATE TABLE transactions (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
@@ -60,7 +58,7 @@ CREATE INDEX "outputs__tx_id" on outputs (tx_id);
 CREATE TABLE inputs (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   tx_id VARCHAR(64) NOT NULL REFERENCES transactions (id),
-  output VARCHAR(64) NOT NULL REFERENCES outputs (id),
+  output VARCHAR(64) NOT NULL,
   signature VARCHAR NOT NULL
 );
 
