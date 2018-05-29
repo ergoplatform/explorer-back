@@ -11,12 +11,17 @@ resolvers += Resolver.bintrayRepo("hseeberger", "maven")
 lazy val doobieVersion = "0.5.2"
 lazy val akkaHttpVersion = "10.1.1"
 lazy val akkaVersion = "2.5.12"
+lazy val catsVersion = "1.1.0"
 
 lazy val doobieDeps = Seq(
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
   "org.tpolecat" %% "doobie-specs2"   % doobieVersion,
   "org.tpolecat" %% "doobie-hikari"   % doobieVersion
+)
+
+lazy val catsDeps = Seq(
+  "org.typelevel" %% "cats-core" % catsVersion
 )
 
 lazy val loggingDeps = Seq(
@@ -43,7 +48,7 @@ lazy val testDeps = Seq(
   "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )
 
-libraryDependencies ++= (otherDeps ++ doobieDeps ++ loggingDeps ++ akkaDeps ++ testDeps)
+libraryDependencies ++= (otherDeps ++ doobieDeps ++ catsDeps ++ loggingDeps ++ akkaDeps ++ testDeps)
 
 enablePlugins(FlywayPlugin)
 
@@ -61,15 +66,15 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-encoding", "UTF-8",
   "-language:experimental.macros",
+  "-language:higherKinds",
   "-language:postfixOps",
   "-feature",
   "-unchecked",
-//  "-Xfatal-warnings",
   "-Xfuture",
-  "-Xlint",
   "-Yno-adapted-args",
   "-Ywarn-numeric-widen",
-  "-Ywarn-value-discard")
+  "-Ywarn-value-discard"
+)
 
 test in assembly := {}
 
