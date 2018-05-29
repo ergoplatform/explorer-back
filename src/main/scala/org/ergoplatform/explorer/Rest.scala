@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer
 
 import akka.http.scaladsl.server.Directives._
-import org.ergoplatform.explorer.http.handlers.{AddressesHandler, BlocksHandler, TransactionsHandler, UtilHandler}
+import org.ergoplatform.explorer.http.handlers._
 
 trait Rest { self: Services =>
 
@@ -9,6 +9,8 @@ trait Rest { self: Services =>
     new BlocksHandler(blocksService).route,
     new TransactionsHandler(txService).route,
     new AddressesHandler(addressesService, txService).route,
+    new StatsHandler(statsService).route,
+    new InfoHandler().route,
     new UtilHandler().route
   ).reduce(_ ~ _)
 }
