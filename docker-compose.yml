@@ -12,3 +12,24 @@ services:
        - ~/postgres:/data/postgres
     ports:
       - "5432:5432"
+    networks:
+      internet:
+        aliases:
+          - "pgdb"
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: 8080
+      DB_URL: jdbc:postgresql://pgdb:5432/explorer
+      DB_USER: ergo
+      DB_PASS: pass
+    depends_on:
+      - postgres
+    networks:
+      - internet
+networks:
+  internet:
+    driver: bridge

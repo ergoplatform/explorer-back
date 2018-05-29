@@ -70,3 +70,7 @@ scalacOptions ++= Seq(
   "-Yno-adapted-args",
   "-Ywarn-numeric-widen",
   "-Ywarn-value-discard")
+
+test in assembly := {}
+
+mainClass in assembly := Some("org.ergoplatform.explorer.App")

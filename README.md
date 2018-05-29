@@ -6,9 +6,7 @@ To run backend locally you need:
 
 1. Install docker
 
-2. Run PostgresDB via docker compose `docker-compose up`
+2. Run via docker compose `docker-compose up`
 
-3. Migrate DB using `sbt flywayMigrate`
+3. Download data backup for db from [Tar backup file](https://drive.google.com/open?id=1XnNZ7vvV4SNfQYURiAzQaFi6Rrid9oD6) and apply it via pg admin restore command.
 
-4. Generate some random data. To do this just run `sbt runMain org.ergoplatform.explorer.DbDataGenerator`.
-In case if you wanna delete all this data you can use another command `sbt runMain org.ergoplatform.explorer.DbDataGenerator clear`
