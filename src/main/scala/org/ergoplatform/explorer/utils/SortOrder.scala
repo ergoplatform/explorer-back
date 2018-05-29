@@ -4,7 +4,7 @@ trait SortOrder
 
 object SortOrder {
   def fromString(v: String): Option[SortOrder] = v.trim.toLowerCase match {
-    case "acs" => Some(Asc)
+    case "asс" => Some(Asc)
     case "desc" => Some(Desc)
     case _ => None
   }
