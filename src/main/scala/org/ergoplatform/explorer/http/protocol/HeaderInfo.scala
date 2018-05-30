@@ -16,6 +16,7 @@ case class HeaderInfo(id: String,
                       votes: String,
                       timestamp: Long,
                       nBits: Long,
+                      size: Long,
                       extensionHash: String,
                       equihashSolution: String,
                       interlinks: List[String])
@@ -40,6 +41,7 @@ object HeaderInfo {
       h.votes,
       h.timestamp,
       h.nBits,
+      h.blockSize,
       h.extensionHash,
       equihashSolutionsString,
       links
@@ -56,6 +58,7 @@ object HeaderInfo {
     ("stateRoot", Json.fromString(h.stateRoot)),
     ("transactionsRoot", Json.fromString(h.transactionsRoot)),
     ("nBits", Json.fromLong(h.nBits)),
+    ("size", Json.fromLong(h.size)),
     ("votes", Json.fromString(h.votes)),
     ("timestamp", Json.fromLong(h.timestamp)),
     ("extensionHash", Json.fromString(h.extensionHash)),
