@@ -13,7 +13,7 @@ object BlockReferencesInfo {
   )
 
   implicit val encoder: Encoder[BlockReferencesInfo] = (br: BlockReferencesInfo) => Json.obj(
-    ("previousIs", Json.fromString(br.previousId)),
+    ("previousId", Json.fromString(br.previousId)),
     ("nextId", br.nextId.fold(Json.Null) { Json.fromString })
   )
 }
