@@ -1,13 +1,21 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.server.Directives._
+import cats.effect.IO
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import org.ergoplatform.explorer.http.protocol.BlockchainInfo
+import org.ergoplatform.explorer.services.StatsService
 
-class InfoHandler extends FailFastCirceSupport {
+class InfoHandler(ss: StatsService[IO]) extends FailFastCirceSupport {
 
-  val stub = BlockchainInfo("1.0.0", 1000003L, 10003243L, 100302L, 415434144L)
+  val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L, 0L)
 
-  val route = (pathPrefix("info") & get) { complete(stub) }
+  val route = (pathPrefix("info") & get) {
+    val f = ss.findBlockchainInfo.unsafeToFuture()
+    onSuccess(f) {
+      case Some(info) => complete(info)
+      case None => complete(emptyInfoResponse)
+    }
+  }
 
 }

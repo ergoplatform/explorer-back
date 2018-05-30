@@ -24,7 +24,13 @@ class StatsDao extends BaseDoobieDao[Long, StatRecord] {
     "block_value",
     "block_fee",
     "total_mining_time",
-    "block_mining_time"
+    "block_mining_time",
+    "version",
+    "supply",
+    "market_cap",
+    "hashrate",
+    "market_price_usd",
+    "market_price_btc"
   )
 
   def findLast: ConnectionIO[Option[StatRecord]] = {
@@ -34,7 +40,7 @@ class StatsDao extends BaseDoobieDao[Long, StatRecord] {
   def findStatsByDuration(d: Duration): ConnectionIO[List[StatRecord]] = {
     val duration = d match {
       case x: FiniteDuration => x.toMillis
-      case Duration.Inf => System.currentTimeMillis - java.time.LocalDate.of(2017, 12, 31).toEpochDay
+      case _ => System.currentTimeMillis - java.time.LocalDate.of(2017, 12, 31).toEpochDay
     }
     val pastPoint = System.currentTimeMillis() - duration
     val sql = selectAllFromFr ++ Fragment.const(s"WHERE ts >= $pastPoint") ++ sortByFr("ts", "ASC")

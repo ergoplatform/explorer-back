@@ -8,6 +8,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends sbt
 COPY . /ergo
 WORKDIR /ergo
+MAINTAINER Aleksei Terekhin <daron666@yandex.ru>
 RUN sbt reload clean assembly
 RUN mv `find . -name ergo-explorer-assembly*.jar` /ergo-explorer.jar
 CMD ["/usr/bin/java", "-jar", "/ergo-explorer.jar"]

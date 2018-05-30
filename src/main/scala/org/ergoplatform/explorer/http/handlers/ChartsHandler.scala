@@ -9,7 +9,7 @@ import org.ergoplatform.explorer.services.StatsService
 class ChartsHandler(ss: StatsService[IO]) extends FailFastCirceSupport with CommonDirectives {
 
   val route = pathPrefix("charts") {
-    totalCoins ~ avgBlockSize
+    totalCoins ~ avgBlockSize ~ marketPrice
   }
 
   val totalCoins = (get & pathPrefix("total") & duration) { d =>
@@ -19,6 +19,11 @@ class ChartsHandler(ss: StatsService[IO]) extends FailFastCirceSupport with Comm
 
   val avgBlockSize = (get & pathPrefix("block-size") & duration) { d =>
     val f = ss.avgBlockSizeForDuration(d).unsafeToFuture()
+    onSuccess(f) { result => complete(result) }
+  }
+
+  val marketPrice = (get & pathPrefix("market-price") & duration) { d =>
+    val f = ss.marketPriceUsdForDuration(d).unsafeToFuture()
     onSuccess(f) { result => complete(result) }
   }
 

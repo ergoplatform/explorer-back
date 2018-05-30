@@ -13,7 +13,13 @@ case class StatRecord(id: Long = -1L,
                       blockValue: Long = 0L,
                       block_fee: Long = 0L,
                       totalMiningTime: Long = 0L,
-                      blockMiningTime: Long = 0L
+                      blockMiningTime: Long = 0L,
+                      version: String = "0.0.0",
+                      supply: Long = 0L,
+                      marketCap: Long = 0L,
+                      hashRate: Long = 0L,
+                      marketPriceUsd: Long = 0L,
+                      marketPriceBtc: Long = 0L
                      ) extends Entity[Long] {
 
   val avgBlockSize = if (blocksCount == 0L) { 0L } else { totalSize / blocksCount }
