@@ -18,7 +18,7 @@ object OutputInfo {
   )
 
   implicit val encoder: Encoder[OutputInfo] = (o: OutputInfo) => Json.obj(
-    ("id,", Json.fromString(o.id)),
+    ("id", Json.fromString(o.id)),
     ("value", Json.fromLong(o.value)),
     ("script", Json.fromString(o.script)),
     ("hash", Json.fromString(o.hash)),
