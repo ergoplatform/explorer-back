@@ -26,13 +26,13 @@ object HeaderInfo {
   import org.ergoplatform.explorer.utils.Converter._
 
   def apply(h: Header, interlinks: List[Interlink]): HeaderInfo = {
-    val links = interlinks.filter(_.blockId == h.id).map(_.modifierId)
+    val links = interlinks.filter(_.blockId == h.id).map(_.modifierId).map(from16to58)
     val equihashSolutions: Array[Byte] = h.equihashSolution.flatMap { Ints.toByteArray }.toArray
     val equihashSolutionsString = Base58.encode(equihashSolutions)
 
     new HeaderInfo(
       from16to58(h.id),
-      h.parentId,
+      from16to58(h.parentId),
       h.version,
       h.height,
       h.adProofsRoot,
