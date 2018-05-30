@@ -53,10 +53,10 @@ libraryDependencies ++= (otherDeps ++ doobieDeps ++ catsDeps ++ loggingDeps ++ a
 enablePlugins(FlywayPlugin)
 
 flywayDriver := "org.postgresql.Driver"
-flywayUrl := "jdbc:postgresql://localhost:5432/explorer"
+flywayUrl := "jdbc:postgresql://0.0.0.0:5432/explorer"
 
-flywayUser := "ergo"
-flywayPassword := "pass"
+flywayUser := sys.env.getOrElse("DB_USER", "ergo")
+flywayPassword := sys.env.getOrElse("DB_PASS", "pass")
 flywaySchemas := Seq("public")
 flywayTable := "schema_history"
 flywayLocations := Seq("filesystem:sql")
