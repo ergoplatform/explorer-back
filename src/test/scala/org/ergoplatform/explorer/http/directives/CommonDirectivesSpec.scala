@@ -1,7 +1,6 @@
 package org.ergoplatform.explorer.http.directives
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.ValidationRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -24,6 +23,12 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
 
     Get("/?sortBy=notid&sortDirection=Desc") ~> sortingEchoRoute ~> check {
       responseAs[String] shouldBe ("notid:DESC")
+    }
+
+    val failingSortOrder = "description"
+
+    Get(s"/?sortBy=notid&sortDirection=$failingSortOrder") ~> sortingEchoRoute ~> check {
+      rejection shouldBe CommonDirectives.malformedSortDirectionParameter(failingSortOrder)
     }
   }
 
@@ -61,15 +66,59 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
     }
 
     Get("/" + failure1) ~> base58EchoRoute ~> check {
-      rejection shouldBe ValidationRejection("String isn't a Base58 representation")
+      rejection shouldBe CommonDirectives.base58ValidationError
     }
 
     Get("/" + failure2) ~> base58EchoRoute ~> check {
-      rejection shouldBe ValidationRejection("String isn't a Base58 representation")
+      rejection shouldBe CommonDirectives.base58ValidationError
     }
 
     Get("/" + failure3) ~> base58EchoRoute ~> check {
-      rejection shouldBe ValidationRejection("String isn't a Base58 representation")
+      rejection shouldBe CommonDirectives.base58ValidationError
+    }
+  }
+
+  val durationEcho = (get & duration) { d => complete(d.toString)}
+
+  it should "read timespan correctly" in {
+    Get("/") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "Duration.Inf"
+    }
+
+    Get("/?timespan=all") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "Duration.Inf"
+    }
+
+    Get("/?timespan=1DaY") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "1 day"
+    }
+
+    Get("/?timespan=7DaYs") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "7 days"
+    }
+
+    Get("/?timespan=30days") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "30 days"
+    }
+
+    Get("/?timespan=60days") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "60 days"
+    }
+
+    Get("/?timespan=180days") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "180 days"
+    }
+
+    Get("/?timespan=1year") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "365 days"
+    }
+
+    Get("/?timespan=2years") ~> durationEcho ~> check {
+      responseAs[String] shouldBe "730 days"
+    }
+
+    Get("/?timespan=2DaYs") ~> durationEcho ~> check {
+      rejection shouldBe CommonDirectives.malformedTimespanParameter
     }
   }
 

@@ -1,7 +1,10 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.free.connection.ConnectionIO
+import doobie.util.fragment.Fragment
 import org.ergoplatform.explorer.db.models.StatRecord
+
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 class StatsDao extends BaseDoobieDao[Long, StatRecord] {
 
@@ -26,5 +29,15 @@ class StatsDao extends BaseDoobieDao[Long, StatRecord] {
 
   def findLast: ConnectionIO[Option[StatRecord]] = {
     list(0, 1, "ts", "DESC").map(_.headOption)
+  }
+
+  def findStatsByDuration(d: Duration): ConnectionIO[List[StatRecord]] = {
+    val duration = d match {
+      case x: FiniteDuration => x.toMillis
+      case Duration.Inf => System.currentTimeMillis - java.time.LocalDate.of(2017, 12, 31).toEpochDay
+    }
+    val pastPoint = System.currentTimeMillis() - duration
+    val sql = selectAllFromFr ++ Fragment.const(s"WHERE ts >= $pastPoint") ++ sortByFr("ts", "ASC")
+    sql.query[StatRecord].to[List]
   }
 }

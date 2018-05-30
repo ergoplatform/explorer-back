@@ -10,6 +10,7 @@ trait Rest { self: Services =>
     new TransactionsHandler(txService).route,
     new AddressesHandler(addressesService, txService).route,
     new StatsHandler(statsService).route,
+    new ChartsHandler(statsService).route,
     new InfoHandler().route,
     new UtilHandler().route
   ).reduce(_ ~ _)
