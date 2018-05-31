@@ -2,19 +2,23 @@ package org.ergoplatform.explorer.http.directives
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import cats.data._
+import cats.implicits.catsKernelStdOrderForString
 import org.scalatest.{FlatSpec, Matchers}
 
 class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTest with CommonDirectives {
 
-  val sortingEchoRoute = (get & sorting) { (s, so) => complete(s"$s:$so") }
+  val fieldMappings = NonEmptyMap.of("notid" -> "not_id", "id" -> "id")
+
+  val sortingEchoRoute = (get & sorting(fieldMappings, Some("id"))) { (s, so) => complete(s"$s:$so") }
 
   it should "read sorting parameters correctly" in {
     Get("/") ~> sortingEchoRoute ~> check {
       responseAs[String] shouldBe ("id:ASC")
     }
 
-    Get("/?sortBy=notid") ~> sortingEchoRoute ~> check {
-      responseAs[String] shouldBe ("notid:ASC")
+    Get("/?sortBy=noTid") ~> sortingEchoRoute ~> check {
+      responseAs[String] shouldBe ("not_id:ASC")
     }
 
     Get("/?sortDirection=dEsC") ~> sortingEchoRoute ~> check {
@@ -22,13 +26,24 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
     }
 
     Get("/?sortBy=notid&sortDirection=Desc") ~> sortingEchoRoute ~> check {
-      responseAs[String] shouldBe ("notid:DESC")
+      responseAs[String] shouldBe ("not_id:DESC")
+    }
+
+    Get(s"/?sortBy=notrid") ~> sortingEchoRoute ~> check {
+      rejection shouldBe CommonDirectives.malformedSortByParameter("notrid", fieldMappings.keys.toNonEmptyList)
     }
 
     val failingSortOrder = "description"
 
     Get(s"/?sortBy=notid&sortDirection=$failingSortOrder") ~> sortingEchoRoute ~> check {
       rejection shouldBe CommonDirectives.malformedSortDirectionParameter(failingSortOrder)
+    }
+
+    Get(s"/?sortBy=notrid&sortDirection=$failingSortOrder") ~> sortingEchoRoute ~> check {
+      rejections should contain allOf(
+        CommonDirectives.malformedSortDirectionParameter(failingSortOrder),
+        CommonDirectives.malformedSortByParameter("notrid", fieldMappings.keys.toNonEmptyList)
+      )
     }
   }
 
@@ -119,6 +134,26 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
 
     Get("/?timespan=2DaYs") ~> durationEcho ~> check {
       rejection shouldBe CommonDirectives.malformedTimespanParameter
+    }
+  }
+
+  val startEndEcho = (get & startEndDate) { (s, e) => complete(s"$s:$e") }
+
+  it should "read start end date correctly" in {
+    Get("/") ~> startEndEcho ~> check {
+      responseAs[String].startsWith("0:") shouldBe true
+    }
+
+    Get("/?endDate=100") ~> startEndEcho ~> check {
+      responseAs[String] shouldBe "0:100"
+    }
+
+    Get("/?startDate=10&endDate=100") ~> startEndEcho ~> check {
+      responseAs[String] shouldBe "10:100"
+    }
+
+    Get("/?startDate=100&endDate=10") ~> startEndEcho ~> check {
+      rejection shouldBe CommonDirectives.malformedStartEndDateParam
     }
   }
 

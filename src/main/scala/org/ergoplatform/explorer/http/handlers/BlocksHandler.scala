@@ -1,7 +1,9 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.server.Directives._
+import cats.data._
 import cats.effect.IO
+import cats.implicits.catsKernelStdOrderForString
 import cats.syntax.all._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import org.ergoplatform.explorer.http.directives.CommonDirectives
@@ -12,6 +14,8 @@ import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with CommonDirectives {
 
+  import BlocksHandler._
+
   val route = pathPrefix("blocks") {
     getBlockById ~ getBlocks
   }
@@ -21,13 +25,26 @@ class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with Comm
     onSuccess(f) { info => complete(info) }
   }
 
-  val getBlocks = (get & paging & sorting) { (o, l, field, so) =>
-    val p = Paging(offset = o, limit = l)
-    val s = Sorting(sortBy = field, order = so)
-    val items = bs.getBlocks(p, s)
-    val count = bs.count()
-    val f = (items, count).parMapN((i, c) => ItemsResponse(i, c)).unsafeToFuture()
-    onSuccess(f) { info => complete(info) }
+  val getBlocks = (get & paging & sorting(sortByFieldMappings, Some("id")) & startEndDate) {
+    (o, l, field, so, start, end) =>
+      val p = Paging(offset = o, limit = l)
+      val s = Sorting(sortBy = field, order = so)
+      val items = bs.getBlocks(p, s, start, end)
+      val count = bs.count()
+      val f = (items, count).parMapN((i, c) => ItemsResponse(i, c)).unsafeToFuture()
+      onSuccess(f) { info => complete(info) }
   }
 
+}
+
+object BlocksHandler {
+
+  val sortByFieldMappings: NonEmptyMap[String, String] = NonEmptyMap.of(
+    "height" -> "height",
+    "timestamp" -> "ts",
+    "transactionsCount" -> "tx_count",
+    "size" -> "size",
+    "votes" -> "votes",
+    "miner" -> "miner_name"
+  )
 }

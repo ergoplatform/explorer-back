@@ -28,7 +28,7 @@ trait BlockService[F[_]] {
     * @param s sorting
     * @return list of search block info
     */
-  def getBlocks(p: Paging, s: Sorting): F[List[SearchBlock]]
+  def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]]
 
   def count(): F[Long]
 }
@@ -59,13 +59,13 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     os <- outputDao.findAllByTxsId(txsIds)
   } yield BlockSummaryInfo(FullBlockInfo(h, links, txs, is, os), references)).transact[F](xa)
 
-  override def getBlocks(p: Paging, s: Sorting): F[List[SearchBlock]] = for {
+  override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = for {
     _ <- Async.shift[F](ec)
-    result <- getBlocksResult(p, s)
+    result <- getBlocksResult(p, s, start, end)
   } yield result
 
-  private def getBlocksResult(p: Paging, s: Sorting): F[List[SearchBlock]] = (for {
-    h <- headersDao.list(p.offset, p.limit, s.sortBy, s.order.toString)
+  private def getBlocksResult(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = (for {
+    h <- headersDao.listByDate(p.offset, p.limit, s.sortBy, s.order.toString, start, end)
     hIds = h.map(_.id)
     txsCnt <- transactionsDao.countTxsNumbersByBlocksIds(hIds)
     result = h

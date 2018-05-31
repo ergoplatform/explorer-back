@@ -1,0 +1,11 @@
+CREATE OR REPLACE FUNCTION tx_count_by_header_id(hid VARCHAR) RETURNS BIGINT LANGUAGE SQL AS
+$$ SELECT count(*) FROM transactions WHERE block_id = hid; $$;
+
+ALTER TABLE headers
+  ADD COLUMN tx_count BIGINT NOT NULL DEFAULT 0,
+  ADD COLUMN miner_name VARCHAR NOT NULL DEFAULT 'unknown',
+  ADD COLUMN miner_address VARCHAR NOT NULL DEFAULT '0000000000000000000000000000000000000000000000000000000000000000';
+
+UPDATE headers SET tx_count = tx_count_by_header_id(id);
+
+DROP FUNCTION IF EXISTS tx_count_by_header_id;

@@ -1,5 +1,6 @@
 package org.ergoplatform.explorer.http.directives
 
+import cats.data._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._
 import org.ergoplatform.explorer.utils.SortOrder
@@ -26,15 +27,36 @@ trait CommonDirectives {
 
   val paging: Directive[(Int, Int)] = parameters(("offset".as[Int] ? 0, "limit".as[Int] ? 20))
 
-  val sorting: Directive[(String, SortOrder)] = parameters(("sortBy" ? "id", "sortDirection" ? "asc"))
-    .tflatMap { case (field: String, order: String) =>
-      SortOrder.fromString(order) match {
-        case Some(o) =>
-          tprovide(field -> o)
-        case None =>
-          reject(malformedSortDirectionParameter(order))
+
+  def checkField(mappings: NonEmptyMap[String, String])(fieldName: String): Boolean =
+    mappings.lookup(fieldName).nonEmpty
+
+  def sorting(fieldMappings: NonEmptyMap[String, String],
+              defaultSortBy: Option[String] = None): Directive[(String, SortOrder)] = {
+
+    val defaultSortField = defaultSortBy.getOrElse(fieldMappings.head._1)
+    val checker = checkField(fieldMappings) _
+
+    parameters(("sortBy" ? defaultSortField, "sortDirection" ? "asc"))
+      .tflatMap { case (field: String, order: String) =>
+        val sanitizedField = field.trim.toLowerCase
+        val sortOrder = SortOrder.fromString(order)
+
+        val sortByRej = malformedSortByParameter(field, fieldMappings.keys.toNonEmptyList)
+        val sortDirRej = malformedSortDirectionParameter(order)
+
+        val rejections = checkValue[Option[SortOrder]](sortDirRej)(sortOrder, _.nonEmpty).toList ++
+          checkValue[String](sortByRej)(sanitizedField, checker).toList
+
+        if (rejections.nonEmpty) {
+          reject(rejections: _*)
+        } else {
+          tprovide(fieldMappings(sanitizedField).get -> sortOrder.get)
+        }
       }
-    }
+  }
+
+
 
   val duration: Directive1[Duration] = parameters("timespan" ? "all")
     .flatMap{ v => stringToDuration(v) match {
@@ -45,6 +67,19 @@ trait CommonDirectives {
 
       }
     }
+
+  def checkValue[A](rej: Rejection)(value: A, f: A => Boolean): Option[Rejection] =
+    if (f(value)) { None } else { Some(rej) }
+
+  val startEndDate: Directive[(Long, Long)] =
+    parameters(("startDate".as[Long] ? 0L, "endDate".as[Long] ? System.currentTimeMillis())).tflatMap { case (s, e) =>
+      if (s > e) {
+        reject(malformedStartEndDateParam)
+      } else {
+        tprovide((s, e))
+      }
+    }
+
 }
 
 object CommonDirectives {
@@ -58,11 +93,23 @@ object CommonDirectives {
     None
   )
 
+  val malformedStartEndDateParam = MalformedQueryParamRejection(
+    "startDate",
+    s"Start Date can't be greater than End Date",
+    None
+  )
+
   val base58ValidationError = ValidationRejection("String isn't a Base58 representation")
 
   def malformedSortDirectionParameter(value: String) = MalformedQueryParamRejection(
     "sortDirection",
     s"This param could be asc or desc, but got $value",
+    None
+  )
+
+  def malformedSortByParameter(value: String, availableValues: NonEmptyList[String]) = MalformedQueryParamRejection(
+    "sortBy",
+    s"This param could be one of ${availableValues.toList.mkString(", ")}, but got $value",
     None
   )
 

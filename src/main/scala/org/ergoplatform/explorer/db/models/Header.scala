@@ -13,5 +13,8 @@ case class Header(id: String,
                   extensionHash: String,
                   blockSize: Long,
                   equihashSolution: List[Int] = List.empty[Int],
-                  adProofs: Option[Array[Byte]] = None) extends Entity[String]
+                  adProofs: Option[Array[Byte]] = None,
+                  txCount: Long,
+                  minerName: String,
+                  minerAddress: String) extends Entity[String]
 

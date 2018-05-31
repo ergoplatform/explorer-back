@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
+import org.ergoplatform.explorer.utils.Converter._
 import scorex.crypto.encode.Base16
 
 case class MinerInfo(addressId: String, name: String)
@@ -13,7 +14,7 @@ object MinerInfo {
   )
 
   implicit val ecoderMinerInfo: Encoder[MinerInfo] = (minerInfo: MinerInfo) => Json.obj(
-    ("adressId", Json.fromString(minerInfo.addressId)),
+    ("adressId", Json.fromString(from16to58(minerInfo.addressId))),
     ("name", Json.fromString(minerInfo.name))
   )
 }
