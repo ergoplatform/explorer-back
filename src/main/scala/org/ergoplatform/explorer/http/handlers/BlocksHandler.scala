@@ -25,7 +25,7 @@ class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with Comm
     onSuccess(f) { info => complete(info) }
   }
 
-  val getBlocks = (get & paging & sorting(sortByFieldMappings, Some("id")) & startEndDate) {
+  val getBlocks = (get & paging & sorting(sortByFieldMappings, Some("height")) & startEndDate) {
     (o, l, field, so, start, end) =>
       val p = Paging(offset = o, limit = l)
       val s = Sorting(sortBy = field, order = so)
@@ -42,7 +42,7 @@ object BlocksHandler {
   val sortByFieldMappings: NonEmptyMap[String, String] = NonEmptyMap.of(
     "height" -> "height",
     "timestamp" -> "ts",
-    "transactionsCount" -> "tx_count",
+    "transactionscount" -> "tx_count",
     "size" -> "size",
     "votes" -> "votes",
     "miner" -> "miner_name"

@@ -29,7 +29,7 @@ trait CommonDirectives {
 
 
   def checkField(mappings: NonEmptyMap[String, String])(fieldName: String): Boolean =
-    mappings.lookup(fieldName).nonEmpty
+    mappings.lookup(fieldName.trim.toLowerCase).nonEmpty
 
   def sorting(fieldMappings: NonEmptyMap[String, String],
               defaultSortBy: Option[String] = None): Directive[(String, SortOrder)] = {
