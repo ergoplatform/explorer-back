@@ -9,7 +9,7 @@ services:
     volumes:
        - ~/postgres:/data/postgres
     env_file:
-      - ~/env/variables.env
+      - ~/env/db.env
     ports:
       - "5432:5432"
     networks:
@@ -23,7 +23,7 @@ services:
     environment:
       DB_URL: jdbc:postgresql://pgdb:5432/explorer
     env_file:
-      - ~/env/variables.env
+      - ~/env/app.env
     depends_on:
       - postgres
     networks:
