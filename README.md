@@ -1,4 +1,4 @@
-# Ergo Explorer Backend
+# Ergo Explorer Backend [![Build Status](https://travis-ci.org/ergoplatform/explorer-back.svg?branch=master)](https://travis-ci.org/ergoplatform/explorer-back)
 
 To run backend locally you need:
 
