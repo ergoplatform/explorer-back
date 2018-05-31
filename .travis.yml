@@ -1,0 +1,10 @@
+language: scala
+jdk:
+  - oraclejdk8
+branches:
+  only:
+    - master
+scala:
+  - 2.12.5
+script:
+  - sbt clean test
