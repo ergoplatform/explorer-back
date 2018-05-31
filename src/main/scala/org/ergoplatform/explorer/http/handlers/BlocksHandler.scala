@@ -43,7 +43,7 @@ object BlocksHandler {
     "height" -> "height",
     "timestamp" -> "ts",
     "transactionscount" -> "tx_count",
-    "size" -> "size",
+    "size" -> "block_size",
     "votes" -> "votes",
     "miner" -> "miner_name"
   )
