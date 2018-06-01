@@ -46,4 +46,39 @@ class StatsDao extends BaseDoobieDao[Long, StatRecord] {
     val sql = selectAllFromFr ++ Fragment.const(s"WHERE ts >= $pastPoint") ++ sortByFr("ts", "ASC")
     sql.query[StatRecord].to[List]
   }
+
+  def totalCoinsGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] = {
+    val selectStr = "min(ts) as t, max(total_coins)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def avgBlockSizeGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] = {
+    val selectStr = "min(ts) as t, avg(block_size)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def marketPriceGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] = {
+    val selectStr = "min(ts) as t, last_value(market_price_usd)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  private def groupedByDayStatsPair(d: Int, selectStr: String): ConnectionIO[List[(Long, Long)]] = {
+    val sql = selectByDay(d, selectStr)
+    sql.query[(Long, Long)].to[List]
+  }
+
+  private def selectByDay(limitDaysBack: Int, selectStr: String): Fragment = {
+    import scala.concurrent.duration._
+
+    val whereFragment = if (limitDaysBack <=0 ) {
+      Fragment.empty
+    } else {
+      val ms = System.currentTimeMillis - limitDaysBack.days.toMillis
+      Fragment.const(s"WHERE ts >= $ms")
+    }
+
+    Fragment.const(
+      s"SELECT $selectStr, TO_CHAR(TO_TIMESTAMP(ts / 1000), 'DD/MM/YYYY') as date " +
+        s"FROM blockchain_stats") ++ whereFragment ++ Fragment.const("GROUP BY date ORDER BY t DESC")
+  }
 }

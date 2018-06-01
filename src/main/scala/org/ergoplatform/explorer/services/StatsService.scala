@@ -10,7 +10,6 @@ import org.ergoplatform.explorer.db.models.StatRecord
 import org.ergoplatform.explorer.http.protocol.{BlockchainInfo, ChartSingleData, StatsSummary, UsdPriceInfo}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 
 trait StatsService[F[_]] {
 
@@ -18,11 +17,11 @@ trait StatsService[F[_]] {
 
   def findBlockchainInfo: F[Option[BlockchainInfo]]
 
-  def totalCoinsForDuration(d: Duration): F[List[ChartSingleData[Long]]]
+  def totalCoinsForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
-  def avgBlockSizeForDuration(d: Duration): F[List[ChartSingleData[Long]]]
+  def avgBlockSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
-  def marketPriceUsdForDuration(d: Duration): F[List[ChartSingleData[UsdPriceInfo]]]
+  def marketPriceUsdForDuration(daysBack: Int): F[List[ChartSingleData[UsdPriceInfo]]]
 }
 
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -40,19 +39,19 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     result <- statsDao.findLast.map(statRecordToBlockchainInfo).transact[F](xa)
   } yield result
 
-  override def totalCoinsForDuration(d: Duration): F[List[ChartSingleData[Long]]] = for {
+  override def totalCoinsForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.findStatsByDuration(d).map(statsToTotalCoins).transact[F](xa)
+    result <- statsDao.totalCoinsGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
-  override def avgBlockSizeForDuration(d: Duration): F[List[ChartSingleData[Long]]] = for {
+  override def avgBlockSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.findStatsByDuration(d).map(statsToAvgBlockSize).transact[F](xa)
+    result <- statsDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
-  def marketPriceUsdForDuration(d: Duration): F[List[ChartSingleData[UsdPriceInfo]]] = for {
+  def marketPriceUsdForDuration(d: Int): F[List[ChartSingleData[UsdPriceInfo]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.findStatsByDuration(d).map(statsToUsdPriceInfo).transact[F](xa)
+    result <- statsDao.marketPriceGroupedByDay(d).map(statsToUsdPriceInfo).transact[F](xa)
   } yield result
 
 
@@ -60,12 +59,9 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def statRecordToBlockchainInfo(s: Option[StatRecord]): Option[BlockchainInfo] = s.map(BlockchainInfo.apply)
 
-  private def statsToTotalCoins(list: List[StatRecord]): List[ChartSingleData[Long]] =
-    list.map(ChartSingleData.toTotalCoinsData)
+  private def pairsToChartData(list: List[(Long, Long)]): List[ChartSingleData[Long]] =
+    list.map{ case (ts, data) => ChartSingleData(ts, data)}
 
-  private def statsToAvgBlockSize(list: List[StatRecord]): List[ChartSingleData[Long]] =
-    list.map(ChartSingleData.toAvgBlockSizeData)
-
-  private def statsToUsdPriceInfo(list: List[StatRecord]): List[ChartSingleData[UsdPriceInfo]] =
-    list.map(ChartSingleData.toMarketPrice)
+  private def statsToUsdPriceInfo(list: List[(Long, Long)]): List[ChartSingleData[UsdPriceInfo]] =
+    list.map{ case (ts, price) => ChartSingleData(ts, UsdPriceInfo(price))}
 }

@@ -58,8 +58,8 @@ trait CommonDirectives {
 
 
 
-  val duration: Directive1[Duration] = parameters("timespan" ? "all")
-    .flatMap{ v => stringToDuration(v) match {
+  val duration: Directive1[Int] = parameters("timespan" ? "all")
+    .flatMap{ v => stringToDaysBack(v) match {
       case Some(d) =>
         provide(d)
       case None =>
@@ -113,16 +113,15 @@ object CommonDirectives {
     None
   )
 
-  def stringToDuration(s: String): Option[Duration] = s.trim.toLowerCase match {
-    case "all" => Some(Duration.Inf)
-    case "1day" => Some(1 day)
-    case "7days" => Some(7 days)
-    case "30days" => Some(30 days)
-    case "60days" => Some(60 days)
-    case "180days" => Some(180 days)
-    case "1year" => Some(365 days)
-    case "2years" => Some(730 days)
+  def stringToDaysBack(s: String): Option[Int] = s.trim.toLowerCase match {
+    case "all" => Some(-1)
+    case "1day" => Some(1)
+    case "7days" => Some(7)
+    case "30days" => Some(30)
+    case "60days" => Some(60)
+    case "180days" => Some(180)
+    case "1year" => Some(365)
+    case "2years" => Some(730)
     case _ => None
   }
-
 }

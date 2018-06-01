@@ -97,39 +97,39 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
 
   it should "read timespan correctly" in {
     Get("/") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "Duration.Inf"
+      responseAs[String] shouldBe "-1"
     }
 
     Get("/?timespan=all") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "Duration.Inf"
+      responseAs[String] shouldBe "-1"
     }
 
     Get("/?timespan=1DaY") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "1 day"
+      responseAs[String] shouldBe "1"
     }
 
     Get("/?timespan=7DaYs") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "7 days"
+      responseAs[String] shouldBe "7"
     }
 
     Get("/?timespan=30days") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "30 days"
+      responseAs[String] shouldBe "30"
     }
 
     Get("/?timespan=60days") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "60 days"
+      responseAs[String] shouldBe "60"
     }
 
     Get("/?timespan=180days") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "180 days"
+      responseAs[String] shouldBe "180"
     }
 
     Get("/?timespan=1year") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "365 days"
+      responseAs[String] shouldBe "365"
     }
 
     Get("/?timespan=2years") ~> durationEcho ~> check {
-      responseAs[String] shouldBe "730 days"
+      responseAs[String] shouldBe "730"
     }
 
     Get("/?timespan=2DaYs") ~> durationEcho ~> check {
