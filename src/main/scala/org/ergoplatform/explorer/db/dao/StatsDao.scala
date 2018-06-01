@@ -79,6 +79,6 @@ class StatsDao extends BaseDoobieDao[Long, StatRecord] {
 
     Fragment.const(
       s"SELECT $selectStr, TO_CHAR(TO_TIMESTAMP(ts / 1000), 'DD/MM/YYYY') as date " +
-        s"FROM blockchain_stats") ++ whereFragment ++ Fragment.const("GROUP BY date ORDER BY t DESC")
+        s"FROM blockchain_stats") ++ whereFragment ++ Fragment.const("GROUP BY date ORDER BY t ASC")
   }
 }
