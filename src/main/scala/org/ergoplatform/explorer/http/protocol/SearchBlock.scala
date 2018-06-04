@@ -21,7 +21,7 @@ object SearchBlock {
     height = h.height,
     timestamp = h.timestamp,
     transactionsCount = txsCount,
-    miner = MinerInfo(from16to58(h.minerAddress), h.minerName),
+    miner = MinerInfo(h.minerAddress, h.minerName),
     size = h.blockSize
   )
 

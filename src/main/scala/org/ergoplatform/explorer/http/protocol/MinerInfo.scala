@@ -13,8 +13,8 @@ object MinerInfo {
     name
   )
 
-  implicit val ecoderMinerInfo: Encoder[MinerInfo] = (minerInfo: MinerInfo) => Json.obj(
-    ("adressId", Json.fromString(from16to58(minerInfo.addressId))),
-    ("name", Json.fromString(minerInfo.name))
+  implicit val encoder: Encoder[MinerInfo] = (minerInfo: MinerInfo) => Json.obj(
+    "adressId" -> Json.fromString(from16to58(minerInfo.addressId)),
+    "name" -> Json.fromString(minerInfo.name)
   )
 }
