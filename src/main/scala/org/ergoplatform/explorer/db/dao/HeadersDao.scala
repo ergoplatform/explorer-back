@@ -17,7 +17,6 @@ class HeadersDao extends BaseDoobieDao[String, Header] {
     "ad_proofs_root",
     "state_root",
     "transactions_root",
-    "votes",
     "ts",
     "n_bits",
     "extension_hash",
