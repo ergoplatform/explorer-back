@@ -6,13 +6,15 @@ CREATE TABLE headers (
   ad_proofs_root VARCHAR(64) NOT NULL,
   state_root VARCHAR(66) NOT NULL,
   transactions_root VARCHAR(64) NOT NULL,
-  votes VARCHAR NOT NULL,
   ts BIGINT NOT NULL,
   n_bits BIGINT NOT NULL,
   extension_hash VARCHAR(64) NOT NULL,
   block_size BIGINT NOT NULL,
   equihash_solution INTEGER ARRAY NOT NULL,
-  ad_proofs BYTEA
+  ad_proofs BYTEA,
+  tx_count BIGINT NOT NULL DEFAULT 0,
+  miner_name VARCHAR NOT NULL,
+  miner_address VARCHAR NOT NULL
 );
 
 ALTER TABLE headers OWNER TO ergo;
@@ -65,4 +67,29 @@ CREATE TABLE inputs (
 ALTER TABLE inputs OWNER to ergo;
 
 CREATE INDEX "inputs__tx_id" on inputs (tx_id);
+
+CREATE TABLE blockchain_stats (
+  id BIGSERIAL NOT NULL PRIMARY KEY,
+  ts BIGINT NOT NULL,
+  block_size BIGINT NOT NULL,
+  total_size BIGINT NOT NULL,
+  txs_count BIGINT NOT NULL,
+  txs_total_count BIGINT NOT NULL,
+  blocks_count BIGINT NOT NULL,
+  difficulty BIGINT NOT NULL,
+  block_coins BIGINT NOT NULL,
+  total_coins BIGINT NOT NULL,
+  block_value BIGINT NOT NULL,
+  block_fee BIGINT NOT NULL,
+  total_mining_time BIGINT NOT NULL,
+  block_mining_time BIGINT NOT NULL,
+  version VARCHAR NOT NULL,
+  supply BIGINT NOT NULL,
+  market_cap BIGINT NOT NULL,
+  hashrate BIGINT NOT NULL,
+  market_price_usd BIGINT NOT NULL,
+  market_price_btc BIGINT NOT NULL
+);
+
+CREATE INDEX "blockchain_stats__ts" ON blockchain_stats (ts);
 

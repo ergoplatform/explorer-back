@@ -19,13 +19,12 @@ object HeadersGen {
     adp <- generateDigestStringBase16(32)
     s <- generateDigestStringBase16(33)
     tr <- generateDigestStringBase16(32)
-    votes <- generateDigestStringBase16(16)
     nBits <- arbLong.arbitrary
     eHash <- generateDigestStringBase16(32)
     bz <- arbLong.arbitrary
     es <- Gen.listOfN(10, arbInt.arbitrary)
     ad <- Gen.oneOf(Gen.const(None), Gen.listOfN(32, arbByte.arbitrary).map(v => Some(v.toArray)))
-  } yield Header(id, pId, version, h, adp, s, tr, votes, System.currentTimeMillis(), nBits, eHash, bz, es, ad, 0L, "", "")
+  } yield Header(id, pId, version, h, adp, s, tr, System.currentTimeMillis(), nBits, eHash, bz, es, ad, 0L, "", "")
 
 
 
