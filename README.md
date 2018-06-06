@@ -9,4 +9,3 @@ To run backend locally you need:
 2. Run via docker compose `docker-compose up`
 
 3. Download data backup for db from [Tar backup file](https://drive.google.com/open?id=1XnNZ7vvV4SNfQYURiAzQaFi6Rrid9oD6) and apply it via pg admin restore command.
-
