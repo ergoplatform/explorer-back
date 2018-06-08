@@ -44,7 +44,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def getBlock(id: String): F[BlockSummaryInfo] = for {
     _ <- Async.shift[F](ec)
-    base16Id <- F.pure(from58to16(id))
+    base16Id = from58to16(id)
     result <- getBlockResult(base16Id)
   } yield result
 

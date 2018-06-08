@@ -13,9 +13,12 @@ trait DbTransactor { self: Configuration =>
       pass = cfg.db.pass
     )
     //TODO: Tune HikariCP config when needed here.
-    _ <- xa.configure(c => IO(
+    _ <- xa.configure(c => IO {
       c.setAutoCommit(false)
-    ))
+      c.setMaximumPoolSize(20)
+      c.setMinimumIdle(5)
+      c.setMaxLifetime(1200000L)
+    })
   } yield xa).unsafeRunSync()
 
 }

@@ -72,8 +72,7 @@ scalacOptions ++= Seq(
   "-unchecked",
   "-Xfuture",
   "-Yno-adapted-args",
-  "-Ywarn-numeric-widen",
-  "-Ywarn-value-discard"
+  "-Ywarn-numeric-widen"
 )
 
 test in assembly := {}
