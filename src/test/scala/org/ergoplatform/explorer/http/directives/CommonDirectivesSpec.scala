@@ -5,6 +5,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.data._
 import cats.implicits.catsKernelStdOrderForString
 import org.scalatest.{FlatSpec, Matchers}
+import scorex.crypto.encode.Base16
 
 class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTest with CommonDirectives {
 
@@ -67,28 +68,18 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
     }
   }
 
-  val base58EchoRoute = (get & base16Segment) { s => complete(s) }
+  val base16EchoRoute = (get & base16Segment) { s => complete(s) }
 
-  it should "read base58 strings from path correctly" in {
+  it should "read base16 strings from path correctly" in {
 
-    val correctBase58 = "7xTVX46CWum2cUppFwfXnTFQ7ZU3FmAemcQmkL3oj5DP"
-    val failure1 = "7xTVX46CWum2cUppFwfXnTFQ7ZU3FmAemcQmkL3oj5%10"
-    val failure2 = "7xTVX46CWum2"
-    val failure3 = "7xTVX46CWum2cUppFwfXnTFQ7ZU3FmAemcQmkL3oj5DP7xTVX46CWum2cUppFwfXnTFQ7ZU3FmAemcQmkL3oj5DP"
+    val correctBase58 = Base16.Alphabet
+    val failure1 = correctBase58 + "GJHGAJAHDF!"
 
-    Get("/" + correctBase58) ~> base58EchoRoute ~> check {
-      responseAs[String] shouldBe "7xTVX46CWum2cUppFwfXnTFQ7ZU3FmAemcQmkL3oj5DP"
+    Get("/" + correctBase58) ~> base16EchoRoute ~> check {
+      responseAs[String] shouldBe Base16.Alphabet
     }
 
-    Get("/" + failure1) ~> base58EchoRoute ~> check {
-      rejection shouldBe CommonDirectives.base16ValidationError
-    }
-
-    Get("/" + failure2) ~> base58EchoRoute ~> check {
-      rejection shouldBe CommonDirectives.base16ValidationError
-    }
-
-    Get("/" + failure3) ~> base58EchoRoute ~> check {
+    Get("/" + failure1) ~> base16EchoRoute ~> check {
       rejection shouldBe CommonDirectives.base16ValidationError
     }
   }
