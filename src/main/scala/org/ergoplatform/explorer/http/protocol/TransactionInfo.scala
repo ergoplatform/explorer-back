@@ -8,8 +8,6 @@ case class TransactionInfo(id: String, inputs: List[InputInfo], outputs: List[Ou
 
 object TransactionInfo {
 
-  import org.ergoplatform.explorer.utils.Converter._
-
   /**
     * This method forms transactions info from soup of raw txs, inputs, outputs
     *
@@ -21,14 +19,14 @@ object TransactionInfo {
     txs.map { tx =>
       val relatedInputs = inputs.filter(_.txId == tx.id).map(InputInfo.apply)
       val relatedOutputs = outputs.filter(_.txId == tx.id).map(OutputInfo.apply)
-      val id = from16to58(tx.id)
+      val id = tx.id
       apply(id, relatedInputs, relatedOutputs)
     }
 
   implicit val encoder: Encoder[TransactionInfo] = (tx: TransactionInfo) => Json.obj(
-    ("id", Json.fromString(tx.id)),
-    ("inputs", tx.inputs.asJson),
-    ("outputs", tx.outputs.asJson)
+    "id" -> Json.fromString(tx.id),
+    "inputs" -> tx.inputs.asJson,
+    "outputs" -> tx.outputs.asJson
   )
 
 }

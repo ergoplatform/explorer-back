@@ -12,11 +12,9 @@ case class TransactionSummaryInfo(id: String,
 
 object TransactionSummaryInfo {
 
-  import org.ergoplatform.explorer.utils.Converter._
-
   def fromDb(tx: Transaction, height: Int, confirmationsCount: Int = 0): TransactionSummaryInfo =
     TransactionSummaryInfo(
-      id = from16to58(tx.id),
+      id = tx.id,
       miniBlockInfo = MiniBlockInfo(tx.blockId, height),
       timestamp = tx.timestamp,
       confirmationsCount = confirmationsCount,
@@ -25,11 +23,11 @@ object TransactionSummaryInfo {
     )
 
   implicit val encoder: Encoder[TransactionSummaryInfo] = (ts: TransactionSummaryInfo) => Json.obj(
-    ("id", Json.fromString(ts.id)),
-    ("timestamp", Json.fromLong(ts.timestamp)),
-    ("size", Json.fromInt(ts.size)),
-    ("confirmationsCount", Json.fromInt(ts.confirmationsCount)),
-    ("block", ts.miniBlockInfo.asJson)
+    "id" -> Json.fromString(ts.id),
+    "timestamp" -> Json.fromLong(ts.timestamp),
+    "size" -> Json.fromInt(ts.size),
+    "confirmationsCount" -> Json.fromInt(ts.confirmationsCount),
+    "block" -> ts.miniBlockInfo.asJson
   )
 
 }

@@ -67,7 +67,7 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
     }
   }
 
-  val base58EchoRoute = (get & base58IdPath) { s => complete(s) }
+  val base58EchoRoute = (get & base16Segment) { s => complete(s) }
 
   it should "read base58 strings from path correctly" in {
 
@@ -81,15 +81,15 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
     }
 
     Get("/" + failure1) ~> base58EchoRoute ~> check {
-      rejection shouldBe CommonDirectives.base58ValidationError
+      rejection shouldBe CommonDirectives.base16ValidationError
     }
 
     Get("/" + failure2) ~> base58EchoRoute ~> check {
-      rejection shouldBe CommonDirectives.base58ValidationError
+      rejection shouldBe CommonDirectives.base16ValidationError
     }
 
     Get("/" + failure3) ~> base58EchoRoute ~> check {
-      rejection shouldBe CommonDirectives.base58ValidationError
+      rejection shouldBe CommonDirectives.base16ValidationError
     }
   }
 

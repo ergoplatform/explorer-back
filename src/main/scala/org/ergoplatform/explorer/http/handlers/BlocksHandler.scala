@@ -20,7 +20,7 @@ class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with Comm
     getBlockById ~ getBlocks
   }
 
-  val getBlockById = (get & base58IdPath) { base58String =>
+  val getBlockById = (get & base16Segment) { base58String =>
     val f = bs.getBlock(base58String).unsafeToFuture()
     onSuccess(f) { info => complete(info) }
   }
@@ -31,7 +31,10 @@ class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with Comm
       val s = Sorting(sortBy = field, order = so)
       val items = bs.getBlocks(p, s, start, end)
       val count = bs.count()
-      val io = (items, count).parMapN((i, c) => ItemsResponse(i, c))
+      val io = for {
+        i <- items
+        c <- count
+      } yield ItemsResponse(i, c)
       val f = io.unsafeToFuture()
       onSuccess(f) { info => complete(info) }
   }

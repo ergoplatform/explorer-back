@@ -12,7 +12,7 @@ class TransactionsHandler(txs: TransactionsService[IO]) extends FailFastCirceSup
     getTxById
   }
 
-  def getTxById = (get & base58IdPath) { id =>
+  def getTxById = (get & base16Segment) { id =>
     val f = txs.getTxInfo(id).unsafeToFuture()
     onSuccess(f) { info => complete(info) }
   }
