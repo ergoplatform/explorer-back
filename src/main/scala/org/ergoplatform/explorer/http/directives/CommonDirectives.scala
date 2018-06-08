@@ -63,9 +63,15 @@ trait CommonDirectives {
   def checkValue[A](rej: Rejection)(value: A, f: A => Boolean): Option[Rejection] =
     if (f(value)) { None } else { Some(rej) }
 
-  val startEndDate: Directive[(Long, Long)] =
-    parameters(("startDate".as[Long] ? 0L, "endDate".as[Long] ? System.currentTimeMillis())).tflatMap { case (s, e) =>
-      if (s > e) {
+  val startEndDate: Directive[(Option[Long], Option[Long])] =
+    parameters(("startDate".as[Long].?, "endDate".as[Long].?)).tflatMap { case (s, e) =>
+
+      val check = (for {
+        start <- s
+        end <- e
+      } yield start > end).getOrElse(false)
+
+      if (check) {
         reject(malformedStartEndDateParam)
       } else {
         tprovide((s, e))
@@ -75,9 +81,6 @@ trait CommonDirectives {
 }
 
 object CommonDirectives {
-
-  val Base58IdStringMaxLength = 44
-  val Base58IdStringMinLength = 32
 
   val malformedTimespanParameter = MalformedQueryParamRejection(
     "timespan",

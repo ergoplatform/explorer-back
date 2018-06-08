@@ -29,13 +29,9 @@ class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with Comm
     (o, l, field, so, start, end) =>
       val p = Paging(offset = o, limit = l)
       val s = Sorting(sortBy = field, order = so)
-      val items = bs.getBlocks(p, s, start, end)
+      val items = bs.getBlocks(p, s, start.getOrElse(0L), end.getOrElse(System.currentTimeMillis()))
       val count = bs.count()
-      val io = for {
-        i <- items
-        c <- count
-      } yield ItemsResponse(i, c)
-      val f = io.unsafeToFuture()
+      val f = (items, count).parMapN { case (i, c) => ItemsResponse(i, c) }.unsafeToFuture()
       onSuccess(f) { info => complete(info) }
   }
 
