@@ -16,7 +16,7 @@ class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO]) ex
     getTxsByAddressId ~ getAddressById
   }
 
-  val getAddressById = (get & base58IdPath) { id =>
+  val getAddressById = (get & base16Segment) { id =>
     val f = as.getAddressInfo(id).unsafeToFuture()
     onSuccess(f) { info => complete(info) }
   }

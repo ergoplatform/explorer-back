@@ -1,27 +1,19 @@
 package org.ergoplatform.explorer.http.directives
 
-import cats.data._
-import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server._
+import cats.data._
 import org.ergoplatform.explorer.utils.SortOrder
-import scorex.crypto.encode.Base58
-
-import scala.concurrent.duration._
-import scala.util.Success
+import scorex.crypto.encode.Base16
 
 trait CommonDirectives {
 
   import CommonDirectives._
 
-  def isBase58IdStringLengthCorrect(s: String): Boolean = {
-    val l = s.length
-    l >= Base58IdStringMinLength && l <= Base58IdStringMaxLength
-  }
-
-  val base58IdPath: Directive1[String] = pathPrefix(Segment).flatMap(v =>
-    Base58.decode(v) match {
-      case Success(_) if isBase58IdStringLengthCorrect(v) => provide(v)
-      case _ => reject(base58ValidationError)
+  val base16Segment: Directive1[String] = pathPrefix(Segment).flatMap(v =>
+    v.forall(Base16.Alphabet.toSet.contains) match {
+      case true => provide(v)
+      case false => reject(base16ValidationError)
     }
   )
 
@@ -99,7 +91,7 @@ object CommonDirectives {
     None
   )
 
-  val base58ValidationError = ValidationRejection("String isn't a Base58 representation")
+  val base16ValidationError = ValidationRejection("String isn't a Base16 representation")
 
   def malformedSortDirectionParameter(value: String) = MalformedQueryParamRejection(
     "sortDirection",

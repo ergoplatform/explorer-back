@@ -9,7 +9,6 @@ import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, SearchBlock}
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
-import org.ergoplatform.explorer.utils.Converter._
 
 import scala.concurrent.ExecutionContext
 
@@ -44,8 +43,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def getBlock(id: String): F[BlockSummaryInfo] = for {
     _ <- Async.shift[F](ec)
-    base16Id = from58to16(id)
-    result <- getBlockResult(base16Id)
+    result <- getBlockResult(id)
   } yield result
 
   private def getBlockResult(id: String): F[BlockSummaryInfo] = (for {

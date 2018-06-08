@@ -8,7 +8,6 @@ import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
-import org.ergoplatform.explorer.utils.Converter._
 import org.ergoplatform.explorer.utils.Paging
 
 import scala.concurrent.ExecutionContext
@@ -35,8 +34,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def getTxInfo(id: String): F[TransactionSummaryInfo] = for {
     _ <- Async.shift[F](ec)
-    base16Id <- F.pure(from58to16(id))
-    result <- getTxInfoResult(base16Id)
+    result <- getTxInfoResult(id)
   } yield result
 
   private def getTxInfoResult(id: String): F[TransactionSummaryInfo] = (for {
@@ -48,8 +46,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]] = for {
     _ <- Async.shift[F](ec)
-    base16Id <- F.pure(from58to16(addressId))
-    result <- getTxsByAddressIdResult(base16Id, p)
+    result <- getTxsByAddressIdResult(addressId, p)
   } yield result
 
   private def getTxsByAddressIdResult(addressId: String, p: Paging): F[List[TransactionInfo]] = (for {
@@ -61,8 +58,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   def countTxsByAddressId(addressId: String): F[Long] = for {
     _ <- Async.shift[F](ec)
-    base16Id <- F.pure(from58to16(addressId))
-    result <- getTxsCountByAddressIdResult(base16Id)
+    result <- getTxsCountByAddressIdResult(addressId)
   } yield result
 
   private def getTxsCountByAddressIdResult(addressId: String): F[Long] =

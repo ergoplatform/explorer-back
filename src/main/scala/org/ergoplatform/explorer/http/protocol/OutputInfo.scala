@@ -7,21 +7,20 @@ case class OutputInfo(id: String, value: Long, script: String, hash: String, spe
 
 object OutputInfo {
 
-  import org.ergoplatform.explorer.utils.Converter._
 
   def apply(o: Output): OutputInfo = OutputInfo(
-    from16to58(o.id),
+    o.id,
     o.value,
-    from16to58(o.script),
-    from16to58(o.hash),
+    o.script,
+    if (o.hash.startsWith("cd0703")) {o.hash} else { "Unable to decode output address."},
     o.spent
   )
 
   implicit val encoder: Encoder[OutputInfo] = (o: OutputInfo) => Json.obj(
-    ("id", Json.fromString(o.id)),
-    ("value", Json.fromLong(o.value)),
-    ("script", Json.fromString(o.script)),
-    ("hash", Json.fromString(o.hash)),
-    ("spent", Json.fromBoolean(o.spent))
+    "id" -> Json.fromString(o.id),
+    "value" -> Json.fromLong(o.value),
+    "script" -> Json.fromString(o.script),
+    "hash" -> Json.fromString(o.hash),
+    "spent" -> Json.fromBoolean(o.spent)
   )
 }

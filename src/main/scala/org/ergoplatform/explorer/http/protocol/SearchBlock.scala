@@ -3,7 +3,6 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models.Header
-import org.ergoplatform.explorer.utils.Converter._
 
 case class SearchBlock(id: String,
                        height: Int,
@@ -14,10 +13,8 @@ case class SearchBlock(id: String,
 
 object SearchBlock {
 
-  import org.ergoplatform.explorer.utils.Converter._
-
   def fromHeader(h: Header, txsCount: Int): SearchBlock = SearchBlock(
-    id = from16to58(h.id),
+    id = h.id,
     height = h.height,
     timestamp = h.timestamp,
     transactionsCount = txsCount,

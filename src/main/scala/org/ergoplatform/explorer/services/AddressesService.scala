@@ -8,7 +8,6 @@ import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao.OutputsDao
 import org.ergoplatform.explorer.http.protocol.AddressInfo
-import org.ergoplatform.explorer.utils.Converter._
 
 import scala.concurrent.ExecutionContext
 
@@ -25,8 +24,7 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def getAddressInfo(addressId: String): F[AddressInfo] = for {
     _ <- Async.shift[F](ec)
-    base16Id <- F.pure(from58to16(addressId))
-    info <- getAddressInfoResult(base16Id)
+    info <- getAddressInfoResult(addressId)
   } yield info
 
   private def getAddressInfoResult(addressId: String): F[AddressInfo] = outputsDao
