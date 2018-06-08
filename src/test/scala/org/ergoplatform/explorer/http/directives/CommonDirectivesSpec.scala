@@ -132,15 +132,15 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
 
   it should "read start end date correctly" in {
     Get("/") ~> startEndEcho ~> check {
-      responseAs[String].startsWith("0:") shouldBe true
+      responseAs[String].startsWith("None:None") shouldBe true
     }
 
     Get("/?endDate=100") ~> startEndEcho ~> check {
-      responseAs[String] shouldBe "0:100"
+      responseAs[String] shouldBe "None:Some(100)"
     }
 
     Get("/?startDate=10&endDate=100") ~> startEndEcho ~> check {
-      responseAs[String] shouldBe "10:100"
+      responseAs[String] shouldBe "Some(10):Some(100)"
     }
 
     Get("/?startDate=100&endDate=10") ~> startEndEcho ~> check {
