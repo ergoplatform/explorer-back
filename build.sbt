@@ -8,16 +8,16 @@ scalaVersion := "2.12.5"
 
 resolvers += Resolver.bintrayRepo("hseeberger", "maven")
 
-lazy val doobieVersion = "0.5.2"
+lazy val doobieVersion = "0.5.3"
 lazy val akkaHttpVersion = "10.1.1"
 lazy val akkaVersion = "2.5.12"
 lazy val catsVersion = "1.1.0"
 
 lazy val doobieDeps = Seq(
-  "org.tpolecat" %% "doobie-core"     % doobieVersion,
-  "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "org.tpolecat" %% "doobie-specs2"   % doobieVersion,
-  "org.tpolecat" %% "doobie-hikari"   % doobieVersion
+  "org.tpolecat" %% "doobie-core"      % doobieVersion,
+  "org.tpolecat" %% "doobie-postgres"  % doobieVersion,
+  "org.tpolecat" %% "doobie-scalatest" % doobieVersion,
+  "org.tpolecat" %% "doobie-hikari"    % doobieVersion
 )
 
 lazy val catsDeps = Seq(
@@ -39,13 +39,16 @@ lazy val otherDeps = Seq(
   "com.github.pureconfig" %% "pureconfig" % "0.9.1",
   "org.scorexfoundation" %% "scrypto" % "2.1.1",
   "de.heikoseeberger" %% "akka-http-circe" % "1.20.1",
-  "io.circe" %% "circe-core" % "0.9.3"
+  "io.circe" %% "circe-core" % "0.9.3",
+  "org.flywaydb" % "flyway-core" % "5.1.1"
 )
 
 lazy val testDeps = Seq(
   "org.scalacheck" %% "scalacheck" % "1.14.0",
   "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % Test
+  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
+  "org.testcontainers" % "postgresql" % "1.7.3" % Test,
+  "com.dimafeng" %% "testcontainers-scala" % "0.18.0" % Test
 )
 
 libraryDependencies ++= (otherDeps ++ doobieDeps ++ catsDeps ++ loggingDeps ++ akkaDeps ++ testDeps)
