@@ -12,11 +12,6 @@ object ChartSingleData {
 
   def toAvgBlockSizeData(s: StatRecord): ChartSingleData[Long] = ChartSingleData(s.timestamp, s.avgBlockSize)
 
-  def toMarketPrice(s: StatRecord): ChartSingleData[UsdPriceInfo] = ChartSingleData(
-    s.timestamp,
-    UsdPriceInfo(s.marketPriceUsd)
-  )
-
   implicit def encoder[D: Encoder]: Encoder[ChartSingleData[D]] = (d: ChartSingleData[D]) => Json.obj(
     "timestamp" -> Json.fromLong(d.timestamp),
     "value" -> d.value.asJson

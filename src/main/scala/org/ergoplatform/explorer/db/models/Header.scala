@@ -15,5 +15,5 @@ case class Header(id: String,
                   adProofs: Option[Array[Byte]] = None,
                   txCount: Long,
                   minerName: String,
-                  minerAddress: String) extends Entity[String]
+                  minerAddress: String)
 

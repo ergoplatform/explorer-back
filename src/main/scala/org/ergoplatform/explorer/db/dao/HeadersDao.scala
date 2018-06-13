@@ -1,63 +1,75 @@
 package org.ergoplatform.explorer.db.dao
 
-import doobie.Composite
-import doobie.free.connection.ConnectionIO
-import doobie.util.fragment.Fragment
+import cats.data._, cats.implicits._
+import doobie._, doobie.implicits._, doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Header
 
-class HeadersDao extends BaseDoobieDao[String, Header] {
 
-  override def table: String = "headers"
+class HeadersDao {
 
-  override def fields: Seq[String] = Seq(
-    "id",
-    "parent_id",
-    "version",
-    "height",
-    "ad_proofs_root",
-    "state_root",
-    "transactions_root",
-    "ts",
-    "n_bits",
-    "extension_hash",
-    "block_size",
-    "equihash_solution",
-    "ad_proofs",
-    "tx_count",
-    "miner_name",
-    "miner_address"
-  )
+  val fields = HeadersOps.fields
 
-  def whereByTs(s: Long, e: Long): Fragment = Fragment.const(
-    s"WHERE (ts <= $e) AND (ts >= $s)"
-  )
-
-  def getLastN(count: Int = 20)
-              (implicit e: Composite[Header]): ConnectionIO[List[Header]] = {
-    val sql = selectAllFromFr ++ sortByFr("height", "DESC") ++ limitFr(count)
-    sql.query[Header].stream.compile.toList
+  def insert(h: Header): ConnectionIO[Header] = {
+    HeadersOps
+      .insert
+      .withUniqueGeneratedKeys[Header](fields: _*)(h)
   }
 
-  def getHeightById(id: String): ConnectionIO[Int] = {
-    val sql = s"SELECT height from $table WHERE id = '$id'"
-    Fragment.const(sql).query[Int].unique
+  def insertMany(list: List[Header]): ConnectionIO[List[Header]] = {
+    HeadersOps
+      .insert
+      .updateManyWithGeneratedKeys[Header](fields: _*)(list)
+      .compile
+      .to[List]
   }
 
-  def findNextBlockId(id: String): ConnectionIO[Option[String]] = {
-    val sql = s"SELECT id from $table WHERE parent_id = '$id'"
-    Fragment.const(sql).query[String].option
+  def update(h: Header): ConnectionIO[Header] = {
+    HeadersOps
+      .update
+      .withUniqueGeneratedKeys[Header](fields: _*)(h -> h.id)
   }
 
-  def listByDate(offset: Int = 0,
-                 limit: Int = 20,
-                 sortBy: String = idFieldName,
-                 sortOder: String = "ASC",
-                 startTs: Long,
-                 endTs: Long)
-                (implicit e: Composite[Header]): ConnectionIO[List[Header]] = {
-    val sql = selectAllFromFr ++ whereByTs(startTs, endTs) ++
-      sortByFr(sortBy, sortOder) ++ limitFr(limit) ++ offsetFr(offset)
-    sql.query[Header].stream.compile.toList
+  def updateMany(list: List[Header]): ConnectionIO[List[Header]] = {
+    HeadersOps
+      .update
+      .updateManyWithGeneratedKeys[Header](fields: _*)(list.map(h => h -> h.id))
+      .compile
+      .to[List]
   }
+
+  def find(id: String): ConnectionIO[Option[Header]] = HeadersOps.select(id).option
+
+  def findByParentId(parentId: String): ConnectionIO[Option[Header]] = HeadersOps.selectByParentId(parentId).option
+
+  def get(id: String): ConnectionIO[Header] = find(id).flatMap {
+    case Some(h) => h.pure[ConnectionIO]
+    case None => doobie.free.connection.raiseError(
+      new NoSuchElementException(s"Cannot find header with id = $id")
+    )
+  }
+
+  def getByParentId(parentId: String): ConnectionIO[Header] = findByParentId(parentId).flatMap {
+    case Some(h) => h.pure[ConnectionIO]
+    case None => doobie.free.connection.raiseError(
+      new NoSuchElementException(s"Cannot find header with parentId = $parentId")
+    )
+  }
+
+  def count: ConnectionIO[Long] = HeadersOps.count.unique
+
+  def getLast(limit: Int = 20): ConnectionIO[List[Header]] = HeadersOps.selectLast(limit).to[List]
+
+  def getHeightById(id: String): ConnectionIO[Int] = HeadersOps.selectHeight(id).option.flatMap {
+    case Some(h) => h.pure[ConnectionIO]
+    case None => (-1).pure[ConnectionIO]
+  }
+
+  def list(offset: Int = 0,
+           limit: Int = 20,
+           sortBy: String = "height",
+           sortOrder: String = "DESC",
+           startTs: Long,
+           endTs: Long): ConnectionIO[List[Header]] =
+    HeadersOps.list(offset, limit, sortBy, sortOrder, startTs, endTs).to[List]
 
 }

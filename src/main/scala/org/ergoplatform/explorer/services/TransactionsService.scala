@@ -40,7 +40,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   private def getTxInfoResult(id: String): F[TransactionSummaryInfo] = (for {
     tx <- transactionsDao.get(id)
     h <- headersDao.getHeightById(tx.blockId)
-    currentHeight <- headersDao.getLastN(1).map(_.headOption.map(_.height).getOrElse(0))
+    currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0))
     info = TransactionSummaryInfo.fromDb(tx, h, currentHeight - h)
   } yield info).transact(xa)
 

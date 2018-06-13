@@ -11,7 +11,8 @@ object AddressInfo {
     val related = os.filter(_.hash == addressId)
     val count = related.map(_.txId).distinct.length
     val receivedSummary = related.map(_.value).sum
-    val currentBalance = related.filter(_.spent == false).map(_.value).sum
+    //TODO: count real unspent amount via db query
+    val currentBalance = receivedSummary
 
     AddressInfo(addressId, count, receivedSummary, currentBalance)
   }

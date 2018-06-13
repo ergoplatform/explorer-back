@@ -13,7 +13,8 @@ object OutputInfo {
     o.value,
     o.script,
     if (o.hash.startsWith("cd0703")) {o.hash} else { "Unable to decode output address."},
-    o.spent
+    //TODO: need real value
+    true
   )
 
   implicit val encoder: Encoder[OutputInfo] = (o: OutputInfo) => Json.obj(

@@ -9,7 +9,7 @@ object HeadersGen {
 
   val rootId = Base16.encode(Array.fill(32)(1: Byte))
 
-  val initBlock = headerGen(rootId, -1).sample.get.copy(id = rootId)
+  val initBlock = headerGen(rootId, -1).sample.get.copy(id = rootId, parentId = Base16.encode(Array.fill(32)(0: Byte)))
 
   def headerGen(parentId: String, height: Int): Gen[Header] = for {
     id <- generateDigestStringBase16(32)

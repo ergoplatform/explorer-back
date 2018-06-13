@@ -7,13 +7,13 @@ import org.ergoplatform.explorer.db.models.Header
 case class SearchBlock(id: String,
                        height: Int,
                        timestamp: Long,
-                       transactionsCount: Int,
+                       transactionsCount: Long,
                        miner: MinerInfo,
                        size: Long)
 
 object SearchBlock {
 
-  def fromHeader(h: Header, txsCount: Int): SearchBlock = SearchBlock(
+  def fromHeader(h: Header, txsCount: Long): SearchBlock = SearchBlock(
     id = h.id,
     height = h.height,
     timestamp = h.timestamp,
@@ -26,7 +26,7 @@ object SearchBlock {
     "id" -> Json.fromString(b.id),
     "height" -> Json.fromInt(b.height),
     "timestamp" -> Json.fromLong(b.timestamp),
-    "transactionsCount" -> Json.fromInt(b.transactionsCount),
+    "transactionsCount" -> Json.fromLong(b.transactionsCount),
     "miner" -> b.miner.asJson,
     "size" -> Json.fromLong(b.size)
   )

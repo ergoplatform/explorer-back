@@ -48,8 +48,8 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def getBlockResult(id: String): F[BlockSummaryInfo] = (for {
     h <- headersDao.get(id)
-    nextIdOpt <- headersDao.findNextBlockId(h.id)
-    references = BlockReferencesInfo(h.parentId, nextIdOpt)
+    nextIdOpt <- headersDao.findByParentId(h.id)
+    references = BlockReferencesInfo(h.parentId, nextIdOpt.map(_.id))
     links <- interlinksDao.findAllByBlockId(h.id)
     txs <- transactionsDao.findAllByBlockId(h.id)
     txsIds = txs.map(_.id)
@@ -63,11 +63,11 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   } yield result
 
   private def getBlocksResult(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = (for {
-    h <- headersDao.listByDate(p.offset, p.limit, s.sortBy, s.order.toString, start, end)
+    h <- headersDao.list(p.offset, p.limit, s.sortBy, s.order.toString, start, end)
     hIds = h.map(_.id)
     txsCnt <- transactionsDao.countTxsNumbersByBlocksIds(hIds)
     result = h
-      .map { h => h -> txsCnt.find(_._1 == h.id).map(_._2).getOrElse(0) }
+      .map { h => h -> txsCnt.find(_._1 == h.id).map(_._2).getOrElse(0L) }
       .map{ case (info, count) => SearchBlock.fromHeader(info, count)}
   } yield result).transact[F](xa)
 
