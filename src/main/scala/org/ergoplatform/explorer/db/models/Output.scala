@@ -4,4 +4,4 @@ case class Output(id: String,
                   txId: String,
                   value: Long,
                   script: String,
-                  hash: String) extends Entity[String]
+                  hash: String)

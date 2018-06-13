@@ -14,7 +14,7 @@ class TransactionsOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
 
   lazy val transactor: Transactor[IO] = xa
 
-  it should "perform aueries on transactions table" in {
+  it should "perform queries on transactions table" in {
     check(insert)
     check(select(""))
     check(findAllByBlockId(""))

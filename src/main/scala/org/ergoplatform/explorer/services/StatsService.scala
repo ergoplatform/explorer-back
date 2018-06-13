@@ -20,8 +20,6 @@ trait StatsService[F[_]] {
   def totalCoinsForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
   def avgBlockSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
-
-  def marketPriceUsdForDuration(daysBack: Int): F[List[ChartSingleData[UsdPriceInfo]]]
 }
 
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -49,19 +47,10 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     result <- statsDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
-  def marketPriceUsdForDuration(d: Int): F[List[ChartSingleData[UsdPriceInfo]]] = for {
-    _ <- Async.shift[F](ec)
-    result <- statsDao.marketPriceGroupedByDay(d).map(statsToUsdPriceInfo).transact[F](xa)
-  } yield result
-
-
   private def statRecordToStatsSummary(s: Option[StatRecord]): Option[StatsSummary] = s.map(StatsSummary.apply)
 
   private def statRecordToBlockchainInfo(s: Option[StatRecord]): Option[BlockchainInfo] = s.map(BlockchainInfo.apply)
 
   private def pairsToChartData(list: List[(Long, Long)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data) => ChartSingleData(ts, data)}
-
-  private def statsToUsdPriceInfo(list: List[(Long, Long)]): List[ChartSingleData[UsdPriceInfo]] =
-    list.map{ case (ts, price) => ChartSingleData(ts, UsdPriceInfo(price))}
 }
