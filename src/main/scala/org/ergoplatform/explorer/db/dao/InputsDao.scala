@@ -1,26 +1,28 @@
 package org.ergoplatform.explorer.db.dao
 
-import doobie.free.connection.ConnectionIO
-import doobie.util.composite.Composite
-import doobie.util.fragment.Fragment
+import cats.data._
+import cats.implicits._
+import doobie._
+import doobie.implicits._
+import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Input
 
-class InputsDao extends BaseDoobieDao[String, Input] {
-  override def table: String = "inputs"
+class InputsDao {
 
-  override def fields: Seq[String] = Seq(
-    "id",
-    "tx_id",
-    "output",
-    "signature"
-  )
+  val fields = InputsOps.fields
 
-  def findAllByTxId(txId: String)(implicit c: Composite[Input]): ConnectionIO[List[Input]] = {
-    (selectAllFromFr ++ Fragment.const(s"WHERE tx_id = '$txId'")).query[Input].to[List]
+  def insert(i: Input): ConnectionIO[Input] = InputsOps.insert.withUniqueGeneratedKeys[Input](fields: _*)(i)
+
+  def insertMany(list: List[Input]): ConnectionIO[List[Input]] =
+    InputsOps.insert.updateManyWithGeneratedKeys[Input](fields: _*)(list).compile.to[List]
+
+  def findAllByTxId(txId: String): ConnectionIO[List[Input]] = InputsOps.findAllByTxId(txId).to[List]
+
+  def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Input]] = NonEmptyList.fromList(txsId) match {
+    case Some(ids) => InputsOps.findAllByTxsId(ids).to[List]
+    case None => doobie.free.connection.raiseError(
+      new IllegalArgumentException(s"Cannot find inputs for empty txIds list")
+    )
   }
 
-  def findAllByTxsId(txsId: List[String])(implicit c: Composite[Input]): ConnectionIO[List[Input]] = {
-    val inList = txsId.map { v => "'" + v + "'" }.mkString("(", ", ", ")")
-    (selectAllFromFr ++ Fragment.const(s"WHERE tx_id in $inList")).query[Input].to[List]
-  }
 }

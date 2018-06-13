@@ -16,7 +16,7 @@ import scala.util.Random
 
 class HeadersDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
 
-  it should "insert,update,select from db correctly" in {
+  it should "insert,update,select from db" in {
 
     val dao = new HeadersDao
 

@@ -1,58 +1,44 @@
 package org.ergoplatform.explorer.db.dao
 
-import doobie.{Composite, ConnectionIO, Fragment}
+import cats.data._
+import cats.implicits._
+import doobie._
+import doobie.implicits._
+import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Transaction
-import org.ergoplatform.explorer.utils.Paging
 
-class TransactionsDao extends BaseDoobieDao[String, Transaction] {
-  override def table: String = "transactions"
+class TransactionsDao {
 
-  override def fields: Seq[String] = Seq(
-    "id",
-    "block_id",
-    "is_coinbase",
-    "ts"
-  )
+  val fields = TransactionsOps.fields
 
-  def findAllByBlockId(blockId: String)(implicit c: Composite[Transaction]): ConnectionIO[List[Transaction]] = {
-    (selectAllFromFr ++ Fragment.const(s"WHERE block_id = '$blockId'")).query[Transaction].to[List]
-  }
+  def insert(t: Transaction): ConnectionIO[Transaction] =
+    TransactionsOps.insert.withUniqueGeneratedKeys[Transaction](fields: _*)(t)
 
-  def countTxsNumbersByBlocksIds(ids: List[String]): ConnectionIO[List[(String, Int)]] = {
-    val blockIds = BaseDoobieDao.collectionToInArgument(ids)
-    val sql = s"SELECT block_id, count(*) FROM $table WHERE block_id in $blockIds GROUP BY block_id";
-    Fragment.const(sql).query[(String, Int)].to[List]
-  }
+  def insertMany(txs: List[Transaction]): ConnectionIO[List[Transaction]] =
+    TransactionsOps.insert.updateManyWithGeneratedKeys[Transaction](fields: _*)(txs).compile.to[List]
 
-  def getTxsByAddressId(addressId: String, offset: Int = 0, limit: Int = 20): ConnectionIO[List[Transaction]] = {
-    val sql =
-      s"""
-         |SELECT t.id, t.block_id, t.is_coinbase, t.ts
-         |FROM transactions t
-         |WHERE EXISTS (
-         |  SELECT 1
-         |  FROM transactions ti LEFT JOIN outputs os
-         |  ON t.id = os.tx_id
-         |  WHERE os.hash = '$addressId'
-         |)
-         |ORDER BY t.ts DESC
-         |OFFSET $offset LIMIT $limit
-         """.stripMargin
-    Fragment.const(sql).query[Transaction].to[List]
-  }
+  def findAllByBlockId(blockId: String): ConnectionIO[List[Transaction]] =
+    TransactionsOps.findAllByBlockId(blockId).to[List]
 
-  def countTxsByAddressId(addressId: String, offset: Int = 0, limit: Int = 20): ConnectionIO[Long] = {
-    val sql =
-      s"""
-         |SELECT COUNT(t.id)
-         |FROM transactions t
-         |WHERE EXISTS (
-         |  SELECT 1
-         |  FROM transactions ti LEFT JOIN outputs os
-         |  ON t.id = os.tx_id
-         |  WHERE os.hash = '$addressId'
-         |)
-         """.stripMargin
-    Fragment.const(sql).query[Long].unique
+  def countTxsNumbersByBlocksIds(ids: List[String]): ConnectionIO[List[(String, Long)]] =
+    NonEmptyList.fromList(ids) match {
+      case Some(l) => TransactionsOps.countTxsNumbersByBlocksIds(l).to[List]
+      case None => doobie.free.connection.raiseError(
+        new IllegalArgumentException(s"Cannot find tx counts for empty blockIds list")
+      )
+    }
+
+  def getTxsByAddressId(addressId: String, offset: Int = 0, limit: Int = 20): ConnectionIO[List[Transaction]] =
+    TransactionsOps.getTxsByAddressId(addressId, offset, limit).to[List]
+
+  def countTxsByAddressId(addressId: String): ConnectionIO[Long] = TransactionsOps.countTxsByAddressId(addressId).unique
+
+  def find(id: String): ConnectionIO[Option[Transaction]] = TransactionsOps.select(id).option
+
+  def get(id: String): ConnectionIO[Transaction] = find(id).flatMap{
+    case Some(t) => t.pure[ConnectionIO]
+    case None => doobie.free.connection.raiseError(
+      new NoSuchElementException(s"Cannot find transaction with id = $id")
+    )
   }
 }

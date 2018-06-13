@@ -47,10 +47,9 @@ CREATE INDEX "transactions__block_id" on transactions (block_id);
 CREATE TABLE outputs (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   tx_id VARCHAR(64) NOT NULL REFERENCES transactions (id),
-  value BIGINT,
-  spent BOOLEAN NOT NULL DEFAULT FALSE,
-  script VARCHAR,
-  hash VARCHAR
+  value BIGINT NOT NULL,
+  script VARCHAR NOT NULL,
+  hash VARCHAR NOT NULL
 );
 
 ALTER TABLE outputs OWNER to ergo;
@@ -86,9 +85,7 @@ CREATE TABLE blockchain_stats (
   version VARCHAR NOT NULL,
   supply BIGINT NOT NULL,
   market_cap BIGINT NOT NULL,
-  hashrate BIGINT NOT NULL,
-  market_price_usd BIGINT NOT NULL,
-  market_price_btc BIGINT NOT NULL
+  hashrate BIGINT NOT NULL
 );
 
 CREATE INDEX "blockchain_stats__ts" ON blockchain_stats (ts);

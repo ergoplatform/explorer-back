@@ -67,7 +67,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     hIds = h.map(_.id)
     txsCnt <- transactionsDao.countTxsNumbersByBlocksIds(hIds)
     result = h
-      .map { h => h -> txsCnt.find(_._1 == h.id).map(_._2).getOrElse(0) }
+      .map { h => h -> txsCnt.find(_._1 == h.id).map(_._2).getOrElse(0L) }
       .map{ case (info, count) => SearchBlock.fromHeader(info, count)}
   } yield result).transact[F](xa)
 

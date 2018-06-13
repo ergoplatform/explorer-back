@@ -15,7 +15,7 @@ class HeadersOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
   val h = HeadersGen.headerGen("test", 1).sample.get
 
-  it should "perform queries on headers table correclty" in {
+  it should "perform queries on headers table" in {
     check(select(""))
     check(selectByParentId(""))
     check(selectLast(10))

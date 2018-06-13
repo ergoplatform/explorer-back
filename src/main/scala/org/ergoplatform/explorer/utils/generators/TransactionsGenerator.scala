@@ -22,11 +22,9 @@ object TransactionsGenerator {
     ids <- Gen.listOfN(number, generateDigestStringBase16(32))
     addresses <- Gen.listOfN(number, generateDigestStringBase16(32))
     outputs = ids.zip(addresses).zip(values).map { case ((id, a), v) =>
-      Output(id, txId, v, false, "", a)
+      Output(id, txId, v, "", a)
     }
   } yield outputs
-
-
 
   def generate(blockId: String, isCoinbase: Boolean = false): Gen[Transaction] =
     Gen.listOfN(32, arbByte.arbitrary).map { l => Transaction(Base16.encode(l.toArray), blockId, isCoinbase, System.currentTimeMillis()) }
@@ -60,12 +58,12 @@ object TransactionsGenerator {
 
           val oId1 = generateDigestStringBase16(32).sample.get
           val v1 = o.value / 2
-          val o1 = Output(oId1, txId, v1, false, "", o.hash)
+          val o1 = Output(oId1, txId, v1, "", o.hash)
 
           val oId2 = generateDigestStringBase16(32).sample.get
           val a2 = generateDigestStringBase16(32).sample.get
           val v2 = o.value - v1
-          val o2 = Output(oId2, txId, v2, false, "", a2)
+          val o2 = Output(oId2, txId, v2, "", a2)
 
           (i , List(o1, o2))
         }
@@ -77,7 +75,7 @@ object TransactionsGenerator {
         }
 
         txs ++= newTxs
-        osSpent ++= osNotSpent.map(_.copy(spent = true))
+        osSpent ++= osNotSpent
         osNotSpent = outputs
         is ++= inputs
       }

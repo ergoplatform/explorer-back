@@ -47,7 +47,7 @@ object DbDataGenerator extends App {
 
     logger.info("interlinks...")
     val interlinksData = InterlinksGenerator.generateInterlinks(blocks)
-    val linksCount = linksDao.insertManyData(interlinksData).transact(xa).unsafeRunSync().length
+    val linksCount = linksDao.insertMany(interlinksData).transact(xa).unsafeRunSync().length
 
     logger.info("transaction related data...")
     val data = TransactionsGenerator.generateSomeData(blocks)

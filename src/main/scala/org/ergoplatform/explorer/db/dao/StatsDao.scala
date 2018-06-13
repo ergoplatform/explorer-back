@@ -28,9 +28,7 @@ class StatsDao extends BaseDoobieDao[Long, StatRecord] {
     "version",
     "supply",
     "market_cap",
-    "hashrate",
-    "market_price_usd",
-    "market_price_btc"
+    "hashrate"
   )
 
   def findLast: ConnectionIO[Option[StatRecord]] = {
