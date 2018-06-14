@@ -15,6 +15,7 @@ class StatsOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IO
   it should "perform queries on stats table" in new {
     check(findLast(10))
     check(insert)
+    check(difficultiesSumSince(0L))
   }
 
 }

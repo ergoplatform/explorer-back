@@ -23,9 +23,7 @@ class TransactionsDao {
   def countTxsNumbersByBlocksIds(ids: List[String]): ConnectionIO[List[(String, Long)]] =
     NonEmptyList.fromList(ids) match {
       case Some(l) => TransactionsOps.countTxsNumbersByBlocksIds(l).to[List]
-      case None => doobie.free.connection.raiseError(
-        new IllegalArgumentException(s"Cannot find tx counts for empty blockIds list")
-      )
+      case None => List.empty[(String, Long)].pure[ConnectionIO]
     }
 
   def getTxsByAddressId(addressId: String, offset: Int = 0, limit: Int = 20): ConnectionIO[List[Transaction]] =

@@ -8,7 +8,7 @@ import org.ergoplatform.explorer.services.StatsService
 
 class InfoHandler(ss: StatsService[IO]) extends FailFastCirceSupport {
 
-  val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L, 0L)
+  val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
 
   val route = (pathPrefix("info") & get) {
     val f = ss.findBlockchainInfo.unsafeToFuture()
