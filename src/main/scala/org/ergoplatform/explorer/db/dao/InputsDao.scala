@@ -20,9 +20,7 @@ class InputsDao {
 
   def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Input]] = NonEmptyList.fromList(txsId) match {
     case Some(ids) => InputsOps.findAllByTxsId(ids).to[List]
-    case None => doobie.free.connection.raiseError(
-      new IllegalArgumentException(s"Cannot find inputs for empty txIds list")
-    )
+    case None => List.empty[Input].pure[ConnectionIO]
   }
 
 }

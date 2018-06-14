@@ -20,10 +20,14 @@ trait StatsService[F[_]] {
   def totalCoinsForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
   def avgBlockSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+
 }
 
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                         (implicit F: Monad[F], A: Async[F]) extends StatsService[F] {
+
+  private val SecondsIn24H: Long = (24*60*60).toLong
+  private val MillisIn24H: Long = SecondsIn24H * 1000L
 
   val statsDao = new StatsDao
 
@@ -35,7 +39,8 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   override def findBlockchainInfo: F[Option[BlockchainInfo]] = for {
     _ <- Async.shift[F](ec)
     result <- statsDao.findLast.map(statRecordToBlockchainInfo).transact[F](xa)
-  } yield result
+    hashrate <- hashRate24H
+  } yield result.map{v => v.copy(hashRate = hashrate)}
 
   override def totalCoinsForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
@@ -46,6 +51,11 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     _ <- Async.shift[F](ec)
     result <- statsDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
+
+  private def hashRate24H: F[Long] = for {
+    difficulties <- statsDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
+    hashrate = difficulties.map { v => v / SecondsIn24H }.getOrElse(0L)
+  } yield hashrate
 
   private def statRecordToStatsSummary(s: Option[StatRecord]): Option[StatsSummary] = s.map(StatsSummary.apply)
 

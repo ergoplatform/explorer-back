@@ -20,9 +20,7 @@ class OutputsDao {
 
   def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Output]] = NonEmptyList.fromList(txsId) match {
     case Some(ids) => OutputsOps.findAllByTxsId(ids).to[List]
-    case None => doobie.free.connection.raiseError(
-      new IllegalArgumentException(s"Cannot find outputs for empty txIds list")
-    )
+    case None => List.empty[Output].pure[ConnectionIO]
   }
 
   def findAllByAddressId(address: String)(implicit c: Composite[Output]): ConnectionIO[List[Output]] =

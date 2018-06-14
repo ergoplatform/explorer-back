@@ -39,9 +39,11 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def getTxInfoResult(id: String): F[TransactionSummaryInfo] = (for {
     tx <- transactionsDao.get(id)
+    is <- inputDao.findAllByTxId(tx.id)
+    os <- outputDao.findAllByTxId(tx.id)
     h <- headersDao.getHeightById(tx.blockId)
     currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0))
-    info = TransactionSummaryInfo.fromDb(tx, h, currentHeight - h)
+    info = TransactionSummaryInfo.fromDb(tx, h, currentHeight - h, is, os)
   } yield info).transact(xa)
 
   def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]] = for {

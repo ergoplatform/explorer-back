@@ -38,6 +38,10 @@ object StatsOps {
   def findLast(cnt: Int = 10): Query0[StatRecord] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blockchain_stats ORDER BY ts DESC LIMIT ${cnt.toLong}").query[StatRecord]
 
+  def difficultiesSumSince(ts: Long): Query0[Long] = {
+    fr"SELECT CAST(SUM(ts) as BIGINT) FROM blockchain_stats WHERE ts >= $ts".query[Long]
+  }
+
   def totalCoinsGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
     val selectStr = "min(ts) as t, max(total_coins)"
     groupedByDayStatsPair(lastDays, selectStr)
