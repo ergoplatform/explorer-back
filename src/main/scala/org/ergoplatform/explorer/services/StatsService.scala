@@ -54,7 +54,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def hashRate24H: F[Long] = for {
     difficulties <- statsDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
-    hashrate = difficulties.map { v => v / SecondsIn24H }.getOrElse(0L)
+    hashrate = difficulties / SecondsIn24H
   } yield hashrate
 
   private def statRecordToStatsSummary(s: Option[StatRecord]): Option[StatsSummary] = s.map(StatsSummary.apply)

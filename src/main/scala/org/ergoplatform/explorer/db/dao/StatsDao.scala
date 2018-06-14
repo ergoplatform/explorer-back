@@ -26,6 +26,6 @@ class StatsDao {
   def avgBlockSizeGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
     StatsOps.avgBlockSizeGroupedByDay(lastDays).to[List]
 
-  def difficultiesSumSince(ts: Long): ConnectionIO[Option[Long]] = StatsOps.difficultiesSumSince(ts).option
+  def difficultiesSumSince(ts: Long): ConnectionIO[Long] = StatsOps.difficultiesSumSince(ts).unique
 
 }

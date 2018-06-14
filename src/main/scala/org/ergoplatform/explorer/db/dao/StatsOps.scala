@@ -1,9 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie._
-import doobie.free.connection.ConnectionIO
 import doobie.implicits._
-import doobie.postgres.implicits._
 import doobie.util.fragment.Fragment
 import org.ergoplatform.explorer.db.models.StatRecord
 
@@ -39,7 +37,7 @@ object StatsOps {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blockchain_stats ORDER BY ts DESC LIMIT ${cnt.toLong}").query[StatRecord]
 
   def difficultiesSumSince(ts: Long): Query0[Long] = {
-    fr"SELECT CAST(SUM(ts) as BIGINT) FROM blockchain_stats WHERE ts >= $ts".query[Long]
+    fr"SELECT COALESCE(CAST(SUM(ts) as BIGINT), 0) FROM blockchain_stats WHERE ts >= $ts".query[Long]
   }
 
   def totalCoinsGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {

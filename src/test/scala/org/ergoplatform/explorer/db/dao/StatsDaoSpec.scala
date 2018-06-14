@@ -26,5 +26,7 @@ class StatsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with Pr
     dao.insertMany(tail).transact(xa).unsafeRunSync() should contain theSameElementsAs tail
 
     dao.findLast.transact(xa).unsafeRunSync() shouldBe Some(stats.maxBy(_.timestamp))
+
+    dao.difficultiesSumSince(System.currentTimeMillis()).transact(xa).unsafeRunSync() shouldBe 0L
   }
 }
