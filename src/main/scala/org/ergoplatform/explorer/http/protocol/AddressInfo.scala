@@ -18,7 +18,7 @@ object AddressInfo {
   }
 
   implicit val encoder: Encoder[AddressInfo] = (a: AddressInfo) => Json.obj(
-    "id" -> Json.fromString(a.id),
+    "summary" -> Json.obj("id" -> Json.fromString(a.id)),
     "transactions" -> Json.obj(
       "total" -> Json.fromInt(a.transactionsCount),
       "totalReceived" -> Json.fromLong(a.totalReceived),
