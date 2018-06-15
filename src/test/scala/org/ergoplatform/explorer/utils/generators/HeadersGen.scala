@@ -24,9 +24,9 @@ object HeadersGen {
     bz <- arbLong.arbitrary
     es <- Gen.listOfN(10, arbInt.arbitrary)
     ad <- Gen.oneOf(Gen.const(None), Gen.listOfN(32, arbByte.arbitrary).map(v => Some(v.toArray)))
-  } yield Header(id, pId, version, h, adp, s, tr, System.currentTimeMillis(), nBits, eHash, bz, es, ad, 0L, "", "")
-
-
+    reward <- Gen.choose(1000000000L, 10000000000L)
+    fee <- Gen.choose(1L, 1000000L)
+  } yield Header(id, pId, version, h, adp, s, tr, System.currentTimeMillis(), nBits, eHash, bz, es, ad, 0L, "", "", reward, fee, 1000L)
 
   def generateHeaders(cnt: Int = 50): List[Header] = (0 until cnt).foldLeft(List(initBlock)) { case (l, h) =>
     val pId = l.headOption.fold(rootId) { _.id }

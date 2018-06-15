@@ -31,12 +31,11 @@ object StatsGenerator {
     totalMiningTime <- arbLong.arbitrary
     blockMiningTime <- arbLong.arbitrary
     version = "0.0.0"
-    supply <- arbLong.arbitrary
-    marketCap <- arbLong.arbitrary
-    hashRate <- arbLong.arbitrary
+    height <- arbInt.arbitrary
+    coins <- Gen.choose(0L, 1000000000000L)
   } yield StatRecord(
     id, ts, blockSize, totalSize, transactionCount, totalTransactionsCount, blocksCount,
     difficulty, blockCoins, totalCoins, blockValue, blockFee, totalMiningTime, blockMiningTime,
-    version, supply, marketCap, hashRate)
+    version, height, coins)
 }
 

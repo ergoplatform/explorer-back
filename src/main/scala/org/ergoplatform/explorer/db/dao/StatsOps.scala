@@ -23,9 +23,8 @@ object StatsOps {
     "total_mining_time",
     "block_mining_time",
     "version",
-    "supply",
-    "market_cap",
-    "hashrate"
+    "height",
+    "total_coins_issued"
   )
 
   val fieldsFr = Fragment.const(fields.mkString(", "))
