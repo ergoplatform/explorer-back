@@ -33,7 +33,7 @@ object TransactionsOps {
         WHERE EXISTS (
           SELECT 1
           FROM transactions ti LEFT JOIN outputs os
-          ON t.id = os.tx_id
+          ON ti.id = os.tx_id
           WHERE os.hash = $addressId
         )
         ORDER BY t.ts DESC
@@ -47,7 +47,7 @@ object TransactionsOps {
          WHERE EXISTS (
            SELECT 1
            FROM transactions ti LEFT JOIN outputs os
-           ON t.id = os.tx_id
+           ON ti.id = os.tx_id
            WHERE os.hash = $addressId)
          """.query[Long]
   }

@@ -17,6 +17,7 @@ class StatsOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IO
     check(insert)
     check(difficultiesSumSince(0L))
     check(circulatingSupplySince(0L))
+    check(deleteAll)
   }
 
 }

@@ -59,6 +59,8 @@ ALTER TABLE outputs OWNER to ergo;
 
 CREATE INDEX "outputs__tx_id" on outputs (tx_id);
 
+CREATE INDEX "outputs__hash" on outputs (hash);
+
 CREATE TABLE inputs (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   tx_id VARCHAR(64) NOT NULL REFERENCES transactions (id),

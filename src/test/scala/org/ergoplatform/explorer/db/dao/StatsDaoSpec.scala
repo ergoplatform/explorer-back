@@ -26,6 +26,9 @@ class StatsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with Pr
 
     dao.difficultiesSumSince(System.currentTimeMillis() + 1000000L).transact(xa).unsafeRunSync() shouldBe 0L
     dao.circulatingSupplySince(System.currentTimeMillis() + 1000000L).transact(xa).unsafeRunSync() shouldBe 0L
+    dao.deleteAll.transact(xa).unsafeRunSync()
+
+    dao.findLast.transact(xa).unsafeRunSync() shouldBe None
   }
 
   it should "count circulating supply and difficulries" in new {

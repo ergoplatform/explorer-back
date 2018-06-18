@@ -76,4 +76,6 @@ object StatsOps {
 
   def insert: Update[StatRecord] = Update[StatRecord](insertSql)
 
+  def deleteAll: Update[Unit] = Update[Unit]("DELETE FROM blockchain_stats")
+
 }

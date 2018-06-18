@@ -29,4 +29,6 @@ class StatsDao {
   def difficultiesSumSince(ts: Long): ConnectionIO[Long] = StatsOps.difficultiesSumSince(ts).unique
 
   def circulatingSupplySince(ts: Long): ConnectionIO[Long] = StatsOps.circulatingSupplySince(ts).unique
+
+  def deleteAll: ConnectionIO[Unit] = StatsOps.deleteAll.toUpdate0(()).run.map { _ => () }
 }
