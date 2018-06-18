@@ -29,7 +29,7 @@ trait BlockService[F[_]] {
     */
   def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]]
 
-  def count(): F[Long]
+  def count(startTs: Long, endTs: Long): F[Long]
 }
 
 class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -71,9 +71,9 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
       .map{ case (info, count) => SearchBlock.fromHeader(info, count)}
   } yield result).transact[F](xa)
 
-  override def count(): F[Long] = for {
+  override def count(startTs: Long, endTs: Long): F[Long] = for {
     _ <- Async.shift[F](ec)
-    cnt <- headersDao.count.transact[F](xa)
+    cnt <- headersDao.count(startTs, endTs).transact[F](xa)
   } yield cnt
 
 }

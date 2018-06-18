@@ -51,7 +51,8 @@ object HeadersOps {
 
   def update: Update[(Header, String)] = Update[(Header, String)](updateByIdSql)
 
-  def count: Query0[Long] = fr"SELECT count(id) FROM headers".query[Long]
+  def count(sTs: Long, eTs: Long): Query0[Long] =
+    fr"SELECT count(id) FROM headers  WHERE (ts >= $sTs) AND (ts <= $eTs)".query[Long]
 
   def list(offset: Int = 0,
            limit: Int = 20,
