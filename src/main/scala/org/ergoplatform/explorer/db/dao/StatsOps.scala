@@ -23,9 +23,8 @@ object StatsOps {
     "total_mining_time",
     "block_mining_time",
     "version",
-    "supply",
-    "market_cap",
-    "hashrate"
+    "height",
+    "total_coins_issued"
   )
 
   val fieldsFr = Fragment.const(fields.mkString(", "))
@@ -37,7 +36,12 @@ object StatsOps {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blockchain_stats ORDER BY ts DESC LIMIT ${cnt.toLong}").query[StatRecord]
 
   def difficultiesSumSince(ts: Long): Query0[Long] = {
-    fr"SELECT COALESCE(CAST(SUM(ts) as BIGINT), 0) FROM blockchain_stats WHERE ts >= $ts".query[Long]
+    fr"SELECT COALESCE(CAST(SUM(difficulty) as BIGINT), 0) FROM blockchain_stats WHERE ts >= $ts".query[Long]
+  }
+
+  def circulatingSupplySince(ts: Long): Query0[Long] = {
+    (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0) " ++
+      fr"FROM transactions t RIGHT JOIN outputs o ON t.id = o.tx_id WHERE t.ts >= $ts").query[Long]
   }
 
   def totalCoinsGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
@@ -71,5 +75,7 @@ object StatsOps {
   }
 
   def insert: Update[StatRecord] = Update[StatRecord](insertSql)
+
+  def deleteAll: Update[Unit] = Update[Unit]("DELETE FROM blockchain_stats")
 
 }

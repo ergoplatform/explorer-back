@@ -38,9 +38,17 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def findBlockchainInfo: F[Option[BlockchainInfo]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.findLast.map(statRecordToBlockchainInfo).transact[F](xa)
-    hashrate <- hashRate24H
-  } yield result.map{v => v.copy(hashRate = hashrate)}
+    result <- blockchainInfoResult
+  } yield result
+
+  private def blockchainInfoResult: F[Option[BlockchainInfo]] = (for {
+    statsRecord <- statsDao.findLast
+    pastTs = System.currentTimeMillis() - MillisIn24H
+    difficulties <- statsDao.difficultiesSumSince(pastTs)
+    hashrate = difficulties / SecondsIn24H
+    supply <- statsDao.circulatingSupplySince(pastTs)
+    info = statsRecord.map { v => BlockchainInfo(v.version, supply, v.avgTxsCount, hashrate)}
+  } yield info).transact[F](xa)
 
   override def totalCoinsForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
@@ -58,8 +66,6 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   } yield hashrate
 
   private def statRecordToStatsSummary(s: Option[StatRecord]): Option[StatsSummary] = s.map(StatsSummary.apply)
-
-  private def statRecordToBlockchainInfo(s: Option[StatRecord]): Option[BlockchainInfo] = s.map(BlockchainInfo.apply)
 
   private def pairsToChartData(list: List[(Long, Long)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data) => ChartSingleData(ts, data)}

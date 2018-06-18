@@ -14,7 +14,10 @@ CREATE TABLE headers (
   ad_proofs BYTEA,
   tx_count BIGINT NOT NULL DEFAULT 0,
   miner_name VARCHAR NOT NULL,
-  miner_address VARCHAR NOT NULL
+  miner_address VARCHAR NOT NULL,
+  miner_reward BIGINT NOT NULL,
+  fee BIGINT NOT NULL,
+  txs_size BIGINT NOT NULL
 );
 
 ALTER TABLE headers OWNER TO ergo;
@@ -56,6 +59,8 @@ ALTER TABLE outputs OWNER to ergo;
 
 CREATE INDEX "outputs__tx_id" on outputs (tx_id);
 
+CREATE INDEX "outputs__hash" on outputs (hash);
+
 CREATE TABLE inputs (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   tx_id VARCHAR(64) NOT NULL REFERENCES transactions (id),
@@ -83,9 +88,8 @@ CREATE TABLE blockchain_stats (
   total_mining_time BIGINT NOT NULL,
   block_mining_time BIGINT NOT NULL,
   version VARCHAR NOT NULL,
-  supply BIGINT NOT NULL,
-  market_cap BIGINT NOT NULL,
-  hashrate BIGINT NOT NULL
+  height INTEGER NOT NULL,
+  total_coins_issued BIGINT NOT NULL
 );
 
 CREATE INDEX "blockchain_stats__ts" ON blockchain_stats (ts);

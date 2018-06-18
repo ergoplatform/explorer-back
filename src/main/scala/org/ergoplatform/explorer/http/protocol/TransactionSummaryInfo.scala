@@ -31,11 +31,13 @@ object TransactionSummaryInfo {
     )
 
   implicit val encoder: Encoder[TransactionSummaryInfo] = (ts: TransactionSummaryInfo) => Json.obj(
-    "id" -> Json.fromString(ts.id),
-    "timestamp" -> Json.fromLong(ts.timestamp),
-    "size" -> Json.fromInt(ts.size),
-    "confirmationsCount" -> Json.fromInt(ts.confirmationsCount),
-    "block" -> ts.miniBlockInfo.asJson,
+    "summary" -> Json.obj(
+      "id" -> Json.fromString(ts.id),
+      "timestamp" -> Json.fromLong(ts.timestamp),
+      "size" -> Json.fromInt(ts.size),
+      "confirmationsCount" -> Json.fromInt(ts.confirmationsCount),
+      "block" -> ts.miniBlockInfo.asJson
+    ),
     "ioSummary" -> Json.obj(
       "totalCoinsTransferred" -> Json.fromLong(ts.totalCoins),
       "totalFee" -> Json.fromLong(ts.totalFee),

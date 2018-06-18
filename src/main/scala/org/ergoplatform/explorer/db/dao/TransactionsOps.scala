@@ -32,11 +32,9 @@ object TransactionsOps {
         FROM transactions t
         WHERE EXISTS (
           SELECT 1
-          FROM transactions ti LEFT JOIN outputs os
-          ON t.id = os.tx_id
-          WHERE os.hash = $addressId
+          FROM outputs os
+          WHERE (os.tx_id = t.id AND os.hash = $addressId)
         )
-        ORDER BY t.ts DESC
         OFFSET ${offset.toLong} LIMIT ${limit.toLong};
       """.query[Transaction]
 
@@ -46,9 +44,9 @@ object TransactionsOps {
          FROM transactions t
          WHERE EXISTS (
            SELECT 1
-           FROM transactions ti LEFT JOIN outputs os
-           ON t.id = os.tx_id
-           WHERE os.hash = $addressId)
+           FROM outputs os
+           WHERE (os.tx_id = t.id AND os.hash = $addressId)
+         )
          """.query[Long]
   }
 

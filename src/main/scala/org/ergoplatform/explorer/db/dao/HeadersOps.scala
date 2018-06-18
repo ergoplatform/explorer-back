@@ -21,7 +21,10 @@ object HeadersOps {
     "ad_proofs",
     "tx_count",
     "miner_name",
-    "miner_address"
+    "miner_address",
+    "miner_reward",
+    "fee",
+    "txs_size"
   )
 
   val fieldsFr = Fragment.const(fields.mkString(", "))

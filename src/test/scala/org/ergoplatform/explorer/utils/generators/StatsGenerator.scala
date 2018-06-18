@@ -12,7 +12,7 @@ object StatsGenerator {
   def generateStats(howMany: Int = 100): List[StatRecord] = {
     val start = System.currentTimeMillis() - 50 * millisInDay
     val end = System.currentTimeMillis()
-    val step = (end - start) / 100
+    val step = (end - start) / howMany
     Range.Long(start, end, step).map { ts => generateStat(ts).sample.get }.toList
   }
 
@@ -23,7 +23,7 @@ object StatsGenerator {
     transactionCount <- arbLong.arbitrary
     totalTransactionsCount <- arbLong.arbitrary
     blocksCount <- arbLong.arbitrary
-    difficulty <- arbLong.arbitrary
+    difficulty <- Gen.choose(0L, 10000L)
     blockCoins <- arbLong.arbitrary
     totalCoins <- arbLong.arbitrary
     blockValue <- arbLong.arbitrary
@@ -31,12 +31,11 @@ object StatsGenerator {
     totalMiningTime <- arbLong.arbitrary
     blockMiningTime <- arbLong.arbitrary
     version = "0.0.0"
-    supply <- arbLong.arbitrary
-    marketCap <- arbLong.arbitrary
-    hashRate <- arbLong.arbitrary
+    height <- arbInt.arbitrary
+    coins <- Gen.choose(0L, 1000000000000L)
   } yield StatRecord(
     id, ts, blockSize, totalSize, transactionCount, totalTransactionsCount, blocksCount,
     difficulty, blockCoins, totalCoins, blockValue, blockFee, totalMiningTime, blockMiningTime,
-    version, supply, marketCap, hashRate)
+    version, height, coins)
 }
 
