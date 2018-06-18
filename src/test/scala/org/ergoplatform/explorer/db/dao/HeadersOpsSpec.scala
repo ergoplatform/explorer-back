@@ -23,7 +23,7 @@ class HeadersOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     check(list(0, 20, "id", "ASC", 0L, 100L))
     check(insert)
     check(update)
-    check(count)
+    check(count(0L, 0L))
   }
 
 }

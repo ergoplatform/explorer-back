@@ -55,7 +55,7 @@ class HeadersDao {
     )
   }
 
-  def count: ConnectionIO[Long] = HeadersOps.count.unique
+  def count(startTs: Long, endTs: Long): ConnectionIO[Long] = HeadersOps.count(startTs, endTs).unique
 
   def getLast(limit: Int = 20): ConnectionIO[List[Header]] = HeadersOps.selectLast(limit).to[List]
 
