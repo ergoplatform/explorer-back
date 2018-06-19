@@ -16,7 +16,8 @@ case class StatRecord(id: Long = -1L,
                       blockMiningTime: Long = 0L,
                       version: String = "0.0.0",
                       height: Int = 0,
-                      totalCoinsIssued: Long = 0L
+                      totalCoinsIssued: Long = 0L,
+                      minerRevenue: Long = 0L
                      ) {
 
   val avgBlockSize = if (blocksCount == 0L) { 0L } else { totalSize / blocksCount }

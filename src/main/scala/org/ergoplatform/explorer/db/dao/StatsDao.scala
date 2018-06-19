@@ -35,6 +35,12 @@ class StatsDao {
   def avgDifficultyGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
     StatsOps.avgDifficultyGroupedByDay(lastDays).to[List]
 
+  def minerRevenueGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
+    StatsOps.minerRevenueGroupedByDay(lastDays).to[List]
+
+  def sumDifficultiesGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
+    StatsOps.sumDifficultyGroupedByDay(lastDays).to[List]
+
   def difficultiesSumSince(ts: Long): ConnectionIO[Long] = StatsOps.difficultiesSumSince(ts).unique
 
   def circulatingSupplySince(ts: Long): ConnectionIO[Long] = StatsOps.circulatingSupplySince(ts).unique
