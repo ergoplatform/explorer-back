@@ -26,6 +26,15 @@ class StatsDao {
   def avgBlockSizeGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
     StatsOps.avgBlockSizeGroupedByDay(lastDays).to[List]
 
+  def avgTxsCountGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
+    StatsOps.avgTxsGroupedByDay(lastDays).to[List]
+
+  def blockchainSizeGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
+    StatsOps.totalBlockchainSizeGroupedByDay(lastDays).to[List]
+
+  def avgDifficultyGroupedByDay(lastDays: Int): ConnectionIO[List[(Long, Long)]] =
+    StatsOps.avgDifficultyGroupedByDay(lastDays).to[List]
+
   def difficultiesSumSince(ts: Long): ConnectionIO[Long] = StatsOps.difficultiesSumSince(ts).unique
 
   def circulatingSupplySince(ts: Long): ConnectionIO[Long] = StatsOps.circulatingSupplySince(ts).unique

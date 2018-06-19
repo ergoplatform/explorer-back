@@ -21,6 +21,12 @@ trait StatsService[F[_]] {
 
   def avgBlockSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
+  def avgBlockChainSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+
+  def avgDifficultyForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+
+  def avgTxsPerBlockForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+
 }
 
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -58,6 +64,21 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   override def avgBlockSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
     result <- statsDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+  } yield result
+
+  override def avgBlockChainSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
+    _ <- Async.shift[F](ec)
+    result <- statsDao.blockchainSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+  } yield result
+
+  override def avgDifficultyForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
+    _ <- Async.shift[F](ec)
+    result <- statsDao.avgDifficultyGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+  } yield result
+
+  override def avgTxsPerBlockForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
+    _ <- Async.shift[F](ec)
+    result <- statsDao.avgTxsCountGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   private def hashRate24H: F[Long] = for {

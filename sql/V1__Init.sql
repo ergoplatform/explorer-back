@@ -26,6 +26,8 @@ CREATE INDEX "headers__parent_id" ON headers (parent_id);
 
 CREATE INDEX "headers__height" ON headers (height);
 
+CREATE INDEX "headers__ts" ON headers (ts);
+
 CREATE TABLE interlinks (
   id BIGSERIAL NOT NULL PRIMARY KEY,
   modifier_id VARCHAR(64) NOT NULL,
@@ -93,4 +95,6 @@ CREATE TABLE blockchain_stats (
 );
 
 CREATE INDEX "blockchain_stats__ts" ON blockchain_stats (ts);
+
+CREATE INDEX "blockchain_stats__height" ON blockchain_stats (height);
 
