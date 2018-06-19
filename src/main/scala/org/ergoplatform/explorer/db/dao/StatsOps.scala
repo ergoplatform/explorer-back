@@ -54,6 +54,21 @@ object StatsOps {
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
+  def avgTxsGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
+    val selectStr = "min(ts) as t, avg(txs_count)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def totalBlockchainSizeGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
+    val selectStr = "min(ts) as t, sum(block_size)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def avgDifficultyGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
+    val selectStr = "min(ts) as t, avg(difficulty)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
   def groupedByDayStatsPair(d: Int, selectStr: String): Query0[(Long, Long)] = {
     val sql = selectByDay(d, selectStr)
     sql.query[(Long, Long)]
