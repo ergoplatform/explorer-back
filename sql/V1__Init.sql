@@ -91,7 +91,8 @@ CREATE TABLE blockchain_stats (
   block_mining_time BIGINT NOT NULL,
   version VARCHAR NOT NULL,
   height INTEGER NOT NULL,
-  total_coins_issued BIGINT NOT NULL
+  total_coins_issued BIGINT NOT NULL,
+  miner_revenue BIGINT NOT NULL
 );
 
 CREATE INDEX "blockchain_stats__ts" ON blockchain_stats (ts);

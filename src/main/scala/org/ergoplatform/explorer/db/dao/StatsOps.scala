@@ -24,7 +24,8 @@ object StatsOps {
     "block_mining_time",
     "version",
     "height",
-    "total_coins_issued"
+    "total_coins_issued",
+    "miner_revenue"
   )
 
   val fieldsFr = Fragment.const(fields.mkString(", "))
@@ -66,6 +67,11 @@ object StatsOps {
 
   def avgDifficultyGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
     val selectStr = "min(ts) as t, avg(difficulty)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def minerRevenueGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
+    val selectStr = "min(ts) as t, sum(miner_revenue)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
