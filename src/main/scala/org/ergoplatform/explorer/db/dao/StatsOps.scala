@@ -70,6 +70,11 @@ object StatsOps {
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
+  def sumDifficultyGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
+    val selectStr = "min(ts) as t, sum(difficulty)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
   def minerRevenueGroupedByDay(lastDays: Int): Query0[(Long, Long)] = {
     val selectStr = "min(ts) as t, sum(miner_revenue)"
     groupedByDayStatsPair(lastDays, selectStr)

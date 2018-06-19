@@ -29,6 +29,8 @@ trait StatsService[F[_]] {
 
   def minerRevenueForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
+  def hashrateForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+
 }
 
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -53,7 +55,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     statsRecord <- statsDao.findLast
     pastTs = System.currentTimeMillis() - MillisIn24H
     difficulties <- statsDao.difficultiesSumSince(pastTs)
-    hashrate = difficulties / SecondsIn24H
+    hashrate = hashratePerDay(difficulties)
     supply <- statsDao.circulatingSupplySince(pastTs)
     info = statsRecord.map { v => BlockchainInfo(v.version, supply, v.avgTxsCount, hashrate)}
   } yield info).transact[F](xa)
@@ -88,6 +90,13 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     result <- statsDao.minerRevenueGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
+  override def hashrateForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
+    _ <- Async.shift[F](ec)
+    difficultiesByDay <- statsDao.sumDifficultiesGroupedByDay(d).transact[F](xa)
+    hashratesByDay = difficultiesByDay.map { case (ts, d) => ts -> hashratePerDay(d)}
+    result = pairsToChartData(hashratesByDay)
+  } yield result
+
   private def hashRate24H: F[Long] = for {
     difficulties <- statsDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
     hashrate = difficulties / SecondsIn24H
@@ -97,4 +106,8 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def pairsToChartData(list: List[(Long, Long)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data) => ChartSingleData(ts, data)}
+
+
+
+  private def hashratePerDay(difficulty: Long): Long = difficulty / SecondsIn24H
 }
