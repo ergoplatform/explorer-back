@@ -2,19 +2,16 @@ package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import org.ergoplatform.explorer.http.directives.CommonDirectives
 import org.ergoplatform.explorer.services.TransactionsService
 
-class TransactionsHandler(txs: TransactionsService[IO]) extends FailFastCirceSupport with CommonDirectives {
+class TransactionsHandler(txs: TransactionsService[IO]) extends ApiRoute {
 
   val route = pathPrefix("transactions") {
     getTxById
   }
 
   def getTxById = (get & base16Segment) { id =>
-    val f = txs.getTxInfo(id).unsafeToFuture()
-    onSuccess(f) { info => complete(info) }
+    txs.getTxInfo(id)
   }
 
 }

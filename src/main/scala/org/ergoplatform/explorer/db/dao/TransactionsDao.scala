@@ -39,4 +39,10 @@ class TransactionsDao {
       new NoSuchElementException(s"Cannot find transaction with id = $id")
     )
   }
+
+  /** Search transaction identifiers by the fragment of the identifier */
+  def searchById(substring: String): ConnectionIO[List[String]] = {
+    TransactionsOps.searchById(substring).to[List]
+  }
+
 }

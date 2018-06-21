@@ -15,6 +15,8 @@ trait AddressesService[F[_]] {
 
   def getAddressInfo(addressId: String): F[AddressInfo]
 
+  def searchById(query: String): F[List[String]]
+
 }
 
 class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -31,5 +33,9 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     .findAllByAddressId(addressId)
     .map { os => AddressInfo.apply(addressId, os) }
     .transact(xa)
+
+  def searchById(substring: String): F[List[String]] = {
+    outputsDao.searchByAddressId(substring).transact(xa)
+  }
 
 }

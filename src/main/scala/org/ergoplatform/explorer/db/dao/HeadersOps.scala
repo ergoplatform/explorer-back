@@ -65,4 +65,10 @@ object HeadersOps {
     Fragment.const("ORDER BY " + sortBy + " " + sortOrder) ++
     fr"LIMIT ${limit.toLong} OFFSET ${offset.toLong};"
     ).query[Header]
+
+  def searchById(substring: String): Query0[Header] = (
+    fr"SELECT" ++ fieldsFr ++
+    fr"FROM headers WHERE id LIKE ${"%" + substring + "%"}"
+  ).query[Header]
+
 }
