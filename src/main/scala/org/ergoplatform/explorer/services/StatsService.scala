@@ -13,9 +13,9 @@ import scala.concurrent.ExecutionContext
 
 trait StatsService[F[_]] {
 
-  def findLastStats: F[Option[StatsSummary]]
+  def findLastStats: F[StatsSummary]
 
-  def findBlockchainInfo: F[Option[BlockchainInfo]]
+  def findBlockchainInfo: F[BlockchainInfo]
 
   def totalCoinsForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
@@ -36,20 +36,24 @@ trait StatsService[F[_]] {
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                         (implicit F: Monad[F], A: Async[F]) extends StatsService[F] {
 
+  val emptyStatsResponse = StatsSummary(StatRecord())
+  val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
   private val SecondsIn24H: Long = (24*60*60).toLong
   private val MillisIn24H: Long = SecondsIn24H * 1000L
 
   val statsDao = new StatsDao
 
-  override def findLastStats: F[Option[StatsSummary]] = for {
+  override def findLastStats: F[StatsSummary] = for {
     _ <- Async.shift[F](ec)
     result <- statsDao.findLast.map(statRecordToStatsSummary).transact[F](xa)
-  } yield result
+  } yield result.getOrElse(emptyStatsResponse)
 
-  override def findBlockchainInfo: F[Option[BlockchainInfo]] = for {
-    _ <- Async.shift[F](ec)
-    result <- blockchainInfoResult
-  } yield result
+  override def findBlockchainInfo: F[BlockchainInfo] = {
+    for {
+      _ <- Async.shift[F](ec)
+      result <- blockchainInfoResult
+    } yield result.getOrElse(emptyInfoResponse)
+  }
 
   private def blockchainInfoResult: F[Option[BlockchainInfo]] = (for {
     statsRecord <- statsDao.findLast

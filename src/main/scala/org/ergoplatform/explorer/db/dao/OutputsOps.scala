@@ -29,4 +29,9 @@ object OutputsOps {
   def findByHash(hash: String)(implicit c: Composite[Output]): Query0[Output] =
     fr"SELECT id, tx_id, value, script, hash FROM outputs WHERE hash = $hash".query[Output]
 
+  /** Search address identifiers by the fragment of the identifier */
+  def searchByHash(substring: String): Query0[String] = {
+    fr"SELECT hash FROM outputs WHERE id LIKE ${"%" + substring +"%"}".query[String]
+  }
+
 }

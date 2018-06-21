@@ -54,4 +54,7 @@ object TransactionsOps {
 
   def select(id: String): Query0[Transaction] =
     fr"SELECT id, block_id, is_coinbase, ts FROM transactions WHERE id = $id".query[Transaction]
+
+  def searchById(substring: String): Query0[String] =
+    fr"SELECT id FROM transactions WHERE id LIKE ${"%" + substring + "%" }".query[String]
 }
