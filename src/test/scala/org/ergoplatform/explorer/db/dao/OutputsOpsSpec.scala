@@ -18,6 +18,7 @@ class OutputsOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     check(findAllByTxId(""))
     check(findAllByTxsId(NonEmptyList.fromListUnsafe(List(""))))
     check(findByHash(""))
+    check(searchByHash(""))
   }
 
 }
