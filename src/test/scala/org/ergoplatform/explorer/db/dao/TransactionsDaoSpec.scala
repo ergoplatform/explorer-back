@@ -1,9 +1,5 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.effect.IO
-import cats.data._
-import cats.implicits._
-import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.PreparedDB
@@ -35,6 +31,11 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     dao.find(head.id + "1").transact(xa).unsafeRunSync() shouldBe None
     the[NoSuchElementException] thrownBy dao.get(head.id + "11").transact(xa).unsafeRunSync()
+
+    val substring = head.id.substring(3, 8)
+    val expectedToFind = txs collect { case tx if tx.id contains substring => tx.id }
+    val foundTxs = dao.searchById(substring).transact(xa).unsafeRunSync()
+    expectedToFind should contain theSameElementsAs foundTxs
 
     dao.insertMany(tail).transact(xa).unsafeRunSync() should contain theSameElementsAs tail
 

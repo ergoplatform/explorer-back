@@ -21,5 +21,6 @@ class TransactionsOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
     check(countTxsNumbersByBlocksIds(NonEmptyList.fromListUnsafe(List(""))))
     check(getTxsByAddressId("", 0, 0))
     check(countTxsByAddressId(""))
+    check(searchById(""))
   }
 }
