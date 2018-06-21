@@ -31,7 +31,7 @@ object OutputsOps {
 
   /** Search address identifiers by the fragment of the identifier */
   def searchByHash(substring: String): Query0[String] = {
-    fr"SELECT hash FROM outputs WHERE id LIKE ${"%" + substring +"%"}".query[String]
+    fr"SELECT hash FROM outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
   }
 
 }
