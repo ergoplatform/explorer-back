@@ -21,4 +21,20 @@ trait DbTransactor { self: Configuration =>
     })
   } yield xa).unsafeRunSync()
 
+  lazy val transactor2: HikariTransactor[IO] = (for {
+    xa <- HikariTransactor.newHikariTransactor[IO](
+      driverClassName = cfg.db.driverClassName,
+      url = cfg.db.url,
+      user = cfg.db.user,
+      pass = cfg.db.pass
+    )
+    //TODO: Tune HikariCP config when needed here.
+    _ <- xa.configure(c => IO {
+      c.setAutoCommit(false)
+      c.setMaximumPoolSize(5)
+      c.setMinimumIdle(2)
+      c.setMaxLifetime(120000L)
+    })
+  } yield xa).unsafeRunSync()
+
 }

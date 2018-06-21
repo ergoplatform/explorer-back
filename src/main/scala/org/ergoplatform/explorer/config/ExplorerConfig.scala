@@ -1,3 +1,3 @@
 package org.ergoplatform.explorer.config
 
-case class ExplorerConfig(db: DbConfig, http: HttpConfig)
+case class ExplorerConfig(db: DbConfig, http: HttpConfig, grabber: GrabberConfig)

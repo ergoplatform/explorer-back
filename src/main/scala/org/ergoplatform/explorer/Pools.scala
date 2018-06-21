@@ -4,5 +4,10 @@ object Pools {
 
   val dbCallsFixedThreadPool = java.util.concurrent.Executors.newFixedThreadPool(15)
 
-  def shutdown = dbCallsFixedThreadPool.shutdown()
+  val grabberPool = java.util.concurrent.Executors.newFixedThreadPool(5)
+
+  def shutdown = {
+    dbCallsFixedThreadPool.shutdown()
+    grabberPool.shutdown()
+  }
 }
