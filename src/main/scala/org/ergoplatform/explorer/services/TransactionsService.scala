@@ -20,6 +20,8 @@ trait TransactionsService[F[_]] {
 
   def countTxsByAddressId(addressId: String): F[Long]
 
+  def searchById(query: String): F[List[String]]
+
 }
 
 class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -64,5 +66,10 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def getTxsCountByAddressIdResult(addressId: String): F[Long] =
     transactionsDao.countTxsByAddressId(addressId).transact(xa)
+
+  /** Search transaction identifiers by the fragment of the identifier */
+  def searchById(substring: String): F[List[String]] = {
+    transactionsDao.searchById(substring).transact(xa)
+  }
 
 }

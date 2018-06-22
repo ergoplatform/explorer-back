@@ -72,4 +72,8 @@ class HeadersDao {
            endTs: Long): ConnectionIO[List[Header]] =
     HeadersOps.list(offset, limit, sortBy, sortOrder, startTs, endTs).to[List]
 
+  /** Search headers by the fragment of the identifier */
+  def searchById(substring: String): ConnectionIO[List[Header]] =
+    HeadersOps.searchById(substring).to[List]
+
 }

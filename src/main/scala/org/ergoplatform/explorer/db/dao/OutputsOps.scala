@@ -36,4 +36,9 @@ object OutputsOps extends JsonMeta {
   def findByHash(hash: String)(implicit c: Composite[Output]): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE hash = $hash").query[Output]
 
+  /** Search address identifiers by the fragment of the identifier */
+  def searchByHash(substring: String): Query0[String] = {
+    fr"SELECT hash FROM outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
+  }
+
 }

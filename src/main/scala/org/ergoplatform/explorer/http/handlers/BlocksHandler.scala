@@ -5,14 +5,12 @@ import cats.data._
 import cats.effect.IO
 import cats.implicits.catsKernelStdOrderForString
 import cats.syntax.all._
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import org.ergoplatform.explorer.http.directives.CommonDirectives
 import org.ergoplatform.explorer.http.protocol.ItemsResponse
 import org.ergoplatform.explorer.services.BlockService
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 
-class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with CommonDirectives {
+class BlocksHandler(bs: BlockService[IO]) extends ApiRoute {
 
   import BlocksHandler._
 
@@ -33,8 +31,8 @@ class BlocksHandler(bs: BlockService[IO]) extends FailFastCirceSupport with Comm
       val s = Sorting(sortBy = field, order = so)
       val items = bs.getBlocks(p, s, sTs, eTs)
       val count = bs.count(sTs, eTs)
-      val f = (items, count).parMapN { case (i, c) => ItemsResponse(i, c) }.unsafeToFuture()
-      onSuccess(f) { info => complete(info) }
+      val itemsResponse = (items, count).parMapN(ItemsResponse.apply)
+      itemsResponse
   }
 
 }

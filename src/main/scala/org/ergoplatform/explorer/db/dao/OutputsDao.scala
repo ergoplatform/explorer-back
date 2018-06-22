@@ -27,4 +27,9 @@ class OutputsDao extends JsonMeta {
   def findAllByAddressId(address: String)(implicit c: Composite[Output]): ConnectionIO[List[Output]] =
     OutputsOps.findByHash(address).to[List]
 
+  /** Search address identifiers by the fragment of the identifier */
+  def searchByAddressId(substring: String): ConnectionIO[List[String]] = {
+    OutputsOps.searchByHash(substring).to[List]
+  }
+
 }

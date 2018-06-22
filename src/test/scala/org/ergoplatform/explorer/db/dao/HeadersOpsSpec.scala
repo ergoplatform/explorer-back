@@ -24,6 +24,7 @@ class HeadersOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     check(insert)
     check(update)
     check(count(0L, 0L))
+    check(searchById(""))
   }
 
 }
