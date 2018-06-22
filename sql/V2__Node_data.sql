@@ -82,6 +82,7 @@ CREATE TABLE node_outputs (
 ALTER TABLE node_outputs OWNER to ergo;
 
 CREATE INDEX "node_outputs__tx_id" on node_outputs (tx_id);
+CREATE INDEX "node_outputs__hash" on node_outputs (hash);
 
 CREATE TABLE node_ad_proofs (
   header_id VARCHAR(64) NOT NULL PRIMARY KEY,

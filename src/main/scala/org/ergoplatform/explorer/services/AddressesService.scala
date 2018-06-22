@@ -7,6 +7,7 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao.OutputsDao
+import org.ergoplatform.explorer.db.mappings.JsonMeta
 import org.ergoplatform.explorer.http.protocol.AddressInfo
 
 import scala.concurrent.ExecutionContext
@@ -18,7 +19,7 @@ trait AddressesService[F[_]] {
 }
 
 class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
-                                  (implicit F: Monad[F], A: Async[F]) extends AddressesService[F] {
+                                  (implicit F: Monad[F], A: Async[F]) extends AddressesService[F] with JsonMeta {
 
   val outputsDao = new OutputsDao
 

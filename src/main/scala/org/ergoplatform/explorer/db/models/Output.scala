@@ -1,7 +1,13 @@
 package org.ergoplatform.explorer.db.models
 
-case class Output(id: String,
-                  txId: String,
-                  value: Long,
-                  script: String,
-                  hash: String)
+import io.circe.Json
+
+case class Output(
+                   id: String,
+                   txId: String,
+                   value: Long,
+                   index: Int,
+                   proposition: String,
+                   hash: String,
+                   additionalRegisters: Json
+                 )

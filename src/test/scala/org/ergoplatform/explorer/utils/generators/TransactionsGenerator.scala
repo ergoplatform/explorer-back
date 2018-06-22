@@ -1,5 +1,6 @@
 package org.ergoplatform.explorer.utils.generators
 
+import io.circe.Json
 import org.ergoplatform.explorer.db.models.{Header, Input, Output, Transaction}
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
@@ -53,8 +54,7 @@ object TransactionsGenerator {
       } else {
         val data = osNotSpent.map { o =>
           val txId = generateDigestStringBase16(32).sample.get
-          val id = generateDigestStringBase16(32).sample.get
-          val i = Input(id, txId, o.id, "")
+          val i = Input(o.id, txId, "", Json.Null)
 
           val oId1 = generateDigestStringBase16(32).sample.get
           val v1 = o.value / 2

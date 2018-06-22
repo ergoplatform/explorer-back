@@ -11,7 +11,7 @@ object OutputInfo {
   def apply(o: Output): OutputInfo = OutputInfo(
     o.id,
     o.value,
-    o.script,
+    o.proposition,
     Some(o.hash).filter(_.startsWith("cd0703"))
   )
 
