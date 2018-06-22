@@ -59,9 +59,9 @@ class HeadersDao {
 
   def getLast(limit: Int = 20): ConnectionIO[List[Header]] = HeadersOps.selectLast(limit).to[List]
 
-  def getHeightById(id: String): ConnectionIO[Int] = HeadersOps.selectHeight(id).option.flatMap {
+  def getHeightById(id: String): ConnectionIO[Long] = HeadersOps.selectHeight(id).option.flatMap {
     case Some(h) => h.pure[ConnectionIO]
-    case None => (-1).pure[ConnectionIO]
+    case None => (-1L).pure[ConnectionIO]
   }
 
   def list(offset: Int = 0,

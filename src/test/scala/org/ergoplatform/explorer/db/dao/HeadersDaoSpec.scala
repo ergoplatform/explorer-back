@@ -23,7 +23,6 @@ class HeadersDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
     val headers = HeadersGen
       .generateHeaders(20)
-      .map { h => h.copy(adProofs = None) }
       .reverse
       .zipWithIndex.map { case (h, ts) => h.copy(timestamp = ts.toLong)}
 

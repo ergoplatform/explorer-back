@@ -1,4 +1,4 @@
-package org.ergoplatform.explorer.grabber
+package org.ergoplatform.explorer.grabber.http
 
 case class NodeAddressService(nodeAddress: String) {
   val infoUri = s"$nodeAddress/info"

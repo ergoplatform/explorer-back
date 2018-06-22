@@ -46,6 +46,7 @@ object App extends Configuration with DbTransactor with Services with Rest {
       stop.onComplete { _ =>
         Pools.shutdown
         transactor.shutdown.unsafeRunSync()
+        transactor2.shutdown.unsafeRunSync()
         system.terminate()
       }
       Await.result(stop, 5 seconds)

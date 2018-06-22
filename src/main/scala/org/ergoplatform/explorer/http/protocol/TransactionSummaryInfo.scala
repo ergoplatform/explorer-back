@@ -7,7 +7,7 @@ import org.ergoplatform.explorer.db.models.{Input, Output, Transaction}
 case class TransactionSummaryInfo(id: String,
                                   timestamp: Long,
                                   size: Int,
-                                  confirmationsCount: Int,
+                                  confirmationsCount: Long,
                                   miniBlockInfo: MiniBlockInfo,
                                   inputs: List[InputInfo],
                                   outputs: List[OutputInfo],
@@ -18,10 +18,10 @@ case class TransactionSummaryInfo(id: String,
 
 object TransactionSummaryInfo {
 
-  def fromDb(tx: Transaction, height: Int, confirmationsCount: Int = 0, inputs: List[Input], outputs: List[Output]): TransactionSummaryInfo =
+  def fromDb(tx: Transaction, height: Long, confirmationsCount: Long = 0, inputs: List[Input], outputs: List[Output]): TransactionSummaryInfo =
     TransactionSummaryInfo(
       id = tx.id,
-      miniBlockInfo = MiniBlockInfo(tx.blockId, height),
+      miniBlockInfo = MiniBlockInfo(tx.headerId, height),
       timestamp = tx.timestamp,
       confirmationsCount = confirmationsCount,
       //TODO Need to add this data to tx
@@ -35,7 +35,7 @@ object TransactionSummaryInfo {
       "id" -> Json.fromString(ts.id),
       "timestamp" -> Json.fromLong(ts.timestamp),
       "size" -> Json.fromInt(ts.size),
-      "confirmationsCount" -> Json.fromInt(ts.confirmationsCount),
+      "confirmationsCount" -> Json.fromLong(ts.confirmationsCount),
       "block" -> ts.miniBlockInfo.asJson
     ),
     "ioSummary" -> Json.obj(

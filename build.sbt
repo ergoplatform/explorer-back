@@ -41,7 +41,8 @@ lazy val otherDeps = Seq(
   "org.scorexfoundation" %% "scrypto" % "2.1.1",
   "de.heikoseeberger" %% "akka-http-circe" % "1.20.1",
   "org.scalaj" %% "scalaj-http" % "2.4.0",
-  "org.flywaydb" % "flyway-core" % "5.1.1"
+  "org.flywaydb" % "flyway-core" % "5.1.1",
+  "com.github.blemale" %% "scaffeine" % "2.5.0"
 )
 lazy val circeDeps = Seq(
   "io.circe" %% "circe-core" % circeVersion,

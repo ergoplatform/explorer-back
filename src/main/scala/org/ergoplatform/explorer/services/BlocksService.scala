@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.services
 import cats._
 import cats.effect._
 import cats.implicits._
+import doobie.free.connection.ConnectionIO
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
@@ -40,6 +41,8 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
+  val adProofDao = new AdProofsDao
+  val blockInfoDao = new BlockInfoDao
 
   override def getBlock(id: String): F[BlockSummaryInfo] = for {
     _ <- Async.shift[F](ec)
@@ -50,12 +53,12 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     h <- headersDao.get(id)
     nextIdOpt <- headersDao.findByParentId(h.id)
     references = BlockReferencesInfo(h.parentId, nextIdOpt.map(_.id))
-    links <- interlinksDao.findAllByBlockId(h.id)
     txs <- transactionsDao.findAllByBlockId(h.id)
     txsIds = txs.map(_.id)
     is <- inputDao.findAllByTxsId(txsIds)
     os <- outputDao.findAllByTxsId(txsIds)
-  } yield BlockSummaryInfo(FullBlockInfo(h, links, txs, is, os), references)).transact[F](xa)
+    ad <- adProofDao.find(h.id)
+  } yield BlockSummaryInfo(FullBlockInfo(h, txs, is, os, ad), references)).transact[F](xa)
 
   override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = for {
     _ <- Async.shift[F](ec)
@@ -63,12 +66,21 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   } yield result
 
   private def getBlocksResult(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = (for {
-    h <- headersDao.list(p.offset, p.limit, s.sortBy, s.order.toString, start, end)
-    hIds = h.map(_.id)
-    txsCnt <- transactionsDao.countTxsNumbersByBlocksIds(hIds)
-    result = h
-      .map { h => h -> txsCnt.find(_._1 == h.id).map(_._2).getOrElse(0L) }
-      .map{ case (info, count) => SearchBlock.fromHeader(info, count)}
+    headers <- headersDao.list(p.offset, p.limit, s.sortBy, s.order.toString, start, end)
+    hIds = headers.map(_.id)
+    blockInfos <- blockInfoDao.list(hIds)
+    _ <- if (hIds.length != blockInfos.length) {
+      doobie.free.connection.raiseError(
+        new IllegalStateException(
+          s"Cannot find BlockInfo for blocks. ids ${hIds.toString}, block " +
+            s"info ids ${blockInfos.map(_.headerId).toString()}")
+      )
+    } else {
+      ().pure[ConnectionIO]
+    }
+    result = headers
+      .map { h => h -> blockInfos.find(_.headerId == h.id).get }
+      .map { case (info, block) => SearchBlock.fromHeader(info, block) }
   } yield result).transact[F](xa)
 
   override def count(startTs: Long, endTs: Long): F[Long] = for {

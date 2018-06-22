@@ -1,31 +1,28 @@
 package org.ergoplatform.explorer.http.protocol
 
-import com.google.common.primitives.Ints
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.{Header, Interlink}
-import scorex.crypto.encode.Base16
+import org.ergoplatform.explorer.db.models.Header
 
-case class HeaderInfo(id: String,
-                      parentId: String,
-                      version: Short,
-                      height: Int,
-                      adProofsRoot: String,
-                      stateRoot: String,
-                      transactionsRoot: String,
-                      timestamp: Long,
-                      nBits: Long,
-                      size: Long,
-                      extensionHash: String,
-                      equihashSolution: String,
-                      interlinks: List[String])
+case class HeaderInfo(
+                       id: String,
+                       parentId: String,
+                       version: Short,
+                       height: Long,
+                       adProofsRoot: String,
+                       stateRoot: String,
+                       transactionsRoot: String,
+                       timestamp: Long,
+                       nBits: Long,
+                       size: Long,
+                       extensionHash: String,
+                       equihashSolution: String,
+                       interlinks: List[String]
+                     )
 
 object HeaderInfo {
 
-  def apply(h: Header, interlinks: List[Interlink]): HeaderInfo = {
-    val links = interlinks.filter(_.blockId == h.id).map(_.modifierId)
-    val equihashSolutions: Array[Byte] = h.equihashSolution.flatMap { Ints.toByteArray }.toArray
-    val equihashSolutionsString = Base16.encode(equihashSolutions)
+  def apply(h: Header): HeaderInfo = {
 
     new HeaderInfo(
       h.id,
@@ -37,10 +34,10 @@ object HeaderInfo {
       h.transactionsRoot,
       h.timestamp,
       h.nBits,
-      h.blockSize,
+      h.size,
       h.extensionHash,
-      equihashSolutionsString,
-      links
+      h.equihashSolutions,
+      h.interlinks
     )
   }
 
@@ -48,7 +45,7 @@ object HeaderInfo {
     "id" -> Json.fromString(h.id),
     "parentId" -> Json.fromString(h.parentId),
     "version" -> Json.fromInt(h.version.toInt),
-    "height" -> Json.fromInt(h.height),
+    "height" -> Json.fromLong(h.height),
     "interlinks" -> h.interlinks.asJson,
     "adProofsRoot" -> Json.fromString(h.adProofsRoot),
     "stateRoot" -> Json.fromString(h.stateRoot),

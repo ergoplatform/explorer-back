@@ -12,8 +12,8 @@ trait DbTransactor { self: Configuration =>
       user = cfg.db.user,
       pass = cfg.db.pass
     )
-    //TODO: Tune HikariCP config when needed here.
     _ <- xa.configure(c => IO {
+      c.setPoolName("Explorer-Hikari-Pool")
       c.setAutoCommit(false)
       c.setMaximumPoolSize(20)
       c.setMinimumIdle(5)
@@ -28,12 +28,12 @@ trait DbTransactor { self: Configuration =>
       user = cfg.db.user,
       pass = cfg.db.pass
     )
-    //TODO: Tune HikariCP config when needed here.
     _ <- xa.configure(c => IO {
+      c.setPoolName("Grabber-Hikari-Pool")
       c.setAutoCommit(false)
       c.setMaximumPoolSize(5)
       c.setMinimumIdle(2)
-      c.setMaxLifetime(120000L)
+      c.setMaxLifetime(1200000L)
     })
   } yield xa).unsafeRunSync()
 

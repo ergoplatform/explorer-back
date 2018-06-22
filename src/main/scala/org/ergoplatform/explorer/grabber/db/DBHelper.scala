@@ -10,13 +10,14 @@ import doobie.postgres.implicits._
 import doobie.free.connection.ConnectionIO
 import io.circe.Json
 import io.circe.parser._
-import org.ergoplatform.explorer.grabber.models._
+import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
+
 
 object DBHelper {
 
-  implicit val MetaDifficulty: Meta[NodeDifficulty] = Meta[BigDecimal].xmap(
-    x => NodeDifficulty(x.toBigInt()),
+  implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
+    x => ApiDifficulty(x.toBigInt()),
     x => BigDecimal.apply(x.value)
   )
 
@@ -31,16 +32,15 @@ object DBHelper {
       }
     )
 
-  def writeOne(nfb: NodeFullBlock): ConnectionIO[Int] = for {
+  def writeOne(nfb: ApiFullBlock): ConnectionIO[Int] = for {
     hInt <- NodeHeadersWriter.insert(nfb.header)
     txInt <- NodeTxWriter.insertMany(btToDb(nfb.bt, nfb.header.timestamp))
     isInt <- NodeInputWriter.insertMany(btToInputs(nfb.bt))
     osInt <- NodeOutputWriter.insertMany(btToOutputs(nfb.bt))
     adInt <- NodeAdProofsWriter.insertMany(nfbToAd(nfb))
-  } yield (hInt + txInt + isInt + osInt + adInt)
+  } yield hInt + txInt + isInt + osInt + adInt
 
-
-  def btToDb(bt: NodeBlockTransactions, ts: Long): List[NodeTxWriter.ToInsert] = {
+  def btToDb(bt: ApiBlockTransactions, ts: Long): List[NodeTxWriter.ToInsert] = {
     val txs = bt.transactions
     val coinbaseId = txs.head.id
     val coinbaseTx = (coinbaseId, bt.headerId, true, ts)
@@ -48,26 +48,27 @@ object DBHelper {
     coinbaseTx :: restTxs
   }
 
-  def nodeInputsToDb(txId: String, list: List[NodeInput]): List[NodeInputWriter.ToInsert] = list
+  def nodeInputsToDb(txId: String, list: List[ApiInput]): List[NodeInputWriter.ToInsert] = list
     .map { i => (i.boxId, txId, i.spendingProof.proofBytes, i.spendingProof.extension) }
 
-  def nodeOutputsToDb(txId: String, list: List[NodeOutput]): List[NodeOutputWriter.ToInsert] = list
+  def nodeOutputsToDb(txId: String, list: List[ApiOutput]): List[NodeOutputWriter.ToInsert] = list
     .zipWithIndex.map { case (o, index) =>
     (o.boxId, txId, o.value, index, o.proposition, o.proposition, o.additionalRegisters)
   }
 
-  def btToInputs(bt: NodeBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>
+  def btToInputs(bt: ApiBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>
     nodeInputsToDb(tx.id, tx.inputs)
   }
 
-  def btToOutputs(bt: NodeBlockTransactions): List[NodeOutputWriter.ToInsert] = bt.transactions.flatMap { tx =>
+  def btToOutputs(bt: ApiBlockTransactions): List[NodeOutputWriter.ToInsert] = bt.transactions.flatMap { tx =>
     nodeOutputsToDb(tx.id, tx.outputs)
   }
 
-  def nfbToAd(nfb: NodeFullBlock): List[NodeAdProofsWriter.ToInsert] = nfb.adProofs.toList.map { ad =>
+  def nfbToAd(nfb: ApiFullBlock): List[NodeAdProofsWriter.ToInsert] = nfb.adProofs.toList.map { ad =>
     (ad.headerId, ad.proofBytes, ad.digest)
   }
 
   def readCurrentHeight: ConnectionIO[Long] =
-    fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM node_headers ORDER BY height DESC LIMIT 1".query[Long].option.map { _.getOrElse(0L) }
+    fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM node_headers ORDER BY height DESC LIMIT 1"
+      .query[Long].option.map { _.getOrElse(-1L) }
 }

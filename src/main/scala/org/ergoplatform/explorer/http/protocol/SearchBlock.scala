@@ -2,10 +2,10 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.Header
+import org.ergoplatform.explorer.db.models.{BlockInfo, Header}
 
 case class SearchBlock(id: String,
-                       height: Int,
+                       height: Long,
                        timestamp: Long,
                        transactionsCount: Long,
                        miner: MinerInfo,
@@ -13,18 +13,18 @@ case class SearchBlock(id: String,
 
 object SearchBlock {
 
-  def fromHeader(h: Header, txsCount: Long): SearchBlock = SearchBlock(
+  def fromHeader(h: Header, info: BlockInfo): SearchBlock = SearchBlock(
     id = h.id,
     height = h.height,
     timestamp = h.timestamp,
-    transactionsCount = txsCount,
-    miner = MinerInfo(h.minerAddress, h.minerName),
-    size = h.blockSize
+    transactionsCount = info.txsCount,
+    miner = MinerInfo(info.minerAddress, info.minerName),
+    size = info.blockSize
   )
 
   implicit val encoderSearchBlock: Encoder[SearchBlock] = (b: SearchBlock) => Json.obj(
     "id" -> Json.fromString(b.id),
-    "height" -> Json.fromInt(b.height),
+    "height" -> Json.fromLong(b.height),
     "timestamp" -> Json.fromLong(b.timestamp),
     "transactionsCount" -> Json.fromLong(b.transactionsCount),
     "miner" -> b.miner.asJson,

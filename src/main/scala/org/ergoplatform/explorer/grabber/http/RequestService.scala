@@ -1,4 +1,4 @@
-package org.ergoplatform.explorer.grabber
+package org.ergoplatform.explorer.grabber.http
 
 import java.io.InputStream
 

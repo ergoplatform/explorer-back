@@ -6,11 +6,11 @@ import cats.implicits._
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
-import org.ergoplatform.explorer.grabber.models.{NodeDifficulty, NodeHeader}
+import org.ergoplatform.explorer.grabber.protocol.{ApiDifficulty, ApiHeader}
 
 object NodeHeadersWriter extends BasicWriter {
 
-  type ToInsert = NodeHeader
+  type ToInsert = ApiHeader
 
   val fields = Seq(
     "id",
@@ -25,15 +25,16 @@ object NodeHeadersWriter extends BasicWriter {
     "transactions_root",
     "extension_hash",
     "equihash_solutions",
-    "interlinks"
+    "interlinks",
+    "size"
   )
 
-  implicit val MetaDifficulty: Meta[NodeDifficulty] = Meta[BigDecimal].xmap(
-    x => NodeDifficulty(x.toBigInt()),
+  implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
+    x => ApiDifficulty(x.toBigInt()),
     x => BigDecimal.apply(x.value)
   )
 
-  implicit val c = Composite[NodeHeader]
+  implicit val c = Composite[ApiHeader]
 
   val insertSql = s"INSERT INTO node_headers ${fields.mkString("(", ", ", ")")} " +
     s"VALUES ${fields.map(_ => "?").mkString("(", ", ", ")")}"

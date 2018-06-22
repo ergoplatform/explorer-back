@@ -1,8 +1,9 @@
-package org.ergoplatform.explorer.grabber.models
+package org.ergoplatform.explorer.grabber.protocol
 
-import io.circe._, io.circe.generic.semiauto._
+import io.circe._
+import io.circe.generic.semiauto._
 
-case class NodeInfo(
+case class ApiNodeInfo(
                      currentTime: Long,
                      name: String,
                      stateType: String,
@@ -24,7 +25,7 @@ case class NodeInfo(
                      isMining: Boolean
                    )
 
-object NodeInfo {
+object ApiNodeInfo {
 
-  implicit val decoder: Decoder[NodeInfo] = deriveDecoder
+  implicit val decoder: Decoder[ApiNodeInfo] = deriveDecoder
 }

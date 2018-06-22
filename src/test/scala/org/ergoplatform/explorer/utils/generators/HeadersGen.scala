@@ -11,7 +11,7 @@ object HeadersGen {
 
   val initBlock = headerGen(rootId, -1).sample.get.copy(id = rootId, parentId = Base16.encode(Array.fill(32)(0: Byte)))
 
-  def headerGen(parentId: String, height: Int): Gen[Header] = for {
+  def headerGen(parentId: String, height: Long): Gen[Header] = for {
     id <- generateDigestStringBase16(32)
     pId = parentId
     version = 1: Short
@@ -22,11 +22,11 @@ object HeadersGen {
     nBits <- arbLong.arbitrary
     eHash <- generateDigestStringBase16(32)
     bz <- arbLong.arbitrary
-    es <- Gen.listOfN(10, arbInt.arbitrary)
+    es <- generateDigestStringBase16(32)
     ad <- Gen.oneOf(Gen.const(None), Gen.listOfN(32, arbByte.arbitrary).map(v => Some(v.toArray)))
     reward <- Gen.choose(1000000000L, 10000000000L)
     fee <- Gen.choose(1L, 1000000L)
-  } yield Header(id, pId, version, h, adp, s, tr, System.currentTimeMillis(), nBits, eHash, bz, es, ad, 0L, "", "", reward, fee, 1000L)
+  } yield Header(id, pId, version, h, nBits, 0L, System.currentTimeMillis(), s, adp, tr,  eHash, es, List.empty[String], 0L)
 
   def generateHeaders(cnt: Int = 50): List[Header] = (0 until cnt).foldLeft(List(initBlock)) { case (l, h) =>
     val pId = l.headOption.fold(rootId) { _.id }

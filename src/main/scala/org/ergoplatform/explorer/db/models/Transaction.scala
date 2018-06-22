@@ -1,3 +1,3 @@
 package org.ergoplatform.explorer.db.models
 
-case class Transaction(id: String, blockId: String, isCoinbase: Boolean, timestamp: Long)
+case class Transaction(id: String, headerId: String, isCoinbase: Boolean, timestamp: Long)
