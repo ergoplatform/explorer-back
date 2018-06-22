@@ -26,7 +26,6 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                                      (implicit F: Monad[F], A: Async[F]) extends TransactionsService[F] {
 
   val headersDao = new HeadersDao
-  val interlinksDao = new InterlinksDao
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
