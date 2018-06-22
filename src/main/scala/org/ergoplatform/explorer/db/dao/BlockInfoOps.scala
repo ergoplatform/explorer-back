@@ -4,10 +4,13 @@ import cats.data.NonEmptyList
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
+import doobie.util.fragment.Fragment
 import doobie.util.query.Query0
 import org.ergoplatform.explorer.db.models.BlockInfo
 
 object BlockInfoOps {
+
+  type SingeDataType = (Long, Long, String)
 
   val fields = Seq(
     "header_id",
@@ -40,7 +43,74 @@ object BlockInfoOps {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE header_id = $headerId").query[BlockInfo]
 
   def select(headerIds: List[String]): Query0[BlockInfo] =
-    (fr"SELECT" ++ fieldsFr ++ fr"WHERE" ++
-      Fragments.in(fr"headers_id", NonEmptyList.fromListUnsafe(headerIds))).query[BlockInfo]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE" ++
+      Fragments.in(fr"header_id", NonEmptyList.fromListUnsafe(headerIds))).query[BlockInfo]
+
+  def findLast(cnt: Int = 10): Query0[BlockInfo] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info ORDER BY timestamp DESC LIMIT ${cnt.toLong}").query[BlockInfo]
+
+  def difficultiesSumSince(ts: Long): Query0[Long] = {
+    fr"SELECT COALESCE(CAST(SUM(difficulty) as BIGINT), 0) FROM blocks_info WHERE timestamp >= $ts".query[Long]
+  }
+
+  def circulatingSupplySince(ts: Long): Query0[Long] = {
+    (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0) " ++
+      fr"FROM node_transactions t RIGHT JOIN node_outputs o ON t.id = o.tx_id WHERE t.timestamp >= $ts").query[Long]
+  }
+
+  def totalCoinsGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(max(total_coins_issued) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def avgBlockSizeGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(avg(block_size) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def avgTxsGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(avg(txs_count) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def totalBlockchainSizeGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(sum(block_size) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def avgDifficultyGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(avg(difficulty) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def sumDifficultyGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(sum(difficulty) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def minerRevenueGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(sum(miner_revenue) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
+  def groupedByDayStatsPair(d: Int, selectStr: String): Query0[SingeDataType] = {
+    val sql = selectByDay(d, selectStr)
+    sql.query[SingeDataType]
+  }
+
+  def selectByDay(limitDaysBack: Int, selectStr: String): Fragment = {
+    import scala.concurrent.duration._
+
+    val whereFragment = if (limitDaysBack <=0 ) {
+      Fragment.empty
+    } else {
+      val ms = System.currentTimeMillis - limitDaysBack.days.toMillis
+      Fragment.const(s"WHERE timestamp >= $ms")
+    }
+
+    Fragment.const(
+      s"SELECT $selectStr, TO_CHAR(TO_TIMESTAMP(timestamp / 1000), 'DD/MM/YYYY') as date " +
+        s"FROM blocks_info") ++ whereFragment ++ Fragment.const("GROUP BY date ORDER BY t ASC")
+  }
 
 }
