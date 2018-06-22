@@ -3,9 +3,8 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models._
-import scorex.crypto.encode.Base16
 
-case class FullBlockInfo(headerInfo: HeaderInfo, transactionsInfo: List[TransactionInfo], adProofsInfo: String)
+case class FullBlockInfo(headerInfo: HeaderInfo, transactionsInfo: List[TransactionInfo], adProof: Option[AdProofInfo])
 
 object FullBlockInfo {
 
@@ -13,21 +12,20 @@ object FullBlockInfo {
     * Creating info model from related db entities
     */
   def apply(h: Header,
-            i: List[Interlink],
             txs: List[Transaction],
             inputs: List[Input],
-            outputs: List[Output]): FullBlockInfo = {
+            outputs: List[Output],
+            adProof: Option[AdProof]): FullBlockInfo = {
 
     val txsInfo = TransactionInfo.extractInfo(txs, inputs, outputs)
-    val headerInfo = HeaderInfo(h, i)
-    val adProofs = h.adProofs.map(v => Base16.encode(v)).getOrElse("")
-
-    new FullBlockInfo(headerInfo, txsInfo, adProofs)
+    val headerInfo = HeaderInfo(h)
+    val adProofInfo = adProof.map{ AdProofInfo.apply }
+    new FullBlockInfo(headerInfo, txsInfo, adProofInfo)
   }
 
   implicit val encoder: Encoder[FullBlockInfo] = (fb: FullBlockInfo) => Json.obj(
-    ("header", fb.headerInfo.asJson),
-    ("blockTransactions", fb.transactionsInfo.asJson),
-    ("adProofs", Json.fromString(fb.adProofsInfo))
+    "header" -> fb.headerInfo.asJson,
+    "blockTransactions" -> fb.transactionsInfo.asJson,
+    "adProofs" -> fb.adProof.asJson
   )
 }

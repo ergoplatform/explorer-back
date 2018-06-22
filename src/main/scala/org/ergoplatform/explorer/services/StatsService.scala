@@ -5,8 +5,8 @@ import cats.effect._
 import cats.implicits._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
-import org.ergoplatform.explorer.db.dao.StatsDao
-import org.ergoplatform.explorer.db.models.StatRecord
+import org.ergoplatform.explorer.db.dao.{BlockInfoDao, HeadersDao}
+import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.http.protocol.{BlockchainInfo, ChartSingleData, StatsSummary, UsdPriceInfo}
 
 import scala.concurrent.ExecutionContext
@@ -36,16 +36,17 @@ trait StatsService[F[_]] {
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                         (implicit F: Monad[F], A: Async[F]) extends StatsService[F] {
 
-  val emptyStatsResponse = StatsSummary(StatRecord())
+  val emptyStatsResponse = StatsSummary.empty
   val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
   private val SecondsIn24H: Long = (24*60*60).toLong
   private val MillisIn24H: Long = SecondsIn24H * 1000L
 
-  val statsDao = new StatsDao
+  val infoDao = new BlockInfoDao
+  val hDao = new HeadersDao
 
   override def findLastStats: F[StatsSummary] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.findLast.map(statRecordToStatsSummary).transact[F](xa)
+    result <- infoDao.findLast.map(statRecordToStatsSummary).transact[F](xa)
   } yield result.getOrElse(emptyStatsResponse)
 
   override def findBlockchainInfo: F[BlockchainInfo] = {
@@ -56,60 +57,61 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   }
 
   private def blockchainInfoResult: F[Option[BlockchainInfo]] = (for {
-    statsRecord <- statsDao.findLast
+    blockInfoRecord <- infoDao.findLast
     pastTs = System.currentTimeMillis() - MillisIn24H
-    difficulties <- statsDao.difficultiesSumSince(pastTs)
+    difficulties <- infoDao.difficultiesSumSince(pastTs)
     hashrate = hashratePerDay(difficulties)
-    supply <- statsDao.circulatingSupplySince(pastTs)
-    info = statsRecord.map { v => BlockchainInfo(v.version, supply, v.avgTxsCount, hashrate)}
+    supply <- infoDao.circulatingSupplySince(pastTs)
+    h <- hDao.get(blockInfoRecord.map(_.headerId).getOrElse(""))
+    info = blockInfoRecord.map { v => BlockchainInfo(h.version.toString, supply, v.avgTxsCount, hashrate)}
   } yield info).transact[F](xa)
 
   override def totalCoinsForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.totalCoinsGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+    result <- infoDao.totalCoinsGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   override def avgBlockSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+    result <- infoDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   override def avgBlockChainSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.blockchainSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+    result <- infoDao.blockchainSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   override def avgDifficultyForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.avgDifficultyGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+    result <- infoDao.avgDifficultyGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   override def avgTxsPerBlockForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.avgTxsCountGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+    result <- infoDao.avgTxsCountGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   override def minerRevenueForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    result <- statsDao.minerRevenueGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+    result <- infoDao.minerRevenueGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   override def hashrateForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
-    difficultiesByDay <- statsDao.sumDifficultiesGroupedByDay(d).transact[F](xa)
-    hashratesByDay = difficultiesByDay.map { case (ts, d) => ts -> hashratePerDay(d)}
+    difficultiesByDay <- infoDao.sumDifficultiesGroupedByDay(d).transact[F](xa)
+    hashratesByDay = difficultiesByDay.map { case (ts, d, s) => (ts, hashratePerDay(d), s)}
     result = pairsToChartData(hashratesByDay)
   } yield result
 
   private def hashRate24H: F[Long] = for {
-    difficulties <- statsDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
+    difficulties <- infoDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
     hashrate = difficulties / SecondsIn24H
   } yield hashrate
 
-  private def statRecordToStatsSummary(s: Option[StatRecord]): Option[StatsSummary] = s.map(StatsSummary.apply)
+  private def statRecordToStatsSummary(s: Option[BlockInfo]): Option[StatsSummary] = s.map(StatsSummary.apply)
 
-  private def pairsToChartData(list: List[(Long, Long)]): List[ChartSingleData[Long]] =
-    list.map{ case (ts, data) => ChartSingleData(ts, data)}
+  private def pairsToChartData(list: List[(Long, Long, String)]): List[ChartSingleData[Long]] =
+    list.map{ case (ts, data, _) => ChartSingleData(ts, data)}
 
 
 

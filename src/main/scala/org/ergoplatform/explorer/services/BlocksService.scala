@@ -8,7 +8,7 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.Header
+import org.ergoplatform.explorer.db.models.{BlockInfo, Header}
 import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, SearchBlock}
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
@@ -41,10 +41,11 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                                (implicit F: Monad[F], A: Async[F]) extends BlockService[F] {
 
   val headersDao = new HeadersDao
-  val interlinksDao = new InterlinksDao
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
+  val adProofDao = new AdProofsDao
+  val blockInfoDao = new BlockInfoDao
 
   override def getBlock(id: String): F[BlockSummaryInfo] = for {
     _ <- Async.shift[F](ec)
@@ -55,12 +56,12 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     h <- headersDao.get(id)
     nextIdOpt <- headersDao.findByParentId(h.id)
     references = BlockReferencesInfo(h.parentId, nextIdOpt.map(_.id))
-    links <- interlinksDao.findAllByBlockId(h.id)
     txs <- transactionsDao.findAllByBlockId(h.id)
     txsIds = txs.map(_.id)
     is <- inputDao.findAllByTxsId(txsIds)
     os <- outputDao.findAllByTxsId(txsIds)
-  } yield BlockSummaryInfo(FullBlockInfo(h, links, txs, is, os), references)).transact[F](xa)
+    ad <- adProofDao.find(h.id)
+  } yield BlockSummaryInfo(FullBlockInfo(h, txs, is, os, ad), references)).transact[F](xa)
 
   override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = for {
     _ <- Async.shift[F](ec)
@@ -84,18 +85,17 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   private def enrichSearchBlocks(headersIO: ConnectionIO[List[Header]]): ConnectionIO[List[SearchBlock]] = {
     for {
       headers <- headersIO
-      transactionCounts <- transactionsDao.countTxsNumbersByBlocksIds(headers.map(_.id))
-    } yield constructSearchBlocks(headers, transactionCounts)
+      blocksInfo <- blockInfoDao.list(headers.map(_.id))
+    } yield constructSearchBlocks(headers, blocksInfo)
   }
 
   private def constructSearchBlocks(headers: List[Header],
-                                    transactionCounts: List[(String, Long)]): List[SearchBlock] = {
+                                    blocksInfo: List[BlockInfo]): List[SearchBlock] = {
     headers.map { header =>
-      val transactionCount = transactionCounts
-        .find { case (id, _) => id == header.id }
-        .map { case (_, count) => count }
-        .getOrElse(0L)
-      SearchBlock.fromHeader(header, transactionCount)
+      val info = blocksInfo
+        .find { _.headerId == header.id }
+        .get
+      SearchBlock.fromHeader(header, info)
     }
   }
 

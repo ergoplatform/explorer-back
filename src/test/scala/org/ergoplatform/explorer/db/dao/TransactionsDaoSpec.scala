@@ -43,14 +43,14 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     headers.foreach { h =>
       val id = h.id
-      val expected = txs.filter(_.blockId == id)
+      val expected = txs.filter(_.headerId == id)
       val fromDb = dao.findAllByBlockId(id).transact(xa).unsafeRunSync()
       fromDb should contain theSameElementsAs expected
     }
 
     headers.foreach { h =>
       val id = h.id
-      val expected = List(id -> txs.count(_.blockId == id))
+      val expected = List(id -> txs.count(_.headerId == id))
       val fromDb = dao.countTxsNumbersByBlocksIds(List(id)).transact(xa).unsafeRunSync()
       fromDb should contain theSameElementsAs expected
     }

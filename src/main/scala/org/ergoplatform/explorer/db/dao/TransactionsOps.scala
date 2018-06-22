@@ -10,29 +10,31 @@ object TransactionsOps {
 
   val fields = Seq(
     "id",
-    "block_id",
-    "is_coinbase",
-    "ts"
+    "header_id",
+    "coinbase",
+    "timestamp"
   )
 
-  val fieldsFr = Fragment.const(fields.mkString(", "))
-  val insertSql = "INSERT INTO transactions (id, block_id, is_coinbase, ts) VALUES (?, ? ,? ,?)"
+  val fieldsString = fields.mkString(", ")
+  val holdersString = fields.map(_ => "?").mkString(", ")
+  val fieldsFr = Fragment.const(fieldsString)
+  val insertSql = s"INSERT INTO node_transactions ($fieldsString) VALUES ($holdersString)"
 
   def findAllByBlockId(blockId: String)(implicit c: Composite[Transaction]): Query0[Transaction] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM transactions WHERE block_id = $blockId").query[Transaction]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_transactions WHERE header_id = $blockId").query[Transaction]
 
   def countTxsNumbersByBlocksIds(blockIds: NonEmptyList[String]): Query0[(String, Long)] =
-    (fr"SELECT block_id, count(*) FROM transactions WHERE" ++
-      Fragments.in(fr"block_id", blockIds) ++ fr"GROUP BY block_id").query[(String, Long)]
+    (fr"SELECT header_id, count(*) FROM node_transactions WHERE" ++
+      Fragments.in(fr"header_id", blockIds) ++ fr"GROUP BY header_id").query[(String, Long)]
 
   def getTxsByAddressId(addressId: String, offset: Int, limit: Int)
                        (implicit c: Composite[Transaction]): Query0[Transaction] =
     fr"""
-        SELECT t.id, t.block_id, t.is_coinbase, t.ts
-        FROM transactions t
+        SELECT t.id, t.header_id, t.coinbase, t.timestamp
+        FROM node_transactions t
         WHERE EXISTS (
           SELECT 1
-          FROM outputs os
+          FROM node_outputs os
           WHERE (os.tx_id = t.id AND os.hash = $addressId)
         )
         OFFSET ${offset.toLong} LIMIT ${limit.toLong};
@@ -41,10 +43,10 @@ object TransactionsOps {
   def countTxsByAddressId(addressId: String): Query0[Long] = {
       fr"""
          SELECT COUNT(t.id)
-         FROM transactions t
+         FROM node_transactions t
          WHERE EXISTS (
            SELECT 1
-           FROM outputs os
+           FROM node_outputs os
            WHERE (os.tx_id = t.id AND os.hash = $addressId)
          )
          """.query[Long]
@@ -53,8 +55,8 @@ object TransactionsOps {
   def insert: Update[Transaction] = Update[Transaction](insertSql)
 
   def select(id: String): Query0[Transaction] =
-    fr"SELECT id, block_id, is_coinbase, ts FROM transactions WHERE id = $id".query[Transaction]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_transactions WHERE id = $id").query[Transaction]
 
   def searchById(substring: String): Query0[String] =
-    fr"SELECT id FROM transactions WHERE id LIKE ${"%" + substring + "%" }".query[String]
+    fr"SELECT id FROM node_transactions WHERE id LIKE ${"%" + substring + "%" }".query[String]
 }

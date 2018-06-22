@@ -1,5 +1,6 @@
 package org.ergoplatform.explorer.utils.generators
 
+import io.circe.Json
 import org.ergoplatform.explorer.db.models.{Header, Input, Output, Transaction}
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
@@ -22,7 +23,7 @@ object TransactionsGenerator {
     ids <- Gen.listOfN(number, generateDigestStringBase16(32))
     addresses <- Gen.listOfN(number, generateDigestStringBase16(32))
     outputs = ids.zip(addresses).zip(values).map { case ((id, a), v) =>
-      Output(id, txId, v, "", a)
+      Output(id, txId, v, 0, "", a)
     }
   } yield outputs
 
@@ -53,17 +54,16 @@ object TransactionsGenerator {
       } else {
         val data = osNotSpent.map { o =>
           val txId = generateDigestStringBase16(32).sample.get
-          val id = generateDigestStringBase16(32).sample.get
-          val i = Input(id, txId, o.id, "")
+          val i = Input(o.boxId, txId, "")
 
           val oId1 = generateDigestStringBase16(32).sample.get
           val v1 = o.value / 2
-          val o1 = Output(oId1, txId, v1, "", o.hash)
+          val o1 = Output(oId1, txId, v1, 0, "", o.hash)
 
           val oId2 = generateDigestStringBase16(32).sample.get
           val a2 = generateDigestStringBase16(32).sample.get
           val v2 = o.value - v1
-          val o2 = Output(oId2, txId, v2, "", a2)
+          val o2 = Output(oId2, txId, v2, 1, "", a2)
 
           (i , List(o1, o2))
         }

@@ -6,8 +6,9 @@ import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.Logger
 import doobie.hikari.implicits._
+import org.ergoplatform.explorer.grabber.GrabberService
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -34,11 +35,18 @@ object App extends Configuration with DbTransactor with Services with Rest {
         logger.error("Could not start HTTP server", ex)
     }
 
+    val grabberEc = ExecutionContext.fromExecutor(Pools.grabberPool)
+
+    val grabberService = new GrabberService(transactor2, grabberEc, cfg.grabber)
+    grabberService.start
+
     sys.addShutdownHook {
+      grabberService.stop
       val stop = binding.flatMap { x => x.unbind() }
       stop.onComplete { _ =>
         Pools.shutdown
         transactor.shutdown.unsafeRunSync()
+        transactor2.shutdown.unsafeRunSync()
         system.terminate()
       }
       Await.result(stop, 5 seconds)
