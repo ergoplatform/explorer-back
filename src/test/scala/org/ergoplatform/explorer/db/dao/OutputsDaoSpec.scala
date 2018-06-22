@@ -38,7 +38,7 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val fromDb = dao.findAllByAddressId(address).transact(xa).unsafeRunSync()
     expected should contain theSameElementsAs fromDb
 
-    val addressPart = address.substring(0, 5)
+    val addressPart = address.substring(5, 10)
     val expectedToFind = outputs.collect { case o if o.hash contains addressPart => o.hash }
     val foundAddresses = dao.searchByAddressId(addressPart).transact(xa).unsafeRunSync()
     expectedToFind should contain theSameElementsAs foundAddresses

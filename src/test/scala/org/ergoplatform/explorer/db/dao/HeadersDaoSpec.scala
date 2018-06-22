@@ -48,6 +48,11 @@ class HeadersDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     the[NoSuchElementException] thrownBy dao.getByParentId(wrongId).transact(xa).unsafeRunSync()
     dao.get(head.id).transact(xa).unsafeRunSync() shouldBe head
 
+    val substring = rnd1.id.substring(0, 5)
+    val expectedHeaders = headers.filter(_.id contains substring)
+    val foundHeaders = dao.searchById(substring).transact(xa).unsafeRunSync()
+    expectedHeaders should contain theSameElementsAs foundHeaders
+
     dao.count(0L, 1000L).transact(xa).unsafeRunSync() shouldBe headers.length
     dao.count(2L, 5L).transact(xa).unsafeRunSync() shouldBe headers.filter { h => (h.timestamp >= 2L) && (h.timestamp <= 5L) }.length
 
