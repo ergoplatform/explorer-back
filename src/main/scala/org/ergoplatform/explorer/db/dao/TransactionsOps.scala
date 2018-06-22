@@ -58,5 +58,5 @@ object TransactionsOps {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_transactions WHERE id = $id").query[Transaction]
 
   def searchById(substring: String): Query0[String] =
-    fr"SELECT id FROM transactions WHERE id LIKE ${"%" + substring + "%" }".query[String]
+    fr"SELECT id FROM node_transactions WHERE id LIKE ${"%" + substring + "%" }".query[String]
 }

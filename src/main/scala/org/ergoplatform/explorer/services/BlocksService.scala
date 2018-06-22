@@ -8,7 +8,7 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.Header
+import org.ergoplatform.explorer.db.models.{BlockInfo, Header}
 import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, SearchBlock}
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
@@ -85,18 +85,17 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   private def enrichSearchBlocks(headersIO: ConnectionIO[List[Header]]): ConnectionIO[List[SearchBlock]] = {
     for {
       headers <- headersIO
-      transactionCounts <- transactionsDao.countTxsNumbersByBlocksIds(headers.map(_.id))
-    } yield constructSearchBlocks(headers, transactionCounts)
+      blocksInfo <- blockInfoDao.list(headers.map(_.id))
+    } yield constructSearchBlocks(headers, blocksInfo)
   }
 
   private def constructSearchBlocks(headers: List[Header],
-                                    transactionCounts: List[(String, Long)]): List[SearchBlock] = {
+                                    blocksInfo: List[BlockInfo]): List[SearchBlock] = {
     headers.map { header =>
-      val transactionCount = transactionCounts
-        .find { case (id, _) => id == header.id }
-        .map { case (_, count) => count }
-        .getOrElse(0L)
-      SearchBlock.fromHeader(header, transactionCount)
+      val info = blocksInfo
+        .find { _.headerId == header.id }
+        .get
+      SearchBlock.fromHeader(header, info)
     }
   }
 
