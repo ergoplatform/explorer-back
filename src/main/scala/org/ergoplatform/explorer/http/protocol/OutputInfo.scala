@@ -9,7 +9,7 @@ object OutputInfo {
 
 
   def apply(o: Output): OutputInfo = OutputInfo(
-    o.id,
+    o.boxId,
     o.value,
     o.proposition,
     Some(o.hash).filter(_.startsWith("cd0703"))

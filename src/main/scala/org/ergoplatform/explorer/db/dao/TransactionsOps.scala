@@ -34,7 +34,7 @@ object TransactionsOps {
         FROM node_transactions t
         WHERE EXISTS (
           SELECT 1
-          FROM outputs os
+          FROM node_outputs os
           WHERE (os.tx_id = t.id AND os.hash = $addressId)
         )
         OFFSET ${offset.toLong} LIMIT ${limit.toLong};
@@ -46,7 +46,7 @@ object TransactionsOps {
          FROM node_transactions t
          WHERE EXISTS (
            SELECT 1
-           FROM outputs os
+           FROM node_outputs os
            WHERE (os.tx_id = t.id AND os.hash = $addressId)
          )
          """.query[Long]

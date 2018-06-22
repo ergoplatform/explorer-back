@@ -25,5 +25,7 @@ class BlockInfoOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     check(avgDifficultyGroupedByDay(10))
     check(sumDifficultyGroupedByDay(10))
     check(minerRevenueGroupedByDay(10))
+    check(insert)
+    check(deleteAll)
   }
 }

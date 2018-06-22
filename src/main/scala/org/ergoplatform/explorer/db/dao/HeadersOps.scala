@@ -61,7 +61,7 @@ object HeadersOps {
 
   def searchById(substring: String): Query0[Header] = (
     fr"SELECT" ++ fieldsFr ++
-    fr"FROM headers WHERE id LIKE ${"%" + substring + "%"}"
+    fr"FROM node_headers WHERE id LIKE ${"%" + substring + "%"}"
   ).query[Header]
 
 }

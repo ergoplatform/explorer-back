@@ -10,7 +10,7 @@ import org.ergoplatform.explorer.db.models.BlockInfo
 
 object BlockInfoOps {
 
-  type SingeDataType = (Long, Long, String)
+  type SingleDataType = (Long, Long, String)
 
   val fields = Seq(
     "header_id",
@@ -36,8 +36,13 @@ object BlockInfoOps {
 
   val fieldsString = fields.mkString(", ")
   val holdersString = fields.map(_ => "?").mkString(", ")
+  val insertSql = s"INSERT INTO blocks_info ($fieldsString) VALUES ($holdersString)"
 
   val fieldsFr = Fragment.const(fieldsString)
+
+  def insert: Update[BlockInfo] = Update[BlockInfo](insertSql)
+
+  def deleteAll: Update[Unit] = Update[Unit]("DELETE FROM blocks_info")
 
   def select(headerId: String): Query0[BlockInfo] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE header_id = $headerId").query[BlockInfo]
@@ -58,44 +63,44 @@ object BlockInfoOps {
       fr"FROM node_transactions t RIGHT JOIN node_outputs o ON t.id = o.tx_id WHERE t.timestamp >= $ts").query[Long]
   }
 
-  def totalCoinsGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+  def totalCoinsGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(max(total_coins_issued) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
-  def avgBlockSizeGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+  def avgBlockSizeGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(avg(block_size) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
-  def avgTxsGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+  def avgTxsGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(avg(txs_count) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
-  def totalBlockchainSizeGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+  def totalBlockchainSizeGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(sum(block_size) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
-  def avgDifficultyGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+  def avgDifficultyGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(avg(difficulty) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
-  def sumDifficultyGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+  def sumDifficultyGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(sum(difficulty) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
-  def minerRevenueGroupedByDay(lastDays: Int): Query0[SingeDataType] = {
+  def minerRevenueGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(sum(miner_revenue) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
-  def groupedByDayStatsPair(d: Int, selectStr: String): Query0[SingeDataType] = {
+  def groupedByDayStatsPair(d: Int, selectStr: String): Query0[SingleDataType] = {
     val sql = selectByDay(d, selectStr)
-    sql.query[SingeDataType]
+    sql.query[SingleDataType]
   }
 
   def selectByDay(limitDaysBack: Int, selectStr: String): Fragment = {

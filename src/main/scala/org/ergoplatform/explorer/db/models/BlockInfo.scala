@@ -20,4 +20,8 @@ case class BlockInfo(
                       totalCoinsIssued: Long,
                       totalMiningTime: Long,
                       totalMinerRevenue: Long
-                    )
+                    ) {
+  val avgBlockSize = if (height == 0L) { 0L } else { blockChainTotalSize / height }
+  val avgTxsCount = if (height == 0L) { 0L } else { totalTxsCount / height }
+  val avgMiningTime = if (height == 0L) { 0L } else { totalMiningTime / height }
+}

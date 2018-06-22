@@ -3,7 +3,7 @@ package org.ergoplatform.explorer.db.models
 import io.circe.Json
 
 case class Output(
-                   id: String,
+                   boxId: String,
                    txId: String,
                    value: Long,
                    index: Int,

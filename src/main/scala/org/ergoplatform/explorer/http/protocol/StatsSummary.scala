@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.StatRecord
+import org.ergoplatform.explorer.db.models.BlockInfo
 
 case class StatsSummary(blocksCount: Long,
                         blocksAvgTime: Long,
@@ -12,11 +12,13 @@ case class StatsSummary(blocksCount: Long,
 
 object StatsSummary {
 
-  def apply(s: StatRecord): StatsSummary = new StatsSummary(
-    blocksCount = s.blocksCount,
+  val empty = StatsSummary(0L, 0L, 0L, 0L, 0L, 0L)
+
+  def apply(s: BlockInfo): StatsSummary = new StatsSummary(
+    blocksCount = s.height,
     blocksAvgTime = s.avgMiningTime,
-    totalCoins = s.totalCoins,
-    totalTransactionsCount = s.totalTransactionsCount,
+    totalCoins = s.totalCoinsIssued,
+    totalTransactionsCount = s.totalTxsCount,
     0L,
     0L
   )
