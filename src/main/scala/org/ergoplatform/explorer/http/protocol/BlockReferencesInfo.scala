@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
+import io.circe.syntax._
 
 case class BlockReferencesInfo(previousId: String, nextId: Option[String])
 
@@ -13,6 +14,6 @@ object BlockReferencesInfo {
 
   implicit val encoder: Encoder[BlockReferencesInfo] = (br: BlockReferencesInfo) => Json.obj(
     "previousId" -> Json.fromString(br.previousId),
-    "nextId" ->  br.nextId.fold(Json.Null) { Json.fromString }
+    "nextId" ->  br.nextId.asJson
   )
 }

@@ -24,8 +24,8 @@ object FullBlockInfo {
   }
 
   implicit val encoder: Encoder[FullBlockInfo] = (fb: FullBlockInfo) => Json.obj(
-    ("header", fb.headerInfo.asJson),
-    ("blockTransactions", fb.transactionsInfo.asJson),
-    ("adProofs", fb.adProof.fold(Json.Null) { _.asJson })
+    "header" -> fb.headerInfo.asJson,
+    "blockTransactions" -> fb.transactionsInfo.asJson,
+    "adProofs" -> fb.adProof.asJson
   )
 }

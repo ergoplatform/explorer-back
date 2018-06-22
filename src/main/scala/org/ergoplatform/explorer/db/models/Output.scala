@@ -9,5 +9,5 @@ case class Output(
                    index: Int,
                    proposition: String,
                    hash: String,
-                   additionalRegisters: Json
+                   additionalRegisters: Json = Json.Null
                  )
