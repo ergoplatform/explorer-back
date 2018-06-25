@@ -25,3 +25,7 @@ case class BlockInfo(
   val avgTxsCount = if (height == 0L) { 0L } else { totalTxsCount / height }
   val avgMiningTime = if (height == 0L) { 0L } else { totalMiningTime / height }
 }
+
+object BlockInfo {
+  val empty = BlockInfo("", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, "", "", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
+}
