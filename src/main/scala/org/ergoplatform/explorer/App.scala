@@ -37,7 +37,8 @@ object App extends Configuration with DbTransactor with Services with Rest {
         f
       }
       _ <- IO {
-        flyway.clean()
+        //flyway.clean()
+        ()
       }
       _ <- IO {
         flyway.migrate()
