@@ -47,14 +47,17 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, grC
   }
 
   //Looking for a block. In case of error just move forward.
-  private def fullBlocksForIds(ids: List[String]): IO[List[ApiFullBlock]] = ids
+  private def fullBlocksForIds(ids: List[String]): IO[List[(ApiFullBlock, Boolean)]] = ids
     .parTraverse(fullBlocksSafe)
     .map(_.flatten.toList)
+    .map(blocks => blocks.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
 
   def writeBlocksFromHeight(h: Long): IO[Unit] = for {
     ids <- idsAtHeight(h)
     blocks <- fullBlocksForIds(ids)
-    _ <- blocks.map { b =>
+    _ <- blocks.map { case (block, isMain) =>
+      val h = block.header.copy(mainChain = isMain)
+      val b = block.copy(header = h)
       DBHelper.writeOne(b).transact[IO](xa)
         .flatMap { _ => writeBlockInfo(b) }
     }.parSequence

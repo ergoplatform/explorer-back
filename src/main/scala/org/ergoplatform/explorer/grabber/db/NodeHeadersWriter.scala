@@ -26,7 +26,8 @@ object NodeHeadersWriter extends BasicWriter {
     "extension_hash",
     "equihash_solutions",
     "interlinks",
-    "size"
+    "size",
+    "main_chain"
   )
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(

@@ -44,7 +44,7 @@ object App extends Configuration with DbTransactor with Services with Rest {
       }
     } yield ()
 
-    //if (cfg.db.migrateOnStart) { migrate.unsafeRunSync() }
+    if (cfg.db.migrateOnStart) { migrate.unsafeRunSync() }
 
     val binding = Http().bindAndHandle(routes, host, port)
 

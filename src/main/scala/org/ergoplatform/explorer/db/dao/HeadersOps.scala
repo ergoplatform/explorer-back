@@ -19,7 +19,8 @@ object HeadersOps {
     "extension_hash",
     "equihash_solutions",
     "interlinks",
-    "size"
+    "size",
+    "main_chain"
   )
 
   val fieldsString = fields.mkString(", ")
@@ -36,7 +37,7 @@ object HeadersOps {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE parent_id = $parentId").query[Header]
 
   def selectLast(limit: Int = 20): Query0[Header] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers ORDER BY height DESC LIMIT ${limit.toLong}").query
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE main_chain = TRUE ORDER BY height DESC LIMIT ${limit.toLong}").query
 
   def selectHeight(id: String): Query0[Long] = fr"SELECT height FROM node_headers WHERE id = $id".query[Long]
 
@@ -45,7 +46,8 @@ object HeadersOps {
   def update: Update[(Header, String)] = Update[(Header, String)](updateByIdSql)
 
   def count(sTs: Long, eTs: Long): Query0[Long] =
-    fr"SELECT count(id) FROM node_headers WHERE (timestamp >= $sTs) AND (timestamp <= $eTs)".query[Long]
+    fr"SELECT count(id) FROM node_headers WHERE (timestamp >= $sTs) AND (timestamp <= $eTs) AND main_chain == TRUE"
+      .query[Long]
 
   def list(offset: Int = 0,
            limit: Int = 20,
@@ -54,7 +56,7 @@ object HeadersOps {
            startTs: Long,
            endTs: Long): Query0[Header] = (
     fr"SELECT" ++ fieldsFr ++
-      fr"FROM node_headers WHERE (timestamp >= $startTs) AND (timestamp <= $endTs)" ++
+      fr"FROM node_headers WHERE ((timestamp >= $startTs) AND (timestamp <= $endTs) AND main_chain = TRUE)" ++
       Fragment.const("ORDER BY " + sortBy + " " + sortOrder) ++
       fr"LIMIT ${limit.toLong} OFFSET ${offset.toLong};"
     ).query[Header]

@@ -12,12 +12,14 @@ CREATE TABLE node_headers (
   extension_hash VARCHAR(64) NOT NULL,
   equihash_solutions VARCHAR NOT NULL,
   interlinks VARCHAR ARRAY NOT NULL,
-  size BIGINT NOT NULL
+  size BIGINT NOT NULL,
+  main_chain BOOLEAN NOT NULL
 );
 
 CREATE INDEX "node_headers__parent_id" ON node_headers (parent_id);
 CREATE INDEX "node_headers__height" ON node_headers (height);
 CREATE INDEX "node_headers__ts" ON node_headers (timestamp);
+CREATE INDEX "node_headers__main_chain" ON node_headers (main_chain);
 
 ALTER TABLE node_headers OWNER TO ergo;
 
