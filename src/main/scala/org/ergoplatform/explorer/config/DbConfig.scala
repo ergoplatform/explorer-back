@@ -7,7 +7,8 @@ case class DbConfig(url: String = "jdbc:postgresql://localhost:5432/explorer",
                     user: String = "ergo",
                     password: Option[String] = None,
                     passfile: Option[String] = None,
-                    driverClassName: String = "org.postgresql.Driver") {
+                    driverClassName: String = "org.postgresql.Driver",
+                    migrateOnStart: Boolean = true) {
 
   def pass: String = (password orElse readfile(passfile)).getOrElse("pass")
 

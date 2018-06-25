@@ -59,15 +59,17 @@ CREATE INDEX "node_transactions__header_id" on node_transactions (header_id);
 CREATE INDEX "node_transactions__timestamp" on node_transactions (timestamp);
 
 CREATE TABLE node_inputs (
-  box_id VARCHAR(64) NOT NULL PRIMARY KEY,
+  box_id VARCHAR(64) NOT NULL,
   tx_id VARCHAR(64) NOT NULL,
   proof_bytes VARCHAR NOT NULL,
-  extension JSON NOT NULL
+  extension JSON NOT NULL,
+  PRIMARY KEY (box_id, tx_id)
 );
 
 ALTER TABLE node_inputs OWNER TO ergo;
 
 CREATE INDEX "node_inputs__tx_id" on node_inputs (tx_id);
+CREATE INDEX "node_inputs__box_id" on node_inputs (box_id);
 
 CREATE TABLE node_outputs (
   box_id VARCHAR(64) NOT NULL PRIMARY KEY,

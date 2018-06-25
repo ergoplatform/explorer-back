@@ -6,7 +6,9 @@ import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.Logger
 import doobie.hikari.implicits._
+import org.ergoplatform.explorer.config.DbConfig
 import org.ergoplatform.explorer.grabber.GrabberService
+import org.flywaydb.core.Flyway
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
@@ -25,6 +27,18 @@ object App extends Configuration with DbTransactor with Services with Rest {
     implicit def rh: RejectionHandler = ErrorHandler.rejectionHandler
     val host = cfg.http.host
     val port = cfg.http.port
+
+
+    def cleanAndMigrate(db: DbConfig): Unit = {
+      val flyway = new Flyway()
+      flyway.setSqlMigrationSeparator("__")
+      flyway.setLocations("filesystem:sql")
+      flyway.setDataSource(db.url, db.user, db.pass)
+      flyway.clean()
+      flyway.migrate()
+    }
+
+    if (cfg.db.migrateOnStart) { cleanAndMigrate(cfg.db) }
 
     val binding = Http().bindAndHandle(routes, host, port)
 
