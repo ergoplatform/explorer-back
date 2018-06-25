@@ -26,7 +26,7 @@ trait PreparedDB extends JsonMeta { self: TestSuite with BeforeAndAfterAll =>
     container.container.start()
     val flyway = new Flyway()
     flyway.setSqlMigrationSeparator("__")
-    flyway.setLocations("filesystem:sql")
+    flyway.setLocations("classpath:db")
     flyway.setDataSource(container.jdbcUrl, container.username, container.password)
     flyway.migrate()
   }
