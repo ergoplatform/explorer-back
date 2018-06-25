@@ -46,7 +46,7 @@ object HeadersOps {
   def update: Update[(Header, String)] = Update[(Header, String)](updateByIdSql)
 
   def count(sTs: Long, eTs: Long): Query0[Long] =
-    fr"SELECT count(id) FROM node_headers WHERE (timestamp >= $sTs) AND (timestamp <= $eTs) AND main_chain == TRUE"
+    fr"SELECT count(id) FROM node_headers WHERE (timestamp >= $sTs) AND (timestamp <= $eTs) AND main_chain = TRUE"
       .query[Long]
 
   def list(offset: Int = 0,

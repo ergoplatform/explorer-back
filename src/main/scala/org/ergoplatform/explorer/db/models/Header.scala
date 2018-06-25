@@ -15,6 +15,6 @@ case class Header(
                    equihashSolutions: String,
                    interlinks: List[String],
                    size: Long,
-                   mainChain: Boolean = true
+                   mainChain: Boolean
                  )
 
