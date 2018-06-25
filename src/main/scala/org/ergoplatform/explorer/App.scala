@@ -32,13 +32,12 @@ object App extends Configuration with DbTransactor with Services with Rest {
       flyway <- IO {
         val f = new Flyway()
         f.setSqlMigrationSeparator("__")
-        f.setLocations("filesystem:sql")
+        f.setLocations("classpath:db")
         f.setDataSource(cfg.db.url, cfg.db.user, cfg.db.pass)
         f
       }
       _ <- IO {
-        //flyway.clean()
-        ()
+        flyway.clean()
       }
       _ <- IO {
         flyway.migrate()

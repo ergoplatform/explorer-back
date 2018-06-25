@@ -69,7 +69,7 @@ flywayUser := sys.env.getOrElse("DB_USER", "ergo")
 flywayPassword := sys.env.getOrElse("DB_PASS", "pass")
 flywaySchemas := Seq("public")
 flywayTable := "schema_history"
-flywayLocations := Seq("filesystem:sql")
+flywayLocations := Seq("classpath:db")
 flywaySqlMigrationSeparator := "__"
 
 scalacOptions ++= Seq(
