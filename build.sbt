@@ -54,6 +54,7 @@ lazy val testDeps = Seq(
   "org.scalacheck" %% "scalacheck" % "1.14.0",
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % Test,
+  "org.mockito" % "mockito-core" % "2.19.0" % Test,
   "org.testcontainers" % "postgresql" % "1.7.3" % Test,
   "com.dimafeng" %% "testcontainers-scala" % "0.18.0" % Test
 )
