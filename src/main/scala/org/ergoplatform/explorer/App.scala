@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
 import akka.stream.ActorMaterializer
+import cats.effect.IO
 import com.typesafe.scalalogging.Logger
 import doobie.hikari.implicits._
-import org.ergoplatform.explorer.config.DbConfig
 import org.ergoplatform.explorer.grabber.GrabberService
 import org.flywaydb.core.Flyway
 
@@ -28,17 +28,23 @@ object App extends Configuration with DbTransactor with Services with Rest {
     val host = cfg.http.host
     val port = cfg.http.port
 
+    val migrate: IO[Unit] = for {
+      flyway <- IO {
+        val f = new Flyway()
+        f.setSqlMigrationSeparator("__")
+        f.setLocations("filesystem:sql")
+        f.setDataSource(cfg.db.url, cfg.db.user, cfg.db.pass)
+        f
+      }
+      _ <- IO {
+        flyway.clean()
+      }
+      _ <- IO {
+        flyway.migrate()
+      }
+    } yield ()
 
-    def cleanAndMigrate(db: DbConfig): Unit = {
-      val flyway = new Flyway()
-      flyway.setSqlMigrationSeparator("__")
-      flyway.setLocations("filesystem:sql")
-      flyway.setDataSource(db.url, db.user, db.pass)
-      flyway.clean()
-      flyway.migrate()
-    }
-
-    if (cfg.db.migrateOnStart) { cleanAndMigrate(cfg.db) }
+    if (cfg.db.migrateOnStart) { migrate.unsafeRunSync() }
 
     val binding = Http().bindAndHandle(routes, host, port)
 
