@@ -36,9 +36,22 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, grC
   private def fullBlock(id: String): IO[ApiFullBlock] =
     requestService.get[ApiFullBlock](addressService.fullBlockUri(id))
 
-  private def fullBlocksForIds(ids: List[String]): IO[List[ApiFullBlock]] = ids.parTraverse { id => fullBlock(id) }
+  private def fullBlocksSafe(id: String): IO[Option[ApiFullBlock]] = {
+    requestService.getSafe[ApiFullBlock](addressService.fullBlockUri(id)).flatMap {
+      case Left(f) =>
+        logger.error(s"Error while requesting block with id $id", f)
+        IO.pure(None)
+      case Right(v) =>
+        IO.pure(Some(v))
+    }
+  }
 
-  private def writeBlocksFromHeight(h: Long): IO[Unit] = for {
+  //Looking for a block. In case of error just move forward.
+  private def fullBlocksForIds(ids: List[String]): IO[List[ApiFullBlock]] = ids
+    .parTraverse(fullBlocksSafe)
+    .map(_.flatten.toList)
+
+  def writeBlocksFromHeight(h: Long): IO[Unit] = for {
     ids <- idsAtHeight(h)
     blocks <- fullBlocksForIds(ids)
     _ <- blocks.map { b =>
@@ -122,6 +135,6 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, grC
       logger.info(s"Grabber stopped. Cause: $r")
     }
   } else {
-    logger.warn("Trying to start service that already has benn started.")
+    logger.warn("Trying to start service that already has been started.")
   }
 }
