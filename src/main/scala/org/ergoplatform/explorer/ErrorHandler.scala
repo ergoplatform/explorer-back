@@ -1,24 +1,26 @@
 package org.ergoplatform.explorer
 
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler, ValidationRejection}
 import akka.http.scaladsl.server._
+import com.typesafe.scalalogging.StrictLogging
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import org.ergoplatform.explorer.http.protocol.ApiError
 
-object ErrorHandler extends FailFastCirceSupport {
+object ErrorHandler extends FailFastCirceSupport with StrictLogging {
 
   implicit val exceptionHandler: ExceptionHandler = ExceptionHandler {
-    case e: ApiError =>
-      complete(StatusCodes.custom(e.statusCode, e.msg) → e)
-    case e: NoSuchElementException =>
-      complete(StatusCodes.NotFound -> Json.obj("msg" -> Json.fromString(e.getMessage)))
-    case e: IllegalArgumentException =>
-      complete(StatusCodes.BadRequest -> Json.obj("msg" -> Json.fromString(e.getMessage)))
-    case e: Throwable =>
-      complete(StatusCodes.InternalServerError -> Json.obj("msg" -> Json.fromString(e.getMessage)))
+    case e: ApiError => error(e, StatusCodes.custom(e.statusCode, e.msg))
+    case e: NoSuchElementException => error(e, StatusCodes.NotFound)
+    case e: IllegalArgumentException => error(e, StatusCodes.BadRequest)
+    case e: Throwable => error(e, StatusCodes.InternalServerError)
+  }
+
+  private def error(e: Throwable, code: StatusCode): Route = {
+    logger.info("Error processing request. " + e, e)
+    complete(code -> Json.obj("msg" -> Json.fromString(e.getMessage)))
   }
 
   implicit val rejectionHandler = RejectionHandler.newBuilder()

@@ -3,7 +3,8 @@ package org.ergoplatform.explorer.services
 import cats._
 import cats.effect._
 import cats.implicits._
-import doobie.free.connection.ConnectionIO
+import doobie.free.connection
+import doobie.free.connection.{ConnectionIO, ConnectionOp}
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
@@ -83,10 +84,15 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   }
 
   private def enrichSearchBlocks(headersIO: ConnectionIO[List[Header]]): ConnectionIO[List[SearchBlock]] = {
-    for {
-      headers <- headersIO
-      blocksInfo <- blockInfoDao.list(headers.map(_.id))
-    } yield constructSearchBlocks(headers, blocksInfo)
+    headersIO.flatMap { headers =>
+      if (headers.isEmpty) {
+        connection.pure(Nil: List[SearchBlock])
+      } else {
+        blockInfoDao.list(headers.map(_.id)) map { blocksInfo =>
+          constructSearchBlocks(headers, blocksInfo)
+        }
+      }
+    }
   }
 
   private def constructSearchBlocks(headers: List[Header],
