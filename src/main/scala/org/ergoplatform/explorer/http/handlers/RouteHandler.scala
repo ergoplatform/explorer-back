@@ -9,7 +9,7 @@ import org.ergoplatform.explorer.http.directives.CommonDirectives
 
 import scala.language.implicitConversions
 
-trait ApiRoute extends FailFastCirceSupport with CommonDirectives {
+trait RouteHandler extends FailFastCirceSupport with CommonDirectives {
 
   def route: Route
 
