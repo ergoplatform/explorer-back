@@ -28,7 +28,7 @@ object BlockListOps {
 
     (fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, i.miner_name, i.block_size" ++
       fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id" ++
-      fr"WHERE  ((timestamp >= $startTs) AND (timestamp <= $endTs) AND main_chain = TRUE)" ++
+      fr"WHERE  ((h.timestamp >= $startTs) AND (h.timestamp <= $endTs) AND h.main_chain = TRUE)" ++
       Fragment.const("ORDER BY " + sortByValue + " " + sortOrder) ++
       fr"LIMIT ${limit.toLong} OFFSET ${offset.toLong};").query[RawSearchBlock]
   }
