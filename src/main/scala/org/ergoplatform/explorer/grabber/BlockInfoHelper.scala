@@ -58,7 +58,7 @@ object BlockInfoHelper {
         fee,
         0L,
         nfb.bt.transactions.length.toLong,
-        CoinsEmission.issuedCoinsAfterHeight(0L),
+        CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
         0L,
         reward + fee
       )
