@@ -4,7 +4,7 @@ import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
 import org.ergoplatform.explorer.services.StatsService
 
-class ChartsHandler(ss: StatsService[IO]) extends ApiRoute {
+class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
 
   val route = pathPrefix("charts") {
     totalCoins ~ avgBlockSize ~ blockChainSize ~ avgTxsPerBlock ~ avgDifficulty ~ minerRevenue ~ hashrate

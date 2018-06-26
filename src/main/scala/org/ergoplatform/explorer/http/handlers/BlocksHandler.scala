@@ -10,7 +10,7 @@ import org.ergoplatform.explorer.services.BlockService
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 
-class BlocksHandler(bs: BlockService[IO]) extends ApiRoute {
+class BlocksHandler(bs: BlockService[IO]) extends RouteHandler {
 
   import BlocksHandler._
 
