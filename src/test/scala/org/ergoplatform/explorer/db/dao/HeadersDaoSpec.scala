@@ -17,7 +17,6 @@ class HeadersDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
     val dao = new HeadersDao
 
-
     val headers = HeadersGen
       .generateHeaders(20)
       .reverse
