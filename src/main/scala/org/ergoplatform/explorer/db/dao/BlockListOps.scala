@@ -22,6 +22,7 @@ object BlockListOps {
       case "timestamp" => "h.timestamp"
       case "txs_count" => "i.txs_count"
       case "miner_name" => "i.miner_name"
+      case "block_size" => "i.block_size"
       case _ => "h.height"
     }
 
