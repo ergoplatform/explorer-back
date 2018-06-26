@@ -41,8 +41,8 @@ object BlocksHandler {
 
   val sortByFieldMappings: NonEmptyMap[String, String] = NonEmptyMap.of(
     "height" -> "height",
-    "timestamp" -> "ts",
-    "transactionscount" -> "tx_count",
+    "timestamp" -> "timestamp",
+    "transactionscount" -> "txs_count",
     "size" -> "block_size",
     "miner" -> "miner_name"
   )

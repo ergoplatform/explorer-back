@@ -42,6 +42,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                                (implicit F: Monad[F], A: Async[F]) extends BlockService[F] {
 
   val headersDao = new HeadersDao
+  val blockListDao = new BlockListDao
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
@@ -69,13 +70,15 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     result <- getBlocksResult(p, s, start, end)
   } yield result
 
-  private def getBlocksResult(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = {
-    enrichSearchBlocks(headersDao.list(p.offset, p.limit, s.sortBy, s.order.toString, start, end)).transact[F](xa)
-  }
+  private def getBlocksResult(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = for {
+    _ <- Async.shift[F](ec)
+    rawBlocks <- blockListDao.list(p.offset, p.limit, s.sortBy, s.order.toString, start, end).transact[F](xa)
+    blocks = rawBlocks.map{SearchBlock.fromRawSearchBlock}
+  } yield blocks
 
   override def count(startTs: Long, endTs: Long): F[Long] = for {
     _ <- Async.shift[F](ec)
-    cnt <- headersDao.count(startTs, endTs).transact[F](xa)
+    cnt <-blockListDao.count(startTs, endTs).transact[F](xa)
   } yield cnt
 
   /** Search blocks by the fragment of the header identifier */
