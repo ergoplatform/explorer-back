@@ -84,7 +84,7 @@ object BlockInfoHelper {
         fee,
         0L,
         nfb.bt.transactions.length.toLong + prev.totalTxsCount,
-        CoinsEmission.issuedCoinsAfterHeight(0L),
+        CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
         prev.totalMiningTime + miningTime,
         prev.totalMinerRevenue + reward + fee
       )
