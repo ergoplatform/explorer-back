@@ -5,7 +5,7 @@ import cats.effect._
 import cats.implicits._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
-import org.ergoplatform.explorer.db.dao.{BlockInfoDao, HeadersDao}
+import org.ergoplatform.explorer.db.dao.{BlockInfoDao, HeadersDao, OutputsDao}
 import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.http.protocol.{BlockchainInfo, ChartSingleData, StatsSummary, UsdPriceInfo}
 
@@ -43,10 +43,16 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   val infoDao = new BlockInfoDao
   val hDao = new HeadersDao
+  val outputsDao = new OutputsDao
 
   override def findLastStats: F[StatsSummary] = for {
     _ <- Async.shift[F](ec)
-    result <- infoDao.findLast.map(statRecordToStatsSummary).transact[F](xa)
+    totalUnspentOutputsValue <- outputsDao.sumOfAllUnspentOutputs.transact[F](xa)
+    totalDifficulties <- infoDao.difficultiesSumSince(0L).transact[F](xa)
+    result <- infoDao
+      .findLast
+      .map(statRecordToStatsSummary(_, totalUnspentOutputsValue, totalDifficulties))
+      .transact[F](xa)
   } yield result.getOrElse(emptyStatsResponse)
 
   override def findBlockchainInfo: F[BlockchainInfo] = {
@@ -108,12 +114,11 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     hashrate = difficulties / SecondsIn24H
   } yield hashrate
 
-  private def statRecordToStatsSummary(s: Option[BlockInfo]): Option[StatsSummary] = s.map(StatsSummary.apply)
+  private def statRecordToStatsSummary(s: Option[BlockInfo], to: Long, td: Long): Option[StatsSummary] =
+    s.map(StatsSummary.apply(_, to, td))
 
   private def pairsToChartData(list: List[(Long, Long, String)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data, _) => ChartSingleData(ts, data)}
-
-
 
   private def hashratePerDay(difficulty: Long): Long = difficulty / SecondsIn24H
 }

@@ -41,4 +41,9 @@ object OutputsOps extends JsonMeta {
     fr"SELECT hash FROM node_outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
   }
 
+  def sumOfAllUnspentOutputs: Query0[Long] = {
+    fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0) FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id WHERE i.box_id IS NULL"
+      .query[Long]
+  }
+
 }

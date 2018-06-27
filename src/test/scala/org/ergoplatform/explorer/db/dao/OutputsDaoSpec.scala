@@ -10,9 +10,12 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
   it should "insert and find" in new {
     val dao = new OutputsDao
+    val inputDao = new InputsDao
 
     val headers = HeadersGen.generateHeaders(2)
-    val (txs, outputs, _) = TransactionsGenerator.generateSomeData(headers)
+    val (txs, outputs, inputs) = TransactionsGenerator.generateSomeData(headers)
+
+    inputDao.insertMany(inputs).transact(xa).unsafeRunSync()
 
     val head = outputs.head
     val tail = outputs.tail
@@ -21,6 +24,8 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     hDao.insertMany(headers).transact(xa).unsafeRunSync()
     val txDao = new TransactionsDao
     txDao.insertMany(txs).transact(xa).unsafeRunSync()
+
+
 
     dao.insert(head).transact(xa).unsafeRunSync() shouldBe head
     dao.insertMany(tail).transact(xa).unsafeRunSync() should contain theSameElementsAs tail
@@ -44,6 +49,12 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     expectedToFind should contain theSameElementsAs foundAddresses
 
     dao.findAllByTxsId(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs outputs
+
+    val inputIds = inputs.map { _.boxId }
+    val unspent = outputs.filterNot{ o => inputIds.contains(o.boxId)}
+    val unspentSum = unspent.map{_.value}.sum
+
+    dao.sumOfAllUnspentOutputs.transact(xa).unsafeRunSync() shouldBe unspentSum
   }
 
 }

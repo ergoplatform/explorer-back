@@ -89,3 +89,5 @@ scalacOptions ++= Seq(
 test in assembly := {}
 
 mainClass in assembly := Some("org.ergoplatform.explorer.App")
+
+parallelExecution in Test := false

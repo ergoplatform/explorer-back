@@ -19,7 +19,9 @@ case class BlockInfo(
                       totalTxsCount: Long,
                       totalCoinsIssued: Long,
                       totalMiningTime: Long,
-                      totalMinerRevenue: Long
+                      totalFees: Long,
+                      totalMinersReward: Long,
+                      totalCoinsInTxs: Long
                     ) {
   val avgBlockSize = if (height == 0L) { 0L } else { blockChainTotalSize / height }
   val avgTxsCount = if (height == 0L) { 0L } else { totalTxsCount / height }
@@ -27,5 +29,5 @@ case class BlockInfo(
 }
 
 object BlockInfo {
-  val empty = BlockInfo("", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, "", "", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
+  val empty = BlockInfo("", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, "", "", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
 }
