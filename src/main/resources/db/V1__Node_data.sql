@@ -42,7 +42,9 @@ CREATE TABLE blocks_info (
   total_txs_count BIGINT NOT NULL,
   total_coins_issued BIGINT NOT NULL,
   total_mining_time BIGINT NOT NULL,
-  total_miner_revenue BIGINT NOT NULL
+  total_fees BIGINT NOT NULL,
+  total_miners_reward BIGINT NOT NULL,
+  total_coins_in_txs BIGINT NOT NULL
 );
 
 CREATE INDEX "blocks_info__height" ON node_headers (height);

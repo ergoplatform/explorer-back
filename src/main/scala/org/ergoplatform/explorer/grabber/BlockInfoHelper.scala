@@ -60,7 +60,9 @@ object BlockInfoHelper {
         nfb.bt.transactions.length.toLong,
         CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
         0L,
-        reward + fee
+        fee,
+        reward,
+        nfb.bt.transactions.flatMap(_.outputs).map(_.value).sum
       )
     } else {
       logger.trace("Getting prev blockInfo from cache.")
@@ -86,7 +88,9 @@ object BlockInfoHelper {
         nfb.bt.transactions.length.toLong + prev.totalTxsCount,
         CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
         prev.totalMiningTime + miningTime,
-        prev.totalMinerRevenue + reward + fee
+        prev.totalFees + fee,
+        prev.totalMinersReward + reward,
+        prev.totalCoinsInTxs + nfb.bt.transactions.flatMap(_.outputs).map(_.value).sum
       )
     }
     logger.trace(s"Putting block info for height ${blockInfo.height} into cache.")

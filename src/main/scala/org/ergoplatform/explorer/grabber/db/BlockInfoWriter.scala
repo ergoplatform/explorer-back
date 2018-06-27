@@ -28,7 +28,9 @@ object BlockInfoWriter extends BasicWriter {
     "total_txs_count",
     "total_coins_issued",
     "total_mining_time",
-    "total_miner_revenue"
+    "total_fees",
+    "total_miners_reward",
+    "total_coins_in_txs"
   )
 
   val insertFields = fields.mkString("(", ", ", ")")
