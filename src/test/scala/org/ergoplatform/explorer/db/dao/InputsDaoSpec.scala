@@ -7,6 +7,7 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.PreparedDB
+import org.ergoplatform.explorer.db.models.InputWithValue
 import org.ergoplatform.explorer.utils.generators.{HeadersGen, TransactionsGenerator}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
@@ -16,27 +17,38 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
     val dao = new InputsDao
 
     val headers = HeadersGen.generateHeaders(2)
-    val (txs, _, ins) = TransactionsGenerator.generateSomeData(headers)
+    val (txs, outputs, inputs) = TransactionsGenerator.generateSomeData(headers)
 
-    val head = ins.head
-    val tail = ins.tail
+
+
+    val head = inputs.head
+    val tail = inputs.tail
 
     val hDao  = new HeadersDao
     hDao.insertMany(headers).transact(xa).unsafeRunSync()
     val txDao = new TransactionsDao
     txDao.insertMany(txs).transact(xa).unsafeRunSync()
+    val oDao = new OutputsDao
+    oDao.insertMany(outputs).transact(xa).unsafeRunSync()
 
     dao.insert(head).transact(xa).unsafeRunSync() shouldBe head
     dao.insertMany(tail).transact(xa).unsafeRunSync() should contain theSameElementsAs tail
 
     txs.foreach { tx =>
       val id = tx.id
-      val expected = ins.filter(_.txId == id)
+      val expected = inputs.filter(_.txId == id)
       val fromDb = dao.findAllByTxId(id).transact(xa).unsafeRunSync()
       expected should contain theSameElementsAs fromDb
     }
 
-    dao.findAllByTxsId(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs ins
+    dao.findAllByTxsId(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs inputs
+
+    val withValues = inputs.map { i =>
+      val v = outputs.find(_.boxId == i.boxId).map(_.value).getOrElse(0L)
+      InputWithValue(i, v)
+    }
+
+    dao.findAllByTxsIdWithValue(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs withValues
   }
 
 }

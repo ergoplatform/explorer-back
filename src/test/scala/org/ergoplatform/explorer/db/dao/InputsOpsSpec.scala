@@ -17,5 +17,7 @@ class InputsOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with I
     check(insert)
     check(findAllByTxId(""))
     check(findAllByTxsId(NonEmptyList.fromListUnsafe(List(""))))
+    check(findAllByTxIdWithValue(""))
+    check(findAllByTxsIdWithValue(NonEmptyList.fromListUnsafe(List(""))))
   }
 }
