@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.db.dao
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.PreparedDB
+import org.ergoplatform.explorer.db.models.SpentOutput
 import org.ergoplatform.explorer.utils.generators.{HeadersGen, TransactionsGenerator}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
@@ -48,7 +49,10 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val foundAddresses = dao.searchByAddressId(addressPart).transact(xa).unsafeRunSync()
     expectedToFind should contain theSameElementsAs foundAddresses
 
+    val withSpent = outputs.map{ o => SpentOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId))}
+
     dao.findAllByTxsId(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs outputs
+    dao.findAllByTxsIdWithSpent(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs withSpent
 
     val inputIds = inputs.map { _.boxId }
     val unspent = outputs.filterNot{ o => inputIds.contains(o.boxId)}

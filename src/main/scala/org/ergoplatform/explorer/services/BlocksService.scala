@@ -61,7 +61,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     txs <- transactionsDao.findAllByBlockId(h.id)
     txsIds = txs.map(_.id)
     is <- inputDao.findAllByTxsIdWithValue(txsIds)
-    os <- outputDao.findAllByTxsId(txsIds)
+    os <- outputDao.findAllByTxsIdWithSpent(txsIds)
     ad <- adProofDao.find(h.id)
   } yield BlockSummaryInfo(FullBlockInfo(h, txs, is, os, ad), references)).transact[F](xa)
 

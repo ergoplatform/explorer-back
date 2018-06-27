@@ -20,6 +20,8 @@ class OutputsOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     check(findByHash(""))
     check(searchByHash(""))
     check(sumOfAllUnspentOutputs)
+    check(findAllByTxIdWithSpent(""))
+    check(findAllByTxsIdWithSpent(NonEmptyList.fromListUnsafe(List(""))))
   }
 
 }

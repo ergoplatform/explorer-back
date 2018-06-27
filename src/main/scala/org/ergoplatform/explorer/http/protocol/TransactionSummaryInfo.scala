@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
 import io.circe.syntax._
-import org.ergoplatform.explorer.db.models.{Input, InputWithValue, Output, Transaction}
+import org.ergoplatform.explorer.db.models._
 
 case class TransactionSummaryInfo(id: String,
                                   timestamp: Long,
@@ -18,7 +18,11 @@ case class TransactionSummaryInfo(id: String,
 
 object TransactionSummaryInfo {
 
-  def fromDb(tx: Transaction, height: Long, confirmationsCount: Long = 0, inputs: List[InputWithValue], outputs: List[Output]): TransactionSummaryInfo =
+  def fromDb(tx: Transaction,
+             height: Long,
+             confirmationsCount: Long = 0,
+             inputs: List[InputWithValue],
+             outputs: List[SpentOutput]): TransactionSummaryInfo =
     TransactionSummaryInfo(
       id = tx.id,
       miniBlockInfo = MiniBlockInfo(tx.headerId, height),
@@ -27,7 +31,7 @@ object TransactionSummaryInfo {
       //TODO Need to add this data to tx
       size = 0,
       inputs = inputs.map(InputInfo.fromInputWithValue),
-      outputs = outputs.map(OutputInfo.apply)
+      outputs = outputs.map(OutputInfo.fromOutputWithSpent)
     )
 
   implicit val encoder: Encoder[TransactionSummaryInfo] = (ts: TransactionSummaryInfo) => Json.obj(

@@ -4,7 +4,7 @@ import cats.data._
 import doobie._
 import doobie.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.Output
+import org.ergoplatform.explorer.db.models.{Output, SpentOutput}
 
 object OutputsOps extends JsonMeta {
 
@@ -27,9 +27,17 @@ object OutputsOps extends JsonMeta {
   def findAllByTxId(txId: String)(implicit c: Composite[Output]): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE tx_id = $txId").query[Output]
 
+  def findAllByTxIdWithSpent(txId: String)(implicit c: Composite[SpentOutput]): Query0[SpentOutput] =
+    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, i.tx_id" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id WHERE o.tx_id = $txId").query[SpentOutput]
 
   def findAllByTxsId(txsId: NonEmptyList[String])(implicit c: Composite[Output]): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE" ++ Fragments.in(fr"tx_id", txsId)).query[Output]
+
+  def findAllByTxsIdWithSpent(txsId: NonEmptyList[String])(implicit c: Composite[SpentOutput]): Query0[SpentOutput] =
+    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, i.tx_id" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
+      fr"WHERE" ++ Fragments.in(fr"o.tx_id", txsId)).query[SpentOutput]
 
   def insert: Update[Output] = Update[Output](insertSql)
 

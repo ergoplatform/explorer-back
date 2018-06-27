@@ -14,7 +14,7 @@ object FullBlockInfo {
   def apply(h: Header,
             txs: List[Transaction],
             inputs: List[InputWithValue],
-            outputs: List[Output],
+            outputs: List[SpentOutput],
             adProof: Option[AdProof]): FullBlockInfo = {
 
     val txsInfo = TransactionInfo.extractInfo(txs, inputs, outputs)
