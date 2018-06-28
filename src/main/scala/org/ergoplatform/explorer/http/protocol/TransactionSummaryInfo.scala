@@ -21,7 +21,7 @@ object TransactionSummaryInfo {
   def fromDb(tx: Transaction,
              height: Long,
              confirmationsCount: Long = 0,
-             inputs: List[InputWithValue],
+             inputs: List[InputWithOutputInfo],
              outputs: List[SpentOutput]): TransactionSummaryInfo =
     TransactionSummaryInfo(
       id = tx.id,
