@@ -27,15 +27,16 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def getAddressInfo(addressId: String): F[AddressInfo] = for {
     _ <- Async.shift[F](ec)
-    info <- A.suspend{
-      //https://github.com/ergoplatform/explorer-back/issues/5
-      if (addressId.startsWith("cd0703")) {
-        getAddressInfoResult(addressId)
-      } else {
-        F.pure(AddressInfo(addressId, List.empty))
-      }
-    }
+    info <- getAddressInfoResultWithFilter(addressId)
   } yield info
+
+  private def getAddressInfoResultWithFilter(addressId: String): F[AddressInfo] = A.suspend {
+    if (addressId.startsWith("cd0703")) {
+      getAddressInfoResult(addressId)
+    } else {
+      F.pure(AddressInfo(addressId, List.empty))
+    }
+  }
 
   private def getAddressInfoResult(addressId: String): F[AddressInfo] = outputsDao
     .findAllByAddressId(addressId)
