@@ -7,7 +7,7 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.PreparedDB
-import org.ergoplatform.explorer.db.models.InputWithValue
+import org.ergoplatform.explorer.db.models.InputWithOutputInfo
 import org.ergoplatform.explorer.utils.generators.{HeadersGen, TransactionsGenerator}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
@@ -45,7 +45,7 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
 
     val withValues = inputs.map { i =>
       val v = outputs.find(_.boxId == i.boxId).map(_.value).getOrElse(0L)
-      InputWithValue(i, v)
+      InputWithOutpuInfo(i, v)
     }
 
     dao.findAllByTxsIdWithValue(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs withValues

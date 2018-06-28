@@ -27,7 +27,13 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def getAddressInfo(addressId: String): F[AddressInfo] = for {
     _ <- Async.shift[F](ec)
-    info <- getAddressInfoResult(addressId)
+    info <- A.suspend{
+      if (addressId.startsWith("cd0703")) {
+        getAddressInfoResult(addressId)
+      } else {
+        F.pure(AddressInfo(addressId, List.empty))
+      }
+    }
   } yield info
 
   private def getAddressInfoResult(addressId: String): F[AddressInfo] = outputsDao
@@ -36,7 +42,11 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     .transact(xa)
 
   def searchById(substring: String): F[List[String]] = {
-    outputsDao.searchByAddressId(substring).transact(xa)
+    if (substring.startsWith("cd0703")) {
+      outputsDao.searchByAddressId(substring).transact(xa)
+    } else {
+      F.pure(List.empty)
+    }
   }
 
 }

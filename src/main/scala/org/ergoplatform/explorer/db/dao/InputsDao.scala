@@ -6,7 +6,7 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.{Input, InputWithValue}
+import org.ergoplatform.explorer.db.models.{Input, InputWithOutputInfo}
 
 class InputsDao extends JsonMeta {
 
@@ -24,13 +24,13 @@ class InputsDao extends JsonMeta {
     case None => List.empty[Input].pure[ConnectionIO]
   }
 
-  def findAllByTxIdWithValue(txId: String): ConnectionIO[List[InputWithValue]] =
+  def findAllByTxIdWithValue(txId: String): ConnectionIO[List[InputWithOutputInfo]] =
     InputsOps.findAllByTxIdWithValue(txId).to[List]
 
-  def findAllByTxsIdWithValue(txsId: List[String]): ConnectionIO[List[InputWithValue]] =
+  def findAllByTxsIdWithValue(txsId: List[String]): ConnectionIO[List[InputWithOutputInfo]] =
     NonEmptyList.fromList(txsId) match {
       case Some(ids) => InputsOps.findAllByTxsIdWithValue(ids).to[List]
-      case None => List.empty[InputWithValue].pure[ConnectionIO]
+      case None => List.empty[InputWithOutputInfo].pure[ConnectionIO]
     }
 
 

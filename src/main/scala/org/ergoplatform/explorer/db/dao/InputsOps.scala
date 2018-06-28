@@ -5,7 +5,7 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.{Input, InputWithValue}
+import org.ergoplatform.explorer.db.models.{Input, InputWithOutputInfo}
 
 object InputsOps extends JsonMeta {
 
@@ -31,15 +31,15 @@ object InputsOps extends JsonMeta {
 
   def insert: Update[Input] = Update[Input](insertSql)
 
-  def findAllByTxIdWithValue(txId: String)(implicit c: Composite[InputWithValue]): Query0[InputWithValue] =
-    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value" ++
+  def findAllByTxIdWithValue(txId: String)(implicit c: Composite[InputWithOutputInfo]): Query0[InputWithOutputInfo] =
+    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value, o.tx_id" ++
       fr"FROM node_inputs i JOIN node_outputs o ON i.box_id = o.box_id" ++
-      fr"WHERE i.tx_id = $txId").query[InputWithValue]
+      fr"WHERE i.tx_id = $txId").query[InputWithOutputInfo]
 
 
-  def findAllByTxsIdWithValue(txsId: NonEmptyList[String])(implicit c: Composite[InputWithValue]): Query0[InputWithValue] =
-    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value" ++
+  def findAllByTxsIdWithValue(txsId: NonEmptyList[String])(implicit c: Composite[InputWithOutputInfo]): Query0[InputWithOutputInfo] =
+    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value, o.tx_id" ++
       fr"FROM node_inputs i JOIN node_outputs o ON i.box_id = o.box_id" ++
-      fr"WHERE" ++ Fragments.in(fr"i.tx_id", txsId)).query[InputWithValue]
+      fr"WHERE" ++ Fragments.in(fr"i.tx_id", txsId)).query[InputWithOutputInfo]
 
 }

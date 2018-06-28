@@ -13,7 +13,7 @@ object FullBlockInfo {
     */
   def apply(h: Header,
             txs: List[Transaction],
-            inputs: List[InputWithValue],
+            inputs: List[InputWithOutputInfo],
             outputs: List[SpentOutput],
             adProof: Option[AdProof]): FullBlockInfo = {
 
