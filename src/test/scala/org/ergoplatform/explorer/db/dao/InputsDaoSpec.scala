@@ -44,9 +44,11 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
     dao.findAllByTxsId(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs inputs
 
     val withValues = inputs.map { i =>
-      val v = outputs.find(_.boxId == i.boxId).map(_.value).getOrElse(0L)
-      val otxid = outputs.find(_.boxId == i.boxId).map(_.txId).getOrElse("")
-      InputWithOutputInfo(i, v, otxid)
+      val oOpt = outputs.find(_.boxId == i.boxId)
+      val v = oOpt.map(_.value).getOrElse(0L)
+      val otxid = oOpt.map(_.txId).getOrElse("")
+      val hash = oOpt.map(_.hash).getOrElse("")
+      InputWithOutputInfo(i, v, otxid, hash)
     }
 
     dao.findAllByTxsIdWithValue(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs withValues

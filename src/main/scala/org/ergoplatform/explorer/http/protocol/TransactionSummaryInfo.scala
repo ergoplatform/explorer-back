@@ -27,7 +27,7 @@ object TransactionSummaryInfo {
       id = tx.id,
       miniBlockInfo = MiniBlockInfo(tx.headerId, height),
       timestamp = tx.timestamp,
-      confirmationsCount = confirmationsCount,
+      confirmationsCount = confirmationsCount + 1L,
       //TODO Need to add this data to tx
       size = 0,
       inputs = inputs.map(InputInfo.fromInputWithValue),
