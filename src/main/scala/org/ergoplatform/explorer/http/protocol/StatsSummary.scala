@@ -11,7 +11,7 @@ case class StatsSummary(blocksCount: Long,
                         totalTransactionsCount: Long,
                         totalFee: Long,
                         totalOutput: Long,
-                        estimatedTxVolume: Long,
+                        estimatedOutput: Long,
                         totalMinerRevenue: Long,
                         percentEarnedTransactionsFees: Double,
                         percentTransactionVolume: Double,
@@ -34,10 +34,7 @@ object StatsSummary {
     BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
-
-  def apply(b: BlockInfo, totalUnspentOutputs: Long, totalDifficulties: Long): StatsSummary = {
-
-
+  def apply(b: BlockInfo, totalUnspentOutputs: Long, totalDifficulties: Long, estimatedOutput: Long): StatsSummary =
     new StatsSummary(
       blocksCount = b.height,
       blocksAvgTime = b.avgMiningTime,
@@ -45,7 +42,7 @@ object StatsSummary {
       totalTransactionsCount = b.totalTxsCount,
       totalFee = b.totalFees,
       totalOutput = totalUnspentOutputs,
-      estimatedTxVolume = 0L,
+      estimatedOutput = estimatedOutput,
       totalMinerRevenue = b.totalMinersReward + b.totalFees,
       percentEarnedTransactionsFees = percentOfFee(b),
       percentTransactionVolume = percentOfTxVolume(b),
@@ -53,7 +50,6 @@ object StatsSummary {
       lastDifficulty = b.difficulty,
       totalHashrate = totalDifficulties / (b.totalMiningTime / 1000)
     )
-  }
 
   implicit val encoder: Encoder[StatsSummary] = (s: StatsSummary) => Json.obj(
     "blockSummary" -> Json.obj(
@@ -65,7 +61,7 @@ object StatsSummary {
       "total" -> Json.fromLong(s.totalTransactionsCount),
       "totalFee" -> Json.fromLong(s.totalFee),
       "totalOutput" -> Json.fromLong(s.totalOutput),
-      "estimatedTransactionVolume" -> Json.fromLong(s.estimatedTxVolume)
+      "estimatedTransactionVolume" -> Json.fromLong(s.estimatedOutput)
     ),
     "miningCost" -> Json.obj(
       "totalMinersRevenue" -> Json.fromLong(s.totalMinerRevenue),
