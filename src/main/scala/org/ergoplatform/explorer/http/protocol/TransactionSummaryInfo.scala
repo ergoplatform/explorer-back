@@ -31,7 +31,8 @@ object TransactionSummaryInfo {
       //TODO Need to add this data to tx
       size = 0,
       inputs = inputs.map(InputInfo.fromInputWithValue),
-      outputs = outputs.map(OutputInfo.fromOutputWithSpent)
+      outputs = outputs.map(OutputInfo.fromOutputWithSpent),
+      totalCoins = inputs.map(_.value).sum
     )
 
   implicit val encoder: Encoder[TransactionSummaryInfo] = (ts: TransactionSummaryInfo) => Json.obj(
