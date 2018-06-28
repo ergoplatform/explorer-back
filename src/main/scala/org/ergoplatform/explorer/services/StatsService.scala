@@ -49,9 +49,10 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     _ <- Async.shift[F](ec)
     totalUnspentOutputsValue <- outputsDao.sumOfAllUnspentOutputs.transact[F](xa)
     totalDifficulties <- infoDao.difficultiesSumSince(0L).transact[F](xa)
+    estimatedOutput <- outputsDao.estimateOutput.transact[F](xa)
     result <- infoDao
       .findLast
-      .map(statRecordToStatsSummary(_, totalUnspentOutputsValue, totalDifficulties))
+      .map(statRecordToStatsSummary(_, totalUnspentOutputsValue, totalDifficulties, estimatedOutput))
       .transact[F](xa)
   } yield result.getOrElse(emptyStatsResponse)
 
@@ -114,8 +115,8 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     hashrate = difficulties / SecondsIn24H
   } yield hashrate
 
-  private def statRecordToStatsSummary(s: Option[BlockInfo], to: Long, td: Long): Option[StatsSummary] =
-    s.map(StatsSummary.apply(_, to, td))
+  private def statRecordToStatsSummary(s: Option[BlockInfo], to: Long, td: Long, eo: Long): Option[StatsSummary] =
+    s.map(StatsSummary.apply(_, to, td, eo))
 
   private def pairsToChartData(list: List[(Long, Long, String)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data, _) => ChartSingleData(ts, data)}

@@ -31,7 +31,7 @@ object HeadersGen {
 
   def generateHeaders(cnt: Int = 50): List[Header] = (0 until cnt).foldLeft(List(initBlock)) { case (l, h) =>
     val pId = l.headOption.fold(rootId) { _.id }
-    headerGen(pId, h).sample.get :: l
+    headerGen(pId, h.toLong).sample.get :: l
   }
 
 }

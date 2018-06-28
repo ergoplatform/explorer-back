@@ -54,4 +54,15 @@ object OutputsOps extends JsonMeta {
       .query[Long]
   }
 
+  //TODO: Make proper value evaluation, without tons of joins
+  def estimatedOutputs: Query0[Long] = {
+    Fragment.const("""
+                  SELECT COALESCE(CAST(SUM(op.value) as BIGINT),0)
+                  FROM node_outputs o
+                  LEFT JOIN node_inputs i ON o.box_id = i.box_id
+                  LEFT JOIN node_outputs op ON i.tx_id = op.tx_id
+                  LEFT JOIN node_inputs ip ON op.box_id = ip.box_id
+                  WHERE o.hash <> op.hash AND ip.box_id IS NULL""").query[Long]
+  }
+
 }
