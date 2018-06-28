@@ -12,6 +12,7 @@ object OutputInfo {
     o.output.boxId,
     o.output.value,
     o.output.proposition,
+    //https://github.com/ergoplatform/explorer-back/issues/5
     Some(o.output.hash).filter(_.startsWith("cd0703")),
     o.spentTxId
   )

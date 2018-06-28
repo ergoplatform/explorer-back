@@ -28,6 +28,7 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   override def getAddressInfo(addressId: String): F[AddressInfo] = for {
     _ <- Async.shift[F](ec)
     info <- A.suspend{
+      //https://github.com/ergoplatform/explorer-back/issues/5
       if (addressId.startsWith("cd0703")) {
         getAddressInfoResult(addressId)
       } else {
@@ -42,6 +43,7 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     .transact(xa)
 
   def searchById(substring: String): F[List[String]] = {
+    //https://github.com/ergoplatform/explorer-back/issues/5
     if (substring.startsWith("cd0703")) {
       outputsDao.searchByAddressId(substring).transact(xa)
     } else {
