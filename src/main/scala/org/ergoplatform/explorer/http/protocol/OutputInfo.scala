@@ -8,12 +8,13 @@ case class OutputInfo(id: String, value: Long, script: String, hash: Option[Stri
 
 object OutputInfo {
 
+  import org.ergoplatform.explorer.services.AddressesService._
+
   def fromOutputWithSpent(o: SpentOutput): OutputInfo = OutputInfo(
     o.output.boxId,
     o.output.value,
     o.output.proposition,
-    //https://github.com/ergoplatform/explorer-back/issues/5
-    Some(o.output.hash).filter(_.startsWith("cd0703")),
+    Some(o.output.hash).filter(isStandardAddress),
     o.spentTxId
   )
 
