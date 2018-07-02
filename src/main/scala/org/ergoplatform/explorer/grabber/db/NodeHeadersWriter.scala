@@ -26,7 +26,6 @@ object NodeHeadersWriter extends BasicWriter {
     "extension_hash",
     "equihash_solutions",
     "interlinks",
-    "size",
     "main_chain"
   )
 

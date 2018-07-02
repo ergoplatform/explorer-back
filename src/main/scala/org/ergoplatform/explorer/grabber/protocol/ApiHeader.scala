@@ -16,7 +16,6 @@ case class ApiHeader(
                       extensionHash: String,
                       equihashSolutions: String,
                       interlinks: List[String],
-                      size: Long = 0L,
                       mainChain: Boolean = true
                     )
 

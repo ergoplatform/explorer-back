@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.grabber.protocol
 
 import io.circe.{Decoder, HCursor}
 
-case class ApiTransaction(id: String, inputs: List[ApiInput], outputs: List[ApiOutput])
+case class ApiTransaction(id: String, inputs: List[ApiInput], outputs: List[ApiOutput], size: Long)
 
 object ApiTransaction {
 
@@ -10,5 +10,6 @@ object ApiTransaction {
     id <- c.downField("id").as[String]
     inputs <- c.downField("inputs").as[List[ApiInput]]
     outputs <- c.downField("outputs").as[List[ApiOutput]]
-  } yield ApiTransaction(id, inputs, outputs)
+    size <- c.downField("bytesSize").as[Long]
+  } yield ApiTransaction(id, inputs, outputs, size)
 }

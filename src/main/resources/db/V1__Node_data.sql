@@ -12,7 +12,6 @@ CREATE TABLE node_headers (
   extension_hash VARCHAR(64) NOT NULL,
   equihash_solutions VARCHAR NOT NULL,
   interlinks VARCHAR ARRAY NOT NULL,
-  size BIGINT NOT NULL,
   main_chain BOOLEAN NOT NULL
 );
 

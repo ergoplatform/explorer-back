@@ -8,7 +8,6 @@ case class ApiNodeInfo(
                      name: String,
                      stateType: String,
                      difficulty: Long,
-                     votes: String,
                      bestFullHeaderId: String,
                      bestHeaderId: String,
                      peersCount: Int,
