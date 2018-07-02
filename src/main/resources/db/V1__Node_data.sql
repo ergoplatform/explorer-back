@@ -32,7 +32,6 @@ CREATE TABLE blocks_info (
   block_mining_time BIGINT NOT NULL,
   txs_count BIGINT NOT NULL,
   txs_size BIGINT NOT NULL,
-  miner_name VARCHAR NOT NULL,
   miner_address VARCHAR NOT NULL,
   miner_reward BIGINT NOT NULL,
   miner_revenue BIGINT NOT NULL,
@@ -95,4 +94,11 @@ CREATE TABLE node_ad_proofs (
   digest VARCHAR NOT NULL
 );
 
-ALTER TABLE node_ad_proofs OWNER to ergo;
+ALTER TABLE node_ad_proofs OWNER TO ergo;
+
+CREATE TABLE known_miners (
+  miner_address VARCHAR NOT NULL PRIMARY KEY,
+  miner_name VARCHAR NOT NULL
+);
+
+ALTER TABLE known_miners OWNER TO ergo;

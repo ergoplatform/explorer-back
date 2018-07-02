@@ -13,23 +13,17 @@ case class SearchBlock(id: String,
 
 object SearchBlock {
 
-  def fromHeader(h: Header, info: BlockInfo): SearchBlock = SearchBlock(
-    id = h.id,
-    height = h.height,
-    timestamp = h.timestamp,
-    transactionsCount = info.txsCount,
-    miner = MinerInfo(info.minerAddress, info.minerName),
-    size = info.blockSize
-  )
-
-  def fromRawSearchBlock(b: RawSearchBlock): SearchBlock = SearchBlock(
-    id = b.id,
-    height = b.height,
-    timestamp = b.timestamp,
-    transactionsCount = b.txsCount,
-    miner = MinerInfo(b.minerAddress, b.minerName),
-    size = b.blockSize
-  )
+  def fromRawSearchBlock(b: RawSearchBlock): SearchBlock = {
+    val minerName = b.minerName.getOrElse(b.minerAddress.reverseIterator.take(8).toString().reverse)
+    SearchBlock(
+      id = b.id,
+      height = b.height,
+      timestamp = b.timestamp,
+      transactionsCount = b.txsCount,
+      miner = MinerInfo(b.minerAddress, minerName),
+      size = b.blockSize
+    )
+  }
 
   implicit val encoderSearchBlock: Encoder[SearchBlock] = (b: SearchBlock) => Json.obj(
     "id" -> Json.fromString(b.id),

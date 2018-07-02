@@ -15,4 +15,8 @@ class BlockListDao {
            endTs: Long): ConnectionIO[List[RawSearchBlock]] =
     BlockListOps.list(offset, limit, sortBy, sortOrder, startTs, endTs).to[List]
 
+  /** Search block related info by the fragment of the identifier */
+  def searchById(substring: String): ConnectionIO[List[RawSearchBlock]] =
+    BlockListOps.searchById(substring).to[List]
+
 }

@@ -79,34 +79,12 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def count(startTs: Long, endTs: Long): F[Long] = for {
     _ <- Async.shift[F](ec)
-    cnt <-blockListDao.count(startTs, endTs).transact[F](xa)
+    cnt <- blockListDao.count(startTs, endTs).transact[F](xa)
   } yield cnt
 
   /** Search blocks by the fragment of the header identifier */
-  def searchById(substring: String): F[List[SearchBlock]] = {
-    enrichSearchBlocks(headersDao.searchById(substring)).transact[F](xa)
-  }
-
-  private def enrichSearchBlocks(headersIO: ConnectionIO[List[Header]]): ConnectionIO[List[SearchBlock]] = {
-    headersIO.flatMap { headers =>
-      if (headers.isEmpty) {
-        connection.pure(Nil: List[SearchBlock])
-      } else {
-        blockInfoDao.list(headers.map(_.id)) map { blocksInfo =>
-          constructSearchBlocks(headers, blocksInfo)
-        }
-      }
-    }
-  }
-
-  private def constructSearchBlocks(headers: List[Header],
-                                    blocksInfo: List[BlockInfo]): List[SearchBlock] = {
-    headers.map { header =>
-      val info = blocksInfo
-        .find { _.headerId == header.id }
-        .get
-      SearchBlock.fromHeader(header, info)
-    }
-  }
-
+  def searchById(substring: String): F[List[SearchBlock]] = blockListDao
+    .searchById(substring)
+    .map(_.map(SearchBlock.fromRawSearchBlock))
+    .transact[F](xa)
 }

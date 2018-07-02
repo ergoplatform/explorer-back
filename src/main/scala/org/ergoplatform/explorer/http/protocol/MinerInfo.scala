@@ -7,7 +7,7 @@ case class MinerInfo(addressId: String, name: String)
 object MinerInfo {
 
   implicit val encoder: Encoder[MinerInfo] = (minerInfo: MinerInfo) => Json.obj(
-    "adressId" -> Json.fromString(minerInfo.addressId),
+    "address" -> Json.fromString(minerInfo.addressId),
     "name" -> Json.fromString(minerInfo.name)
   )
 }

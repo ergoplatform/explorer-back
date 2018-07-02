@@ -6,6 +6,6 @@ case class RawSearchBlock(
                            timestamp: Long,
                            txsCount: Long,
                            minerAddress: String,
-                           minerName: String,
+                           minerName: Option[String],
                            blockSize: Long
                          )

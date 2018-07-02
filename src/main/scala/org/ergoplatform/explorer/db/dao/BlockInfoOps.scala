@@ -22,7 +22,6 @@ object BlockInfoOps {
     "block_mining_time",
     "txs_count",
     "txs_size",
-    "miner_name",
     "miner_address",
     "miner_reward",
     "miner_revenue",

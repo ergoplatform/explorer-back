@@ -10,7 +10,6 @@ case class BlockInfo(
                       blockMiningTime: Long,
                       txsCount: Long,
                       txsSize: Long,
-                      minerName: String,
                       minerAddress: String,
                       minerReward: Long,
                       minerRevenue: Long,
@@ -29,5 +28,5 @@ case class BlockInfo(
 }
 
 object BlockInfo {
-  val empty = BlockInfo("", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, "", "", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
+  val empty = BlockInfo("", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, "", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
 }
