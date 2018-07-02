@@ -19,7 +19,6 @@ object HeadersOps {
     "extension_hash",
     "equihash_solutions",
     "interlinks",
-    "size",
     "main_chain"
   )
 

@@ -14,7 +14,6 @@ case class Header(
                    extensionHash: String,
                    equihashSolutions: String,
                    interlinks: List[String],
-                   size: Long,
                    mainChain: Boolean
                  )
 

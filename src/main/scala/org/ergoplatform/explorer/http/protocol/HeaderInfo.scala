@@ -22,7 +22,7 @@ case class HeaderInfo(
 
 object HeaderInfo {
 
-  def apply(h: Header): HeaderInfo = {
+  def apply(h: Header, size: Long): HeaderInfo = {
 
     new HeaderInfo(
       h.id,
@@ -34,7 +34,7 @@ object HeaderInfo {
       h.transactionsRoot,
       h.timestamp,
       h.nBits,
-      h.size,
+      size,
       h.extensionHash,
       h.equihashSolutions,
       h.interlinks
