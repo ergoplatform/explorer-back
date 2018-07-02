@@ -1,8 +1,6 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.data._
 import cats.implicits._
-import doobie._
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
 import doobie.postgres.implicits._

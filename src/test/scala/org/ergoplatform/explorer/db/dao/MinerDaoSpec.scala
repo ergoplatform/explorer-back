@@ -1,9 +1,5 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.effect.IO
-import cats.data._
-import cats.implicits._
-import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.PreparedDB
@@ -38,6 +34,19 @@ class MinerDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with Pr
 
     dao.find(miner1.address).transact(xa).unsafeRunSync() shouldBe None
 
+  }
+
+  it should "search address" in {
+    val m1 = Miner("1234", "1")
+    val m2 = Miner("2345", "2")
+    val m3 = Miner("3456", "3")
+
+    val dao = new MinerDao
+    dao.insertMany(List(m1, m2, m3)).transact(xa).unsafeRunSync()
+
+    dao.searchAddress("234").transact(xa).unsafeRunSync() should contain theSameElementsAs List(m1, m2).map(_.address)
+    dao.searchAddress("2345").transact(xa).unsafeRunSync() should contain only(m2.address)
+    dao.searchAddress("12345").transact(xa).unsafeRunSync() shouldBe empty
   }
 
 }

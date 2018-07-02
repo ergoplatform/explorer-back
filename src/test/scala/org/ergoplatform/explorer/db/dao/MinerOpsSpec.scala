@@ -17,5 +17,6 @@ class MinerOpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IO
     check(update)
     check(delete(""))
     check(find(""))
+    check(searchAddress(""))
   }
 }
