@@ -21,15 +21,23 @@ object BlockListOps {
       case "height" => "h.height"
       case "timestamp" => "h.timestamp"
       case "txs_count" => "i.txs_count"
-      case "miner_name" => "i.miner_name"
+      case "miner_name" => "m.miner_name"
       case "block_size" => "i.block_size"
       case _ => "h.height"
     }
 
-    (fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, i.miner_name, i.block_size" ++
-      fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id" ++
+    (fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size" ++
+      fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id " ++
+      fr"LEFT JOIN known_miners m ON i.miner_address = m.miner_address" ++
       fr"WHERE  ((h.timestamp >= $startTs) AND (h.timestamp <= $endTs) AND h.main_chain = TRUE)" ++
       Fragment.const("ORDER BY " + sortByValue + " " + sortOrder) ++
       fr"LIMIT ${limit.toLong} OFFSET ${offset.toLong};").query[RawSearchBlock]
   }
+
+  def searchById(substring: String): Query0[RawSearchBlock] = (
+      fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size" ++
+      fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id " ++
+      fr"LEFT JOIN known_miners m ON i.miner_address = m.miner_address" ++
+      fr"WHERE h.id LIKE ${"%" + substring + "%"}"
+    ).query[RawSearchBlock]
 }

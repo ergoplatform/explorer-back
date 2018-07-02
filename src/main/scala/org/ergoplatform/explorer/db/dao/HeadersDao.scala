@@ -55,25 +55,10 @@ class HeadersDao {
     )
   }
 
-  def count(startTs: Long, endTs: Long): ConnectionIO[Long] = HeadersOps.count(startTs, endTs).unique
-
   def getLast(limit: Int = 20): ConnectionIO[List[Header]] = HeadersOps.selectLast(limit).to[List]
 
   def getHeightById(id: String): ConnectionIO[Long] = HeadersOps.selectHeight(id).option.flatMap {
     case Some(h) => h.pure[ConnectionIO]
     case None => (-1L).pure[ConnectionIO]
   }
-
-  def list(offset: Int = 0,
-           limit: Int = 20,
-           sortBy: String = "height",
-           sortOrder: String = "DESC",
-           startTs: Long,
-           endTs: Long): ConnectionIO[List[Header]] =
-    HeadersOps.list(offset, limit, sortBy, sortOrder, startTs, endTs).to[List]
-
-  /** Search headers by the fragment of the identifier */
-  def searchById(substring: String): ConnectionIO[List[Header]] =
-    HeadersOps.searchById(substring).to[List]
-
 }
