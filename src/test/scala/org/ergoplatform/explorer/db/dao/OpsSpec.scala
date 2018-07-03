@@ -91,6 +91,7 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(update)
     check(delete(""))
     check(find(""))
+    check(searchAddress(""))
   }
 
   it should "check all ops for block list ops" in {
