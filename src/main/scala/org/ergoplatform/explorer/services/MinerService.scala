@@ -2,6 +2,7 @@ package org.ergoplatform.explorer.services
 
 import cats.Monad
 import cats.effect.Async
+import cats.implicits._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
