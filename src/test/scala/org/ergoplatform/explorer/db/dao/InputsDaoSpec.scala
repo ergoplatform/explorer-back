@@ -1,14 +1,8 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.effect.IO
-import cats.data._
-import cats.implicits._
-import doobie._
 import doobie.implicits._
-import doobie.postgres.implicits._
-import org.ergoplatform.explorer.db.PreparedDB
+import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.db.models.InputWithOutputInfo
-import org.ergoplatform.explorer.utils.generators.{HeadersGen, TransactionsGenerator}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
@@ -16,10 +10,7 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
   it should "insert and find" in new {
     val dao = new InputsDao
 
-    val headers = HeadersGen.generateHeaders(2)
-    val (txs, outputs, inputs) = TransactionsGenerator.generateSomeData(headers)
-
-
+    val (headers, _, txs, inputs, outputs, _) = PreparedData.data
 
     val head = inputs.head
     val tail = inputs.tail
@@ -45,13 +36,14 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
 
     val withValues = inputs.map { i =>
       val oOpt = outputs.find(_.boxId == i.boxId)
-      val v = oOpt.map(_.value).getOrElse(0L)
-      val otxid = oOpt.map(_.txId).getOrElse("")
-      val hash = oOpt.map(_.hash).getOrElse("")
+      val v = oOpt.map(_.value)
+      val otxid = oOpt.map(_.txId)
+      val hash = oOpt.map(_.hash)
       InputWithOutputInfo(i, v, otxid, hash)
     }
 
-    dao.findAllByTxsIdWithValue(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs withValues
+    val fromDb = dao.findAllByTxsIdWithValue(txs.map(_.id)).transact(xa).unsafeRunSync()
+    fromDb should contain theSameElementsAs withValues
   }
 
 }

@@ -7,9 +7,9 @@ import org.ergoplatform.explorer.db.models.InputWithOutputInfo
 case class InputInfo(
                       id: String,
                       signature: String,
-                      value: Long,
+                      value: Option[Long],
                       txId: String,
-                      outputTransactionId: String,
+                      outputTransactionId: Option[String],
                       address: Option[String])
 
 object InputInfo {
@@ -18,7 +18,7 @@ object InputInfo {
 
   def fromInputWithValue(i: InputWithOutputInfo) =
     InputInfo(i.input.boxId, i.input.proofBytes, i.value, i.input.txId,
-      i.outputTxId, Some(i.address).filter(isStandardAddress))
+      i.outputTxId, i.address.filter(isStandardAddress))
 
   implicit val encoder: Encoder[InputInfo] = (i: InputInfo) => Json.obj(
     "id" -> Json.fromString(i.id),
@@ -26,6 +26,6 @@ object InputInfo {
     "signature" -> Json.fromString(i.signature),
     "value" -> i.value.asJson,
     "transactionId" -> Json.fromString(i.txId),
-    "outputTransactionId" -> Json.fromString(i.outputTransactionId)
+    "outputTransactionId" -> i.outputTransactionId.asJson
   )
 }

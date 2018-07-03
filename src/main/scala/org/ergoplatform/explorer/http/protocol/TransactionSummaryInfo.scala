@@ -32,7 +32,7 @@ object TransactionSummaryInfo {
       size = 0,
       inputs = inputs.map(InputInfo.fromInputWithValue),
       outputs = outputs.map(OutputInfo.fromOutputWithSpent),
-      totalCoins = inputs.map(_.value).sum
+      totalCoins = inputs.map(_.value.getOrElse(0L)).sum
     )
 
   implicit val encoder: Encoder[TransactionSummaryInfo] = (ts: TransactionSummaryInfo) => Json.obj(

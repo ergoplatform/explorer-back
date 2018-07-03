@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.data._, cats.implicits._
+import cats.implicits._
 import doobie._, doobie.implicits._, doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Header
 

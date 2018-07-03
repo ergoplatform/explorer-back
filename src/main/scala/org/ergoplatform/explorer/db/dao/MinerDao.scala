@@ -1,16 +1,13 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.data._
 import cats.implicits._
 import doobie._
 import doobie.implicits._
-import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Miner
 
 class MinerDao {
 
   val fields = MinerOps.fields
-
 
   def insert(m: Miner): ConnectionIO[Miner] = MinerOps.insert.withUniqueGeneratedKeys[Miner](fields: _*)(m)
 

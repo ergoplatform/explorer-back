@@ -1,3 +1,3 @@
 package org.ergoplatform.explorer.db.models
 
-case class InputWithOutputInfo(input: Input, value: Long, outputTxId: String, address: String)
+case class InputWithOutputInfo(input: Input, value: Option[Long], outputTxId: Option[String], address: Option[String])

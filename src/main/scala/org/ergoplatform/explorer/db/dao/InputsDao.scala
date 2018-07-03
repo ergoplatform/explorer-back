@@ -4,7 +4,6 @@ import cats.data._
 import cats.implicits._
 import doobie._
 import doobie.implicits._
-import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
 import org.ergoplatform.explorer.db.models.{Input, InputWithOutputInfo}
 
