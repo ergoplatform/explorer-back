@@ -22,7 +22,10 @@ class MinerServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   /** Search address by the fragment of the address */
   def searchAddress(substring: String): F[List[String]] = {
-    minerDao.searchAddress(substring).transact(xa)
+    for {
+      _ <- Async.shift[F](ec)
+      addresses <- minerDao.searchAddress(substring).transact(xa)
+    } yield addresses
   }
 
 }
