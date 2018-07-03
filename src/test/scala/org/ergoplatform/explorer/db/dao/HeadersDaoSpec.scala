@@ -1,11 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.implicits._
 import doobie.implicits._
-import doobie.postgres.implicits._
-
-import org.ergoplatform.explorer.db.PreparedDB
-import org.ergoplatform.explorer.utils.generators.HeadersGen
+import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import scorex.crypto.encode.Base16
 
@@ -16,17 +12,12 @@ class HeadersDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
   it should "insert,update,select from db" in {
 
     val dao = new HeadersDao
-
-    val headers = HeadersGen
-      .generateHeaders(20)
-      .reverse
-      .zipWithIndex.map { case (h, ts) => h.copy(timestamp = ts.toLong)}
+    val headers = PreparedData.readHeaders
 
     val head = headers.head
     val tail = headers.tail
 
     val wrongId = Base16.encode(Array.fill(33)(1: Byte))
-
 
     dao.insert(head).transact(xa).unsafeRunSync() shouldBe head
     dao.insertMany(tail).transact(xa).unsafeRunSync() shouldBe tail
@@ -45,6 +36,5 @@ class HeadersDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     the[NoSuchElementException] thrownBy dao.get(wrongId).transact(xa).unsafeRunSync()
     the[NoSuchElementException] thrownBy dao.getByParentId(wrongId).transact(xa).unsafeRunSync()
     dao.get(head.id).transact(xa).unsafeRunSync() shouldBe head
-
   }
 }

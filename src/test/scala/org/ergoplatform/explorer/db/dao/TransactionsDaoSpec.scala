@@ -1,9 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
-import doobie.postgres.implicits._
-import org.ergoplatform.explorer.db.PreparedDB
-import org.ergoplatform.explorer.utils.generators.{HeadersGen, TransactionsGenerator}
+import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.util.Random
@@ -17,8 +15,7 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
     val hDao = new HeadersDao
     val oDao = new OutputsDao
 
-    val headers = HeadersGen.generateHeaders(2)
-    val (txs, oss, _) = TransactionsGenerator.generateSomeData(headers)
+    val (headers, _, txs, inputs, outputs, _) = PreparedData.data
 
     hDao.insertMany(headers).transact(xa).unsafeRunSync()
 
@@ -39,7 +36,7 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
 
     dao.insertMany(tail).transact(xa).unsafeRunSync() should contain theSameElementsAs tail
 
-    oDao.insertMany(oss).transact(xa).unsafeRunSync()
+    oDao.insertMany(outputs).transact(xa).unsafeRunSync()
 
     headers.foreach { h =>
       val id = h.id
@@ -55,10 +52,11 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
       fromDb should contain theSameElementsAs expected
     }
 
-    val randomOs = Random.shuffle(oss).head
-    val txIds: Set[String] = oss.filter(_.hash == randomOs.hash).map(_.txId).toSet
+    val randomOs = Random.shuffle(outputs).head
+    val txIds: Set[String] = outputs.filter(_.hash == randomOs.hash).map(_.txId).toSet
     val expected = txs.filter(tx => txIds(tx.id))
-    dao.getTxsByAddressId(randomOs.hash).transact(xa).unsafeRunSync() should contain theSameElementsAs expected
+    val fromDb = dao.getTxsByAddressId(randomOs.hash, offset = 0, limit = Int.MaxValue).transact(xa).unsafeRunSync()
+    fromDb should contain theSameElementsAs expected
     dao.countTxsByAddressId(randomOs.hash).transact(xa).unsafeRunSync() shouldBe expected.length.toLong
   }
 

@@ -1,10 +1,8 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
-import doobie.postgres.implicits._
-import org.ergoplatform.explorer.db.PreparedDB
+import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.db.models.SpentOutput
-import org.ergoplatform.explorer.utils.generators.{HeadersGen, TransactionsGenerator}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
@@ -13,8 +11,7 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val dao = new OutputsDao
     val inputDao = new InputsDao
 
-    val headers = HeadersGen.generateHeaders(2)
-    val (txs, outputs, inputs) = TransactionsGenerator.generateSomeData(headers)
+    val (headers, _, txs, inputs, outputs, _) = PreparedData.data
 
     inputDao.insertMany(inputs).transact(xa).unsafeRunSync()
 
@@ -25,8 +22,6 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     hDao.insertMany(headers).transact(xa).unsafeRunSync()
     val txDao = new TransactionsDao
     txDao.insertMany(txs).transact(xa).unsafeRunSync()
-
-
 
     dao.insert(head).transact(xa).unsafeRunSync() shouldBe head
     dao.insertMany(tail).transact(xa).unsafeRunSync() should contain theSameElementsAs tail

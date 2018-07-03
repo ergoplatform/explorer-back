@@ -1,10 +1,8 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
-import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.PreparedDB
 import org.ergoplatform.explorer.db.models.{BlockInfo, Header, Miner, RawSearchBlock}
-import org.ergoplatform.explorer.grabber.db.BlockInfoWriter
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
@@ -22,13 +20,12 @@ class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val hDao = new HeadersDao
     val mDao = new MinerDao
+    val iDao = new BlockInfoDao
 
     val dao = new BlockListDao
 
     hDao.insertMany(List(h1, h2, h3)).transact(xa).unsafeRunSync()
-    BlockInfoWriter.insert(bi1).transact(xa).unsafeRunSync()
-    BlockInfoWriter.insert(bi2).transact(xa).unsafeRunSync()
-    BlockInfoWriter.insert(bi3).transact(xa).unsafeRunSync()
+    iDao.insertMany(List(bi1, bi2, bi3)).transact(xa).unsafeRunSync()
     mDao.insert(miner1).transact(xa).unsafeRunSync()
 
     val fromDb = dao.list(startTs = 0L, endTs = 300L).transact(xa).unsafeRunSync()
@@ -39,7 +36,7 @@ class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
       RawSearchBlock("1", 0L, 100L, 0L, "addr1", Some("SUPSUPSUP"), 0L)
     )
 
-    fromDb should contain theSameElementsInOrderAs(expectedResult)
+    fromDb should contain theSameElementsInOrderAs expectedResult
   }
 
   it should "search by id correctly" in {
@@ -49,10 +46,10 @@ class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     val bi2 = BlockInfo("aab", 150L, 1L, 0L, 0L, 0L, 0L, 0L, 0L,  "addr4", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
 
     val hDao = new HeadersDao
+    val iDao = new BlockInfoDao
 
     hDao.insertMany(List(h1, h2)).transact(xa).unsafeRunSync()
-    BlockInfoWriter.insert(bi1).transact(xa).unsafeRunSync()
-    BlockInfoWriter.insert(bi2).transact(xa).unsafeRunSync()
+    iDao.insertMany(List(bi1, bi2)).transact(xa).unsafeRunSync()
 
     val dao = new BlockListDao
 

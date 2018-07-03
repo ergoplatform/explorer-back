@@ -24,24 +24,24 @@ object OutputsOps extends JsonMeta {
 
   val insertSql = s"INSERT INTO node_outputs ($fieldsString) VALUES ($holdersString)"
 
-  def findAllByTxId(txId: String)(implicit c: Composite[Output]): Query0[Output] =
+  def findAllByTxId(txId: String): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE tx_id = $txId").query[Output]
 
-  def findAllByTxIdWithSpent(txId: String)(implicit c: Composite[SpentOutput]): Query0[SpentOutput] =
+  def findAllByTxIdWithSpent(txId: String): Query0[SpentOutput] =
     (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id WHERE o.tx_id = $txId").query[SpentOutput]
 
-  def findAllByTxsId(txsId: NonEmptyList[String])(implicit c: Composite[Output]): Query0[Output] =
+  def findAllByTxsId(txsId: NonEmptyList[String]): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE" ++ Fragments.in(fr"tx_id", txsId)).query[Output]
 
-  def findAllByTxsIdWithSpent(txsId: NonEmptyList[String])(implicit c: Composite[SpentOutput]): Query0[SpentOutput] =
+  def findAllByTxsIdWithSpent(txsId: NonEmptyList[String]): Query0[SpentOutput] =
     (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
       fr"WHERE" ++ Fragments.in(fr"o.tx_id", txsId)).query[SpentOutput]
 
   def insert: Update[Output] = Update[Output](insertSql)
 
-  def findByHash(hash: String)(implicit c: Composite[Output]): Query0[Output] =
+  def findByHash(hash: String): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE hash = $hash").query[Output]
 
   /** Search address identifiers by the fragment of the identifier */

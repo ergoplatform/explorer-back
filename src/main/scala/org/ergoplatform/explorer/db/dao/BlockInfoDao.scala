@@ -3,10 +3,11 @@ package org.ergoplatform.explorer.db.dao
 import cats.implicits._
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
-import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.BlockInfo
 
 class BlockInfoDao {
+
+  val fields = BlockInfoOps.fields
 
 
   def find(headerId: String): ConnectionIO[Option[BlockInfo]] = BlockInfoOps.select(headerId).option
@@ -16,6 +17,20 @@ class BlockInfoDao {
     case None => doobie.free.connection.raiseError(
       new NoSuchElementException(s"Cannot find block info for block with id = $headerId")
     )
+  }
+
+  def insert(bi: BlockInfo): ConnectionIO[BlockInfo] = {
+    BlockInfoOps
+      .insert
+      .withUniqueGeneratedKeys[BlockInfo](fields: _*)(bi)
+  }
+
+  def insertMany(list: List[BlockInfo]): ConnectionIO[List[BlockInfo]] = {
+    BlockInfoOps
+      .insert
+      .updateManyWithGeneratedKeys[BlockInfo](fields: _*)(list)
+      .compile
+      .to[List]
   }
 
   def list(headerIds: List[String]): ConnectionIO[List[BlockInfo]] = BlockInfoOps.select(headerIds).to[List]
