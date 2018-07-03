@@ -19,4 +19,7 @@ class MinerDao {
   def delete(minerAddress: String): ConnectionIO[Unit] = MinerOps.delete(minerAddress).run(minerAddress).map(_ => Unit)
 
   def find(minerAddress: String): ConnectionIO[Option[Miner]] = MinerOps.find(minerAddress).option
+
+  /** Search address by the fragment of the address */
+  def searchAddress(substring: String): ConnectionIO[List[String]] = MinerOps.searchAddress(substring).to[List]
 }

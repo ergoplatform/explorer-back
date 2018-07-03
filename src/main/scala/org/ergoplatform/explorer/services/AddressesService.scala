@@ -44,10 +44,8 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     .map { os => AddressInfo.apply(addressId, os) }
     .transact(xa)
 
-  def searchById(substring: String): F[List[String]] = if (isStandardAddress(substring)) {
+  def searchById(substring: String): F[List[String]] = {
     outputsDao.searchByAddressId(substring).transact(xa)
-  } else {
-    F.pure(List.empty)
   }
 
 }

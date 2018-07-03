@@ -6,7 +6,7 @@ import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.http.handlers.SearchHandler
 import org.ergoplatform.explorer.http.protocol.{MinerInfo, SearchBlock}
-import org.ergoplatform.explorer.services.{AddressesService, BlockService, TransactionsService}
+import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
 import org.mockito.Mockito._
 
 class SearchHandlerSpec extends HandlerSpec {
@@ -14,6 +14,7 @@ class SearchHandlerSpec extends HandlerSpec {
   val blockService = mock[BlockService[IO]]
   val transactionService = mock[TransactionsService[IO]]
   val addressService = mock[AddressesService[IO]]
+  val minerService = mock[MinerService[IO]]
 
   private def response(blocks: List[SearchBlock], transactionIds: List[String], addressIds: List[String]) =
     Json.obj(
@@ -34,13 +35,15 @@ class SearchHandlerSpec extends HandlerSpec {
   when(blockService.searchById(queryNoMatch)).thenReturn(IO(Nil))
   when(transactionService.searchById(queryNoMatch)).thenReturn(IO(Nil))
   when(addressService.searchById(queryNoMatch)).thenReturn(IO(Nil))
+  when(minerService.searchAddress(queryNoMatch)).thenReturn(IO(Nil))
 
   when(blockService.searchById(querySingleMatch)).thenReturn(IO(blockSingleMatch))
   when(transactionService.searchById(querySingleMatch)).thenReturn(IO(transactionSingleMatch))
   when(addressService.searchById(querySingleMatch)).thenReturn(IO(addressSingleMatch))
+  when(minerService.searchAddress(querySingleMatch)).thenReturn(IO(addressSingleMatch))
 
 
-  val route = new SearchHandler(blockService, transactionService, addressService).route
+  val route = new SearchHandler(blockService, transactionService, addressService, minerService).route
 
   it should "return result" in {
     Get(prefix + querySingleMatch) ~> route ~> check {

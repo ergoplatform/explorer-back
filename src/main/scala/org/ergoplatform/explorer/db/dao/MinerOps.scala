@@ -27,4 +27,7 @@ object MinerOps {
 
   def find(minerAddress: String): Query0[Miner] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM known_miners WHERE miner_address = $minerAddress").query[Miner]
+
+  def searchAddress(substring: String): Query0[String] =
+    (fr"SELECT miner_address FROM known_miners WHERE miner_address LIKE ${"%" + substring +"%"}").query[String]
 }

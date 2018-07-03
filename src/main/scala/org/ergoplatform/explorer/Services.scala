@@ -13,4 +13,5 @@ trait Services { self: DbTransactor with Configuration =>
   val txService = new TransactionsServiceIOImpl[IO](transactor, servicesEc)
   val addressesService = new AddressesServiceIOImpl[IO](transactor, servicesEc)
   val statsService = new StatsServiceIOImpl[IO](transactor, servicesEc)
+  val minerService = new MinerServiceIOImpl[IO](transactor, servicesEc)
 }
