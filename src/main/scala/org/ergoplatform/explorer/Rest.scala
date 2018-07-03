@@ -12,6 +12,6 @@ trait Rest { self: Services =>
     new StatsHandler(statsService).route,
     new ChartsHandler(statsService).route,
     new InfoHandler(statsService).route,
-    new SearchHandler(blocksService, txService, addressesService).route
+    new SearchHandler(blocksService, txService, addressesService, minerService).route
   ).reduce(_ ~ _)
 }
