@@ -14,11 +14,9 @@ case class InputInfo(
 
 object InputInfo {
 
-  import org.ergoplatform.explorer.services.AddressesService._
-
-  def fromInputWithValue(i: InputWithOutputInfo) =
-    InputInfo(i.input.boxId, i.input.proofBytes, i.value, i.input.txId,
-      i.outputTxId, i.address.filter(isStandardAddress))
+  def fromInputWithValue(i: InputWithOutputInfo) = InputInfo(
+    i.input.boxId, i.input.proofBytes, i.value, i.input.txId, i.outputTxId, i.address
+  )
 
   implicit val encoder: Encoder[InputInfo] = (i: InputInfo) => Json.obj(
     "id" -> Json.fromString(i.id),
