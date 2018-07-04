@@ -14,7 +14,7 @@ case class SearchBlock(id: String,
 object SearchBlock {
 
   def fromRawSearchBlock(b: RawSearchBlock): SearchBlock = {
-    val minerName = b.minerName.getOrElse(b.minerAddress.reverseIterator.take(8).toString().reverse)
+    val minerName = b.minerName.getOrElse(b.minerAddress.takeRight(8))
     SearchBlock(
       id = b.id,
       height = b.height,
