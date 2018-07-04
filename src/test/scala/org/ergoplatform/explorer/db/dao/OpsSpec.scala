@@ -97,9 +97,15 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
   it should "check all ops for block list ops" in {
     import BlockListOps._
 
-    count(0L, 0L)
-    list(0,0, "", "", 0L, 0L)
-    searchById("")
+    check(count(0L, 0L))
+    check(list(0,0, "", "", 0L, 0L))
+    check(searchById(""))
+  }
+
+  it should "check all ops for miner stats ops" in {
+    import MinerStatsOps._
+
+    check(minerStatsAfter(0L))
   }
 
 }

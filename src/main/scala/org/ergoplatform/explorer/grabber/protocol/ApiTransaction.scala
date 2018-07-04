@@ -10,6 +10,6 @@ object ApiTransaction {
     id <- c.downField("id").as[String]
     inputs <- c.downField("inputs").as[List[ApiInput]]
     outputs <- c.downField("outputs").as[List[ApiOutput]]
-    size <- c.downField("bytesSize").as[Long]
+    size <- c.downField("bytesSize").as[Option[Long]].map(_.getOrElse(0L))
   } yield ApiTransaction(id, inputs, outputs, size)
 }

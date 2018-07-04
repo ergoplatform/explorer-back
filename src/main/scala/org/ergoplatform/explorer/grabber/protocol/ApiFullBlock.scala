@@ -13,6 +13,6 @@ object ApiFullBlock {
       case Left(_) => Right(None)
       case Right(proofs) => Right(Some(proofs))
     }
-    size <- c.downField("bytesSize").as[Long]
+    size <- c.downField("bytesSize").as[Option[Long]].map(_.getOrElse(0L))
   } yield ApiFullBlock(header, bt, adProofs, size)
 }

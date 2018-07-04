@@ -5,9 +5,9 @@ import cats.effect._
 import cats.implicits._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
-import org.ergoplatform.explorer.db.dao.{BlockInfoDao, HeadersDao, OutputsDao}
-import org.ergoplatform.explorer.db.models.BlockInfo
-import org.ergoplatform.explorer.http.protocol.{BlockchainInfo, ChartSingleData, StatsSummary, UsdPriceInfo}
+import org.ergoplatform.explorer.db.dao.{BlockInfoDao, HeadersDao, MinerStatsDao, OutputsDao}
+import org.ergoplatform.explorer.db.models.{BlockInfo, MinerStats}
+import org.ergoplatform.explorer.http.protocol._
 
 import scala.concurrent.ExecutionContext
 
@@ -31,6 +31,8 @@ trait StatsService[F[_]] {
 
   def hashrateForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
+  def sharesAcrossMinersFor24H: F[List[MinerStatSingleInfo]]
+
 }
 
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -44,6 +46,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   val infoDao = new BlockInfoDao
   val hDao = new HeadersDao
   val outputsDao = new OutputsDao
+  val minerStatsDao = new MinerStatsDao
 
   override def findLastStats: F[StatsSummary] = for {
     _ <- Async.shift[F](ec)
@@ -109,6 +112,29 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     hashratesByDay = difficultiesByDay.map { case (ts, d, s) => (ts, hashratePerDay(d), s)}
     result = pairsToChartData(hashratesByDay)
   } yield result
+
+  def sharesAcrossMinersFor24H: F[List[MinerStatSingleInfo]] = for {
+    _ <- Async.shift[F](ec)
+    result <- sharesAcrossMinersFor24HResult
+  } yield result
+
+  private def sharesAcrossMinersFor24HResult: F[List[MinerStatSingleInfo]] = for {
+    rawStats <- minerStatsDao.minerStatsAfter(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
+    stats <- F.pure(rawMinerStatsToView(rawStats))
+  } yield stats
+
+  private def rawMinerStatsToView(list: List[MinerStats]): List[MinerStatSingleInfo] = {
+    val totalCount = list.map(_.blocksMined).sum
+    def threshold(m: MinerStats): Boolean = ((m.blocksMined.toDouble * 100) / totalCount.toDouble) > 1.0
+
+    val (big, other) = list.partition(threshold)
+    val otherSumStats = MinerStatSingleInfo("other", other.map(_.blocksMined).sum)
+    val bigOnes = big.map { info =>
+      MinerStatSingleInfo(info.printableName, info.blocksMined)
+    }
+
+    (bigOnes :+ otherSumStats).sortBy(v => -v.value).filterNot(_.value == 0L)
+  }
 
   private def hashRate24H: F[Long] = for {
     difficulties <- infoDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
