@@ -119,7 +119,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   } yield result
 
   private def sharesAcrossMinersFor24HResult: F[List[MinerStatSingleInfo]] = for {
-    rawStats <- minerStatsDao.minerStatsAfter(/* System.currentTimeMillis() - MillisIn24H */ 0L).transact[F](xa)
+    rawStats <- minerStatsDao.minerStatsAfter(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
     stats <- F.pure(rawMinerStatsToView(rawStats))
   } yield stats
 
