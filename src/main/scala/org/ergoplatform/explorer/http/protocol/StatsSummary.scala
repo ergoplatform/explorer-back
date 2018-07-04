@@ -25,7 +25,7 @@ object StatsSummary {
   val empty = StatsSummary(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0D, 0D, 0L, 0L, 0L)
 
   def percentOfFee(b: BlockInfo): Double = {
-    val result = b.totalMinersReward.toDouble / (b.totalMinersReward.toDouble + b.totalFees.toDouble)
+    val result = b.totalFees.toDouble / (b.totalMinersReward.toDouble + b.totalFees.toDouble)
     BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
