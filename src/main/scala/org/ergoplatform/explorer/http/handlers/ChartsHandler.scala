@@ -7,7 +7,14 @@ import org.ergoplatform.explorer.services.StatsService
 class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
 
   val route = pathPrefix("charts") {
-    totalCoins ~ avgBlockSize ~ blockChainSize ~ avgTxsPerBlock ~ avgDifficulty ~ minerRevenue ~ hashrate
+    totalCoins ~
+    avgBlockSize ~
+    blockChainSize ~
+    avgTxsPerBlock ~
+    avgDifficulty ~
+    minerRevenue ~
+    hashrateDistribution ~
+    hashrate
   }
 
   val totalCoins = (get & pathPrefix("total") & duration) { d =>
@@ -19,28 +26,26 @@ class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
   }
 
   val blockChainSize = (get & pathPrefix("blockchain-size") & duration) { d =>
-    val f = ss.avgBlockChainSizeForDuration(d).unsafeToFuture()
-    onSuccess(f) { result => complete(result) }
+    ss.avgBlockChainSizeForDuration(d)
   }
 
   val avgTxsPerBlock = (get & pathPrefix("transactions-per-block") & duration) { d =>
-    val f = ss.avgTxsPerBlockForDuration(d).unsafeToFuture()
-    onSuccess(f) { result => complete(result) }
+    ss.avgTxsPerBlockForDuration(d)
   }
 
   val avgDifficulty = (get & pathPrefix("difficulty") & duration) { d =>
-    val f = ss.avgDifficultyForDuration(d).unsafeToFuture()
-    onSuccess(f) { result => complete(result) }
+    ss.avgDifficultyForDuration(d)
   }
 
   val minerRevenue = (get & pathPrefix("miners-revenue") & duration) { d =>
-    val f = ss.minerRevenueForDuration(d).unsafeToFuture()
-    onSuccess(f) { result => complete(result) }
+    ss.minerRevenueForDuration(d)
   }
 
   val hashrate = (get & pathPrefix("hash-rate") & duration) { d =>
-    val f = ss.hashrateForDuration(d).unsafeToFuture()
-    onSuccess(f) { result => complete(result) }
+    ss.hashrateForDuration(d)
   }
 
+  val hashrateDistribution = (get & pathPrefix("hash-rate-distribution")) {
+    ss.sharesAcrossMinersFor24H
+  }
 }
