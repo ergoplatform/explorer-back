@@ -44,6 +44,11 @@ object OutputsOps extends JsonMeta {
   def findByHash(hash: String): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE hash = $hash").query[Output]
 
+  def findByHashWithSpent(hash: String): Query0[SpentOutput] =
+    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, i.tx_id" ++
+     fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
+     fr"WHERE o.hash = $hash").query[SpentOutput]
+
   /** Search address identifiers by the fragment of the identifier */
   def searchByHash(substring: String): Query0[String] = {
     fr"SELECT hash FROM node_outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]

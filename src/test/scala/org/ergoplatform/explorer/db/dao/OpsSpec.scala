@@ -77,6 +77,7 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(findAllByTxId(""))
     check(findAllByTxsId(NonEmptyList.fromListUnsafe(List(""))))
     check(findByHash(""))
+    check(findByHashWithSpent(""))
     check(searchByHash(""))
     check(sumOfAllUnspentOutputs)
     check(findAllByTxIdWithSpent(""))

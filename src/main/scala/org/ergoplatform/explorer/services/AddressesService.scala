@@ -31,7 +31,7 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   private def getAddressInfoResult(addressId: String): F[AddressInfo] = outputsDao
     .findAllByAddressId(addressId)
-    .map { os => AddressInfo.apply(addressId, os) }
+    .map { outputs => AddressInfo.apply(addressId, outputs) }
     .transact(xa)
 
   def searchById(substring: String): F[List[String]] = {
