@@ -7,5 +7,5 @@ case class MinerStats(
                        blocksMined: Long,
                        minerName: Option[String]
                      ) {
-  val printableName: String = minerName.getOrElse(minerAddress.reverse.take(8).reverse)
+  val printableName: String = minerName.getOrElse(minerAddress.takeRight(8))
 }
