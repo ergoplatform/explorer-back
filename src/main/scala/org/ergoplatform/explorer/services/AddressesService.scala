@@ -22,22 +22,12 @@ trait AddressesService[F[_]] {
 
 class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                                   (implicit F: Monad[F], A: Async[F]) extends AddressesService[F] with JsonMeta {
-  import AddressesService._
-
   val outputsDao = new OutputsDao
 
   override def getAddressInfo(addressId: String): F[AddressInfo] = for {
     _ <- Async.shift[F](ec)
-    info <- getAddressInfoFilteringNonStandard(addressId)
+    info <- getAddressInfoResult(addressId)
   } yield info
-
-  private def getAddressInfoFilteringNonStandard(addressId: String): F[AddressInfo] = A.suspend {
-    if (isStandardAddress(addressId)) {
-      getAddressInfoResult(addressId)
-    } else {
-      F.pure(AddressInfo(addressId, List.empty))
-    }
-  }
 
   private def getAddressInfoResult(addressId: String): F[AddressInfo] = outputsDao
     .findAllByAddressId(addressId)
@@ -48,15 +38,4 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     outputsDao.searchByAddressId(substring).transact(xa)
   }
 
-}
-
-object AddressesService {
-  /**
-    * Currently we are supporting only standart addresses, they all are starting with cb0703 char sequence
-    *
-    * More details https://github.com/ergoplatform/explorer-back/issues/5
-    * @param address String representation of address
-    * @return true or false
-    */
-  def isStandardAddress(address: String): Boolean = address.startsWith("cb0703")
 }
