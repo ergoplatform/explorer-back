@@ -37,6 +37,8 @@ class BlockInfoDao {
 
   def findLast: ConnectionIO[Option[BlockInfo]] = BlockInfoOps.findLast(1).option
 
+  def findSince(ts: Long): ConnectionIO[List[BlockInfo]] = BlockInfoOps.findSince(ts).to[List]
+
   def totalCoinsGroupedByDay(lastDays: Int): ConnectionIO[List[BlockInfoOps.SingleDataType]] =
     BlockInfoOps.totalCoinsGroupedByDay(lastDays).to[List]
 

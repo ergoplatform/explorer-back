@@ -54,20 +54,22 @@ object OutputsOps extends JsonMeta {
     fr"SELECT hash FROM node_outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
   }
 
-  def sumOfAllUnspentOutputs: Query0[Long] = {
-    fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0) FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id WHERE i.box_id IS NULL"
-      .query[Long]
-  }
+  def sumOfAllUnspentOutputsSince(ts: Long): Query0[Long] =
+   (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0)" ++
+    fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+    fr"LEFT JOIN node_transactions t ON o.tx_id = t.id" ++
+    fr"WHERE i.box_id IS NULL AND t.timestamp >= $ts").query[Long]
 
   //TODO: Make proper value evaluation, without tons of joins
-  def estimatedOutputs: Query0[Long] = {
-    Fragment.const("""
+  def estimatedOutputsSince(ts: Long): Query0[Long] = {
+    Fragment.const(s"""
                   SELECT COALESCE(CAST(SUM(op.value) as BIGINT),0)
                   FROM node_outputs o
                   LEFT JOIN node_inputs i ON o.box_id = i.box_id
                   LEFT JOIN node_outputs op ON i.tx_id = op.tx_id
                   LEFT JOIN node_inputs ip ON op.box_id = ip.box_id
-                  WHERE o.hash <> op.hash AND ip.box_id IS NULL""").query[Long]
+                  LEFT JOIN node_transactions t ON o.tx_id = t.id
+                  WHERE o.hash <> op.hash AND ip.box_id IS NULL AND t.timestamp >= $ts""").query[Long]
   }
 
 }
