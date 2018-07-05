@@ -53,7 +53,7 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val unspent = outputs.filterNot{ o => inputIds.contains(o.boxId)}
     val unspentSum = unspent.map{_.value}.sum
 
-    dao.sumOfAllUnspentOutputs.transact(xa).unsafeRunSync() shouldBe unspentSum
+    dao.sumOfAllUnspentOutputsSince(0L).transact(xa).unsafeRunSync() shouldBe unspentSum
   }
 
 }

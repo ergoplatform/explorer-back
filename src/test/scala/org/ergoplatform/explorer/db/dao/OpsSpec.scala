@@ -47,6 +47,7 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(select(""))
     check(select(List("")))
     check(findLast(100))
+    check(findSince(0L))
     check(circulatingSupplySince(0L))
     check(difficultiesSumSince(0L))
     check(totalCoinsGroupedByDay(10))
@@ -79,10 +80,10 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(findByHash(""))
     check(findByHashWithSpent(""))
     check(searchByHash(""))
-    check(sumOfAllUnspentOutputs)
+    check(sumOfAllUnspentOutputsSince(0L))
     check(findAllByTxIdWithSpent(""))
     check(findAllByTxsIdWithSpent(NonEmptyList.fromListUnsafe(List(""))))
-    check(estimatedOutputs)
+    check(estimatedOutputsSince(0L))
   }
 
   it should "check all ops in miner ops" in {

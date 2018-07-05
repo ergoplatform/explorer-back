@@ -55,6 +55,9 @@ object BlockInfoOps {
   def findLast(cnt: Int = 10): Query0[BlockInfo] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info ORDER BY height DESC LIMIT ${cnt.toLong}").query[BlockInfo]
 
+  def findSince(ts: Long): Query0[BlockInfo] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE timestamp >= $ts").query[BlockInfo]
+
   def difficultiesSumSince(ts: Long): Query0[Long] = {
     fr"SELECT COALESCE(CAST(SUM(difficulty) as BIGINT), 0) FROM blocks_info WHERE timestamp >= $ts".query[Long]
   }

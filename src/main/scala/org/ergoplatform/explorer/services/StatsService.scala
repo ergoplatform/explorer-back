@@ -10,6 +10,7 @@ import org.ergoplatform.explorer.db.models.{BlockInfo, MinerStats}
 import org.ergoplatform.explorer.http.protocol._
 
 import scala.concurrent.ExecutionContext
+import scala.math.BigDecimal
 
 trait StatsService[F[_]] {
 
@@ -50,14 +51,56 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   override def findLastStats: F[StatsSummary] = for {
     _ <- Async.shift[F](ec)
-    totalUnspentOutputsValue <- outputsDao.sumOfAllUnspentOutputs.transact[F](xa)
-    totalDifficulties <- infoDao.difficultiesSumSince(0L).transact[F](xa)
-    estimatedOutput <- outputsDao.estimateOutput.transact[F](xa)
-    result <- infoDao
-      .findLast
-      .map(statRecordToStatsSummary(_, totalUnspentOutputsValue, totalDifficulties, estimatedOutput))
-      .transact[F](xa)
-  } yield result.getOrElse(emptyStatsResponse)
+    pastTs <- F.pure(System.currentTimeMillis() - MillisIn24H)
+    totalOutputs <- outputsDao.sumOfAllUnspentOutputsSince(pastTs).transact[F](xa)
+    estimatedOutputs <- outputsDao.estimateOutputSince(pastTs).transact[F](xa)
+    stats <- infoDao.findSince(pastTs).transact[F](xa).map{list => recentToStats(list, totalOutputs, estimatedOutputs)}
+  } yield stats
+
+  private def percentOfFee(fees: Long, minersReward: Long): Double = if (fees + minersReward == 0L) {
+    0.0
+  } else {
+    val result = fees.toDouble / (minersReward.toDouble + fees.toDouble)
+    BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+  }
+
+  private def percentOfTxVolume(minersReward: Long, totalCoins: Long): Double = if (totalCoins == 0L) {
+    0.0
+  } else {
+    val result = minersReward.toDouble / totalCoins.toDouble
+    BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+  }
+
+  private def recentToStats(list: List[BlockInfo], totalOutputs: Long, estimatedOutputs: Long): StatsSummary =
+    list.sortBy(info => -info.height) match {
+      case Nil =>
+        StatsSummary.empty
+      case x :: _ =>
+        val blocksCount = list.length.toLong
+        val avgMiningTime = list.map(_.blockMiningTime).sum / blocksCount
+        val coins = list.map(_.blockCoins).sum
+        val txsCount = list.map(_.txsCount).sum
+        val totalFee = list.map(_.blockFee).sum
+        val minersRevenue = list.map(_.minerRevenue).sum
+        val minersReward = list.map(_.minerReward).sum
+        val hashrate = list.map(_.difficulty).sum / SecondsIn24H
+
+        StatsSummary(
+          blocksCount = blocksCount,
+          blocksAvgTime = avgMiningTime,
+          totalCoins = coins,
+          totalTransactionsCount = txsCount,
+          totalFee = totalFee,
+          totalOutput = totalOutputs,
+          estimatedOutput = estimatedOutputs,
+          totalMinerRevenue = minersRevenue,
+          percentEarnedTransactionsFees = percentOfFee(totalFee, minersReward),
+          percentTransactionVolume = percentOfTxVolume(minersReward, coins),
+          costPerTx = if (txsCount == 0L) { 0L } else { minersRevenue / txsCount },
+          lastDifficulty = x.difficulty,
+          totalHashrate = hashrate
+        )
+    }
 
   override def findBlockchainInfo: F[BlockchainInfo] = {
     for {
