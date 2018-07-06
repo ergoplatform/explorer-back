@@ -23,18 +23,15 @@ class HeadersDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     dao.insertMany(tail).transact(xa).unsafeRunSync() shouldBe tail
 
     dao.getHeightById(head.id).transact(xa).unsafeRunSync() shouldBe head.height
-    dao.getByParentId(head.id).transact(xa).unsafeRunSync() shouldBe tail.head
 
     val rnd1 = Random.shuffle(headers).head
     dao.getHeightById(rnd1.id).transact(xa).unsafeRunSync() shouldBe rnd1.height
-    dao.getByParentId(rnd1.parentId).transact(xa).unsafeRunSync() shouldBe rnd1
 
     dao.find(wrongId).transact(xa).unsafeRunSync() shouldBe None
     dao.findByParentId(wrongId).transact(xa).unsafeRunSync() shouldBe None
     dao.find(head.id).transact(xa).unsafeRunSync() shouldBe Some(head)
 
     the[NoSuchElementException] thrownBy dao.get(wrongId).transact(xa).unsafeRunSync()
-    the[NoSuchElementException] thrownBy dao.getByParentId(wrongId).transact(xa).unsafeRunSync()
     dao.get(head.id).transact(xa).unsafeRunSync() shouldBe head
   }
 }

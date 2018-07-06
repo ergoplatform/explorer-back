@@ -48,13 +48,6 @@ class HeadersDao {
     )
   }
 
-  def getByParentId(parentId: String): ConnectionIO[Header] = findByParentId(parentId).flatMap {
-    case Some(h) => h.pure[ConnectionIO]
-    case None => doobie.free.connection.raiseError(
-      new NoSuchElementException(s"Cannot find header with parentId = $parentId")
-    )
-  }
-
   def getLast(limit: Int = 20): ConnectionIO[List[Header]] = HeadersOps.selectLast(limit).to[List]
 
   def getHeightById(id: String): ConnectionIO[Long] = HeadersOps.selectHeight(id).option.flatMap {
