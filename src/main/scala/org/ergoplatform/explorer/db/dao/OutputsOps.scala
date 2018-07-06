@@ -4,7 +4,7 @@ import cats.data._
 import doobie._
 import doobie.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.{Output, SpentOutput}
+import org.ergoplatform.explorer.db.models.{AddressSummaryData, Output, SpentOutput}
 
 object OutputsOps extends JsonMeta {
 
@@ -71,5 +71,17 @@ object OutputsOps extends JsonMeta {
                   LEFT JOIN node_transactions t ON o.tx_id = t.id
                   WHERE o.hash <> op.hash AND ip.box_id IS NULL AND t.timestamp >= $ts""").query[Long]
   }
+
+  def addressStats(hash: String): Query0[AddressSummaryData] =
+    fr"""
+        SELECT
+        o.hash as hash,
+        COUNT(o.tx_id),
+        CAST(SUM(CASE WHEN i.box_id IS NOT NULL THEN o.value ELSE 0 END) AS BIGINT) as spent,
+        CAST(SUM(CASE WHEN i.box_id IS NULL THEN o.value ELSE 0 END) AS BIGINT) as unspent
+        FROM node_outputs o
+        LEFT JOIN node_inputs i ON o.box_id = i.box_id
+        WHERE hash = $hash
+        GROUP BY (hash)""".query[AddressSummaryData]
 
 }

@@ -84,6 +84,7 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(findAllByTxIdWithSpent(""))
     check(findAllByTxsIdWithSpent(NonEmptyList.fromListUnsafe(List(""))))
     check(estimatedOutputsSince(0L))
+    check(addressStats(""))
   }
 
   it should "check all ops in miner ops" in {
