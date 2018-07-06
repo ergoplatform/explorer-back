@@ -7,6 +7,7 @@ import doobie.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao.{BlockInfoDao, HeadersDao, MinerStatsDao, OutputsDao}
 import org.ergoplatform.explorer.db.models.{BlockInfo, MinerStats}
+import org.ergoplatform.explorer.grabber.CoinsEmission
 import org.ergoplatform.explorer.http.protocol._
 
 import scala.concurrent.ExecutionContext
@@ -114,9 +115,10 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     pastTs = System.currentTimeMillis() - MillisIn24H
     difficulties <- infoDao.difficultiesSumSince(pastTs)
     hashrate = hashratePerDay(difficulties)
-    supply <- infoDao.circulatingSupplySince(pastTs)
     h <- hDao.get(blockInfoRecord.map(_.headerId).getOrElse(""))
-    info = blockInfoRecord.map { v => BlockchainInfo(h.version.toString, supply, v.avgTxsCount, hashrate)}
+    info = blockInfoRecord.map { v =>
+      val supply = CoinsEmission.issuedCoinsAfterHeight(v.height)
+      BlockchainInfo(h.version.toString, supply, v.avgTxsCount, hashrate)}
   } yield info).transact[F](xa)
 
   override def totalCoinsForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
