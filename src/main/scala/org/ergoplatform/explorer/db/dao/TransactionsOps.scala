@@ -12,7 +12,8 @@ object TransactionsOps {
     "id",
     "header_id",
     "coinbase",
-    "timestamp"
+    "timestamp",
+    "size"
   )
 
   val fieldsString = fields.mkString(", ")
@@ -30,7 +31,7 @@ object TransactionsOps {
   def getTxsByAddressId(addressId: String, offset: Int, limit: Int)
                        (implicit c: Composite[Transaction]): Query0[Transaction] =
     fr"""
-        SELECT t.id, t.header_id, t.coinbase, t.timestamp
+        SELECT t.id, t.header_id, t.coinbase, t.timestamp, t.size
         FROM node_transactions t
         WHERE EXISTS (
           SELECT 1

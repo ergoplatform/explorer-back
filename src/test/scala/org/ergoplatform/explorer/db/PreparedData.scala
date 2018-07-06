@@ -70,7 +70,8 @@ object PreparedData extends App {
       id = data(0),
       headerId = data(1),
       isCoinbase = data(2).contains("t"),
-      timestamp = data(3).toLong
+      timestamp = data(3).toLong,
+      size = data(4).toLong
     )
   }
 

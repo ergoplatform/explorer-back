@@ -6,7 +6,7 @@ import org.ergoplatform.explorer.db.models._
 
 case class TransactionSummaryInfo(id: String,
                                   timestamp: Long,
-                                  size: Int,
+                                  size: Long,
                                   confirmationsCount: Long,
                                   miniBlockInfo: MiniBlockInfo,
                                   inputs: List[InputInfo],
@@ -28,8 +28,7 @@ object TransactionSummaryInfo {
       miniBlockInfo = MiniBlockInfo(tx.headerId, height),
       timestamp = tx.timestamp,
       confirmationsCount = confirmationsCount + 1L,
-      //TODO Need to add this data to tx
-      size = 0,
+      size = tx.size,
       inputs = inputs.map(InputInfo.fromInputWithValue),
       outputs = outputs.map(OutputInfo.fromOutputWithSpent),
       totalCoins = inputs.map(_.value.getOrElse(0L)).sum
@@ -39,7 +38,7 @@ object TransactionSummaryInfo {
     "summary" -> Json.obj(
       "id" -> Json.fromString(ts.id),
       "timestamp" -> Json.fromLong(ts.timestamp),
-      "size" -> Json.fromInt(ts.size),
+      "size" -> Json.fromLong(ts.size),
       "confirmationsCount" -> Json.fromLong(ts.confirmationsCount),
       "block" -> ts.miniBlockInfo.asJson
     ),

@@ -43,8 +43,9 @@ object DBHelper {
   def btToDb(bt: ApiBlockTransactions, ts: Long): List[NodeTxWriter.ToInsert] = {
     val txs = bt.transactions
     val coinbaseId = txs.last.id
-    val coinbaseTx = (coinbaseId, bt.headerId, true, ts)
-    val restTxs = txs.init.map { tx => (tx.id, bt.headerId, false, ts) }
+    val coinbaseTx = (coinbaseId, bt.headerId, true, ts, txs.last.size)
+
+    val restTxs = txs.init.map { tx => (tx.id, bt.headerId, false, ts, tx.size) }
     coinbaseTx :: restTxs
   }
 
