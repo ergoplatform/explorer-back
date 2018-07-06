@@ -5,7 +5,7 @@ import cats.effect._
 import cats.implicits._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
-import org.ergoplatform.explorer.db.dao.{BlockInfoDao, HeadersDao, MinerStatsDao, OutputsDao}
+import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.db.models.{BlockInfo, MinerStats}
 import org.ergoplatform.explorer.grabber.CoinsEmission
 import org.ergoplatform.explorer.http.protocol._
@@ -48,6 +48,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   val infoDao = new BlockInfoDao
   val hDao = new HeadersDao
   val outputsDao = new OutputsDao
+  val tDao = new TransactionsDao
   val minerStatsDao = new MinerStatsDao
 
   override def findLastStats: F[StatsSummary] = for {
@@ -111,14 +112,14 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   }
 
   private def blockchainInfoResult: F[Option[BlockchainInfo]] = (for {
-    blockInfoRecord <- infoDao.findLast
+    header <- hDao.getLast(1).map(_.headOption)
     pastTs = System.currentTimeMillis() - MillisIn24H
     difficulties <- infoDao.difficultiesSumSince(pastTs)
     hashrate = hashrateForSecs(difficulties, SecondsIn24H)
-    h <- hDao.get(blockInfoRecord.map(_.headerId).getOrElse(""))
-    info = blockInfoRecord.map { v =>
-      val supply = CoinsEmission.issuedCoinsAfterHeight(v.height)
-      BlockchainInfo(h.version.toString, supply, v.avgTxsCount, hashrate)}
+    txsCount <- tDao.countTxsSince(pastTs)
+    info = header.map { h =>
+      val supply = CoinsEmission.issuedCoinsAfterHeight(h.height)
+      BlockchainInfo(h.version.toString, supply, txsCount, hashrate)}
   } yield info).transact[F](xa)
 
   override def totalCoinsForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {

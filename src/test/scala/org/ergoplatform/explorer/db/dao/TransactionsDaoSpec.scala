@@ -58,6 +58,8 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
     val fromDb = dao.getTxsByAddressId(randomOs.hash, offset = 0, limit = Int.MaxValue).transact(xa).unsafeRunSync()
     fromDb should contain theSameElementsAs expected
     dao.countTxsByAddressId(randomOs.hash).transact(xa).unsafeRunSync() shouldBe expected.length.toLong
+
+    dao.countTxsSince(0L).transact(xa).unsafeRunSync() shouldBe txs.length.toLong
   }
 
 }

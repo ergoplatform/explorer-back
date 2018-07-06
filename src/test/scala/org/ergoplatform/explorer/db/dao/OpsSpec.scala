@@ -39,6 +39,7 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(getTxsByAddressId("", 0, 0))
     check(countTxsByAddressId(""))
     check(searchById(""))
+    check(txsSince(0L))
   }
 
   it should "check all block info ops" in {

@@ -52,7 +52,8 @@ CREATE TABLE node_transactions (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   header_id VARCHAR(64) NOT NULL,
   coinbase BOOLEAN NOT NULL,
-  timestamp BIGINT NOT NULL
+  timestamp BIGINT NOT NULL,
+  size BIGINT NOT NULL
 );
 
 ALTER TABLE node_transactions OWNER TO ergo;

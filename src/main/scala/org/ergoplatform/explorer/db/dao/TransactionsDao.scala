@@ -44,4 +44,6 @@ class TransactionsDao {
     TransactionsOps.searchById(substring).to[List]
   }
 
+  def countTxsSince(ts: Long): ConnectionIO[Long] = TransactionsOps.txsSince(ts).unique
+
 }
