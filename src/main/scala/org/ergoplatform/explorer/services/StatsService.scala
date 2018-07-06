@@ -84,7 +84,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
         val totalFee = list.map(_.blockFee).sum
         val minersRevenue = list.map(_.minerRevenue).sum
         val minersReward = list.map(_.minerReward).sum
-        val hashrate = list.map(_.difficulty).sum / SecondsIn24H
+        val hashrate = hashrateForSecs(list.map(_.difficulty).sum, SecondsIn24H)
 
         StatsSummary(
           blocksCount = blocksCount,
@@ -114,7 +114,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     blockInfoRecord <- infoDao.findLast
     pastTs = System.currentTimeMillis() - MillisIn24H
     difficulties <- infoDao.difficultiesSumSince(pastTs)
-    hashrate = hashratePerDay(difficulties)
+    hashrate = hashrateForSecs(difficulties, SecondsIn24H)
     h <- hDao.get(blockInfoRecord.map(_.headerId).getOrElse(""))
     info = blockInfoRecord.map { v =>
       val supply = CoinsEmission.issuedCoinsAfterHeight(v.height)
@@ -154,7 +154,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   override def hashrateForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
     difficultiesByDay <- infoDao.sumDifficultiesGroupedByDay(d).transact[F](xa)
-    hashratesByDay = difficultiesByDay.map { case (ts, d, s) => (ts, hashratePerDay(d), s)}
+    hashratesByDay = difficultiesByDay.map { case (ts, d, s) => (ts, hashrateForSecs(d, SecondsIn24H), s)}
     result = pairsToChartData(hashratesByDay)
   } yield result
 
@@ -192,5 +192,5 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   private def pairsToChartData(list: List[(Long, Long, String)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data, _) => ChartSingleData(ts, data)}
 
-  private def hashratePerDay(difficulty: Long): Long = difficulty / SecondsIn24H
+  private def hashrateForSecs(difficulty: Long, seconds: Long): Long = (difficulty / seconds) + 1L
 }
