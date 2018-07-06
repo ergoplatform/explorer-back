@@ -60,4 +60,6 @@ object TransactionsOps {
 
   def searchById(substring: String): Query0[String] =
     fr"SELECT id FROM node_transactions WHERE id LIKE ${"%" + substring + "%" }".query[String]
+
+  def txsSince(ts: Long): Query0[Long] = fr"SELECT count(*) FROM node_transactions WHERE timestamp >= $ts".query[Long]
 }
