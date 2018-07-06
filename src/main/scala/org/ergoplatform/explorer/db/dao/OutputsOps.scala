@@ -29,7 +29,9 @@ object OutputsOps extends JsonMeta {
 
   def findAllByTxIdWithSpent(txId: String): Query0[SpentOutput] =
     (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, i.tx_id" ++
-      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id WHERE o.tx_id = $txId").query[SpentOutput]
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"LEFT JOIN node_transactions t ON i.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE o.tx_id = $txId AND (h.main_chain = TRUE OR i.tx_id IS NULL)").query[SpentOutput]
 
   def findAllByTxsId(txsId: NonEmptyList[String]): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE" ++ Fragments.in(fr"tx_id", txsId)).query[Output]

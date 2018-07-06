@@ -33,7 +33,7 @@ object HeadersOps {
   def select(id: String): Query0[Header] = (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE id = $id;").query[Header]
 
   def selectByParentId(parentId: String): Query0[Header] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE parent_id = $parentId").query[Header]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE parent_id = $parentId AND main_chain = TRUE").query[Header]
 
   def selectLast(limit: Int = 20): Query0[Header] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE main_chain = TRUE ORDER BY height DESC LIMIT ${limit.toLong}").query
