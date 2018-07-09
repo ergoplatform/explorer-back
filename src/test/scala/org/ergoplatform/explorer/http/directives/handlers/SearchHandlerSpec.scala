@@ -5,7 +5,7 @@ import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.http.handlers.SearchHandler
-import org.ergoplatform.explorer.http.protocol.{MinerInfo, SearchBlock}
+import org.ergoplatform.explorer.http.protocol.{MinerInfo, SearchBlockInfo}
 import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
 import org.mockito.Mockito._
 
@@ -16,7 +16,7 @@ class SearchHandlerSpec extends HandlerSpec {
   val addressService = mock[AddressesService[IO]]
   val minerService = mock[MinerService[IO]]
 
-  private def response(blocks: List[SearchBlock], transactionIds: List[String], addressIds: List[String]) =
+  private def response(blocks: List[SearchBlockInfo], transactionIds: List[String], addressIds: List[String]) =
     Json.obj(
       "blocks" -> blocks.asJson,
       "transactions" -> transactionIds.asJson,
@@ -28,7 +28,7 @@ class SearchHandlerSpec extends HandlerSpec {
   val querySingleMatch = "11111"
 
   val miner = MinerInfo("mock.miner.address", "Mock miner")
-  val blockSingleMatch = List(SearchBlock("123123" + querySingleMatch, 1, System.currentTimeMillis(), 42, miner, 100))
+  val blockSingleMatch = List(SearchBlockInfo("123123" + querySingleMatch, 1, System.currentTimeMillis(), 42, miner, 100, 0L, 0L))
   val transactionSingleMatch = List("fff123" + querySingleMatch)
   val addressSingleMatch = List("add123" +  querySingleMatch)
 
