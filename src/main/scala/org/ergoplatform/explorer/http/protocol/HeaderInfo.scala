@@ -48,6 +48,7 @@ object HeaderInfo {
     "parentId" -> Json.fromString(h.parentId),
     "version" -> Json.fromInt(h.version.toInt),
     "height" -> Json.fromLong(h.height),
+    "difficulty" -> Json.fromLong(h.difficulty),
     "interlinks" -> h.interlinks.asJson,
     "adProofsRoot" -> Json.fromString(h.adProofsRoot),
     "stateRoot" -> Json.fromString(h.stateRoot),
