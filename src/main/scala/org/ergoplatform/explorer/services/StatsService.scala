@@ -23,7 +23,7 @@ trait StatsService[F[_]] {
 
   def avgBlockSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
-  def avgBlockChainSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+  def totalBlockChainSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
   def avgDifficultyForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
@@ -132,7 +132,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     result <- infoDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
-  override def avgBlockChainSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
+  override def totalBlockChainSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
     result <- infoDao.blockchainSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
