@@ -10,7 +10,7 @@ import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.db.models.{BlockInfo, Header}
-import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, SearchBlock}
+import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, SearchBlockInfo}
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 import scala.concurrent.ExecutionContext
@@ -30,11 +30,11 @@ trait BlockService[F[_]] {
     * @param s sorting
     * @return list of search block info
     */
-  def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]]
+  def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlockInfo]]
 
   def count(startTs: Long, endTs: Long): F[Long]
 
-  def searchById(query: String): F[List[SearchBlock]]
+  def searchById(query: String): F[List[SearchBlockInfo]]
 
 }
 
@@ -66,15 +66,15 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     ad <- adProofDao.find(h.id)
   } yield BlockSummaryInfo(FullBlockInfo(h, txs, is, os, ad, blockSize), references)).transact[F](xa)
 
-  override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = for {
+  override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlockInfo]] = for {
     _ <- Async.shift[F](ec)
     result <- getBlocksResult(p, s, start, end)
   } yield result
 
-  private def getBlocksResult(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlock]] = for {
+  private def getBlocksResult(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlockInfo]] = for {
     _ <- Async.shift[F](ec)
     rawBlocks <- blockListDao.list(p.offset, p.limit, s.sortBy, s.order.toString, start, end).transact[F](xa)
-    blocks = rawBlocks.map{SearchBlock.fromRawSearchBlock}
+    blocks = rawBlocks.map{SearchBlockInfo.fromRawSearchBlock}
   } yield blocks
 
   override def count(startTs: Long, endTs: Long): F[Long] = for {
@@ -83,8 +83,8 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   } yield cnt
 
   /** Search blocks by the fragment of the header identifier */
-  def searchById(substring: String): F[List[SearchBlock]] = blockListDao
+  def searchById(substring: String): F[List[SearchBlockInfo]] = blockListDao
     .searchById(substring)
-    .map(_.map(SearchBlock.fromRawSearchBlock))
+    .map(_.map(SearchBlockInfo.fromRawSearchBlock))
     .transact[F](xa)
 }

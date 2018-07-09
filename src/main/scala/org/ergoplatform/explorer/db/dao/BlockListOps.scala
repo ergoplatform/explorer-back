@@ -26,7 +26,7 @@ object BlockListOps {
       case _ => "h.height"
     }
 
-    (fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size" ++
+    (fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size, h.difficulty, i.miner_reward" ++
       fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id " ++
       fr"LEFT JOIN known_miners m ON i.miner_address = m.miner_address" ++
       fr"WHERE  ((h.timestamp >= $startTs) AND (h.timestamp <= $endTs) AND h.main_chain = TRUE)" ++
@@ -35,7 +35,7 @@ object BlockListOps {
   }
 
   def searchById(substring: String): Query0[RawSearchBlock] = (
-      fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size" ++
+      fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size, h.difficulty, i.miner_reward" ++
       fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id " ++
       fr"LEFT JOIN known_miners m ON i.miner_address = m.miner_address" ++
       fr"WHERE h.id LIKE ${"%" + substring + "%"}"

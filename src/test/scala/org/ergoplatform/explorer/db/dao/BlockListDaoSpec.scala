@@ -31,9 +31,9 @@ class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     val fromDb = dao.list(startTs = 0L, endTs = 300L).transact(xa).unsafeRunSync()
 
     val expectedResult = List(
-      RawSearchBlock("3", 2L, 200L, 0L, "addr1", Some("SUPSUPSUP"), 0L),
-      RawSearchBlock("2", 1L, 150L, 0L, "addr2", None, 0L),
-      RawSearchBlock("1", 0L, 100L, 0L, "addr1", Some("SUPSUPSUP"), 0L)
+      RawSearchBlock("3", 2L, 200L, 0L, "addr1", Some("SUPSUPSUP"), 0L, 0L, 0L),
+      RawSearchBlock("2", 1L, 150L, 0L, "addr2", None, 0L, 0L, 0L),
+      RawSearchBlock("1", 0L, 100L, 0L, "addr1", Some("SUPSUPSUP"), 0L, 0L, 0L)
     )
 
     fromDb should contain theSameElementsInOrderAs expectedResult
@@ -53,8 +53,8 @@ class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val dao = new BlockListDao
 
-    val r1 = RawSearchBlock("aaab", 0L, 100L, 0L, "addr3", None, 0L)
-    val r2 = RawSearchBlock("aab", 1L, 150L, 0L, "addr4", None, 0L)
+    val r1 = RawSearchBlock("aaab", 0L, 100L, 0L, "addr3", None, 0L, 0L, 0L)
+    val r2 = RawSearchBlock("aab", 1L, 150L, 0L, "addr4", None, 0L, 0L, 0L)
 
     dao.searchById("aa").transact(xa).unsafeRunSync() should contain theSameElementsAs List(r1, r2)
     dao.searchById("aaa").transact(xa).unsafeRunSync() should contain theSameElementsAs List(r1)

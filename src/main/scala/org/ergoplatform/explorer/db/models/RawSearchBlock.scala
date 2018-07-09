@@ -7,5 +7,7 @@ case class RawSearchBlock(
                            txsCount: Long,
                            minerAddress: String,
                            minerName: Option[String],
-                           blockSize: Long
+                           blockSize: Long,
+                           difficulty: Long,
+                           minerReward: Long
                          )
