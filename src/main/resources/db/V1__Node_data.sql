@@ -105,5 +105,7 @@ CREATE TABLE known_miners (
 ALTER TABLE known_miners OWNER TO ergo;
 
 INSERT INTO known_miners(miner_address, miner_name) VALUES
-('cd07024afefde8d4f6f56c0aa39290dcfcdfdf2af161f82ff35ddad7d3874fc646bd08', 'catena_serv'),
-('cd0702086b00fb38941997017b0f00a20157d4106f5a80f18bfcf1023a6238489846e6', 'ergo-hetzber');
+('cd0702774a99fa3041fa8d441ac81217c8f1d715c83bac4f7fcc2be3f0d454c6c908fe', 'catena_serv'),
+('cd07026146d4305b4ee16e3b2e0ccabaab8d2bb3962ab3603b7b1b8a2aec757b54f7c3', 'ergo-hetzber'),
+('cd070307bb8e6ae6a4ccb778ce5e1511f2c8596cc505d762409ef8b3d5b684bf585184', 'mine1.187'),
+('cd070337fe6d98e1c9d50f8f67dabc4ec4518eea7d6fff926add74dfd188666cb2565a', 'mine2.210');
