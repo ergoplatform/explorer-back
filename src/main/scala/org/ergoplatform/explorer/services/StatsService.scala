@@ -23,7 +23,7 @@ trait StatsService[F[_]] {
 
   def avgBlockSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
-  def avgBlockChainSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+  def totalBlockChainSizeForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
   def avgDifficultyForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
@@ -90,7 +90,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
         StatsSummary(
           blocksCount = blocksCount,
           blocksAvgTime = avgMiningTime,
-          totalCoins = coins,
+          totalCoins = minersReward,
           totalTransactionsCount = txsCount,
           totalFee = totalFee,
           totalOutput = totalOutputs,
@@ -132,7 +132,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     result <- infoDao.avgBlockSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
-  override def avgBlockChainSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
+  override def totalBlockChainSizeForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
     result <- infoDao.blockchainSizeGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
@@ -186,9 +186,6 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     difficulties <- infoDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
     hashrate = difficulties / SecondsIn24H
   } yield hashrate
-
-  private def statRecordToStatsSummary(s: Option[BlockInfo], to: Long, td: Long, eo: Long): Option[StatsSummary] =
-    s.map(StatsSummary.apply(_, to, td, eo))
 
   private def pairsToChartData(list: List[(Long, Long, String)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data, _) => ChartSingleData(ts, data)}

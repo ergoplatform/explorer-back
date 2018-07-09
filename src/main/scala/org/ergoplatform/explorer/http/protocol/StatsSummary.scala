@@ -24,33 +24,6 @@ object StatsSummary {
 
   val empty = StatsSummary(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0D, 0D, 0L, 0L, 0L)
 
-  def percentOfFee(b: BlockInfo): Double = {
-    val result = b.totalFees.toDouble / (b.totalMinersReward.toDouble + b.totalFees.toDouble)
-    BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-  }
-
-  def percentOfTxVolume(b: BlockInfo): Double = {
-    val result = b.totalMinersReward.toDouble / b.totalCoinsInTxs.toDouble
-    BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-  }
-
-  def apply(b: BlockInfo, totalUnspentOutputs: Long, totalDifficulties: Long, estimatedOutput: Long): StatsSummary =
-    new StatsSummary(
-      blocksCount = b.height,
-      blocksAvgTime = b.avgMiningTime,
-      totalCoins = b.totalCoinsIssued,
-      totalTransactionsCount = b.totalTxsCount,
-      totalFee = b.totalFees,
-      totalOutput = totalUnspentOutputs,
-      estimatedOutput = estimatedOutput,
-      totalMinerRevenue = b.totalMinersReward + b.totalFees,
-      percentEarnedTransactionsFees = percentOfFee(b),
-      percentTransactionVolume = percentOfTxVolume(b),
-      costPerTx = (b.totalMinersReward + b.totalFees) / b.totalTxsCount,
-      lastDifficulty = b.difficulty,
-      totalHashrate = totalDifficulties / (b.totalMiningTime / 1000)
-    )
-
   implicit val encoder: Encoder[StatsSummary] = (s: StatsSummary) => Json.obj(
     "blockSummary" -> Json.obj(
       "total" -> Json.fromLong(s.blocksCount),

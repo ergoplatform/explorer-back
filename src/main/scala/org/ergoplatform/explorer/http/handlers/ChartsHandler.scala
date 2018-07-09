@@ -26,7 +26,7 @@ class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
   }
 
   val blockChainSize = (get & pathPrefix("blockchain-size") & duration) { d =>
-    ss.avgBlockChainSizeForDuration(d)
+    ss.totalBlockChainSizeForDuration(d)
   }
 
   val avgTxsPerBlock = (get & pathPrefix("transactions-per-block") & duration) { d =>
