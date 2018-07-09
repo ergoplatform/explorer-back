@@ -90,7 +90,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
         StatsSummary(
           blocksCount = blocksCount,
           blocksAvgTime = avgMiningTime,
-          totalCoins = coins,
+          totalCoins = minersReward,
           totalTransactionsCount = txsCount,
           totalFee = totalFee,
           totalOutput = totalOutputs,
@@ -186,9 +186,6 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     difficulties <- infoDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
     hashrate = difficulties / SecondsIn24H
   } yield hashrate
-
-  private def statRecordToStatsSummary(s: Option[BlockInfo], to: Long, td: Long, eo: Long): Option[StatsSummary] =
-    s.map(StatsSummary.apply(_, to, td, eo))
 
   private def pairsToChartData(list: List[(Long, Long, String)]): List[ChartSingleData[Long]] =
     list.map{ case (ts, data, _) => ChartSingleData(ts, data)}
