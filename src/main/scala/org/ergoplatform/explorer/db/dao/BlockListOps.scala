@@ -23,6 +23,8 @@ object BlockListOps {
       case "txs_count" => "i.txs_count"
       case "miner_name" => "m.miner_name"
       case "block_size" => "i.block_size"
+      case "difficulty" => "h.difficulty"
+      case "miner_reward" => "i.miner_reward"
       case _ => "h.height"
     }
 

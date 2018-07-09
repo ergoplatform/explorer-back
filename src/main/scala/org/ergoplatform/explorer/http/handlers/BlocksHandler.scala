@@ -44,6 +44,8 @@ object BlocksHandler {
     "timestamp" -> "timestamp",
     "transactionscount" -> "txs_count",
     "size" -> "block_size",
-    "miner" -> "miner_name"
+    "miner" -> "miner_name",
+    "difficulty" -> "difficulty",
+    "minerreward" -> "miner_reward"
   )
 }
