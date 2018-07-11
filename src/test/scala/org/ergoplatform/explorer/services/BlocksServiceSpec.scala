@@ -2,11 +2,11 @@ package org.ergoplatform.explorer.services
 
 import cats.effect.IO
 import doobie.implicits._
-import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, SpentOutput}
+import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, TransactionInfo}
-import org.ergoplatform.explorer.utils.{Desc, Paging, SortOrder, Sorting}
+import org.ergoplatform.explorer.utils.{Desc, Paging, Sorting}
 import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
