@@ -22,7 +22,10 @@ object TransactionSummaryInfo {
              height: Long,
              confirmationsCount: Long = 0,
              inputs: List[InputWithOutputInfo],
-             outputs: List[SpentOutput]): TransactionSummaryInfo =
+             outputs: List[SpentOutput]): TransactionSummaryInfo = {
+    val totalFee = outputs.filter(_.output.proposition == "0101").map(_.output.value).sum
+    val feePerByte = if (tx.size == 0) { 0L } else { totalFee / tx.size }
+
     TransactionSummaryInfo(
       id = tx.id,
       miniBlockInfo = MiniBlockInfo(tx.headerId, height),
@@ -31,8 +34,11 @@ object TransactionSummaryInfo {
       size = tx.size,
       inputs = inputs.map(InputInfo.fromInputWithValue),
       outputs = outputs.map(OutputInfo.fromOutputWithSpent),
-      totalCoins = inputs.map(_.value.getOrElse(0L)).sum
+      totalCoins = inputs.map(_.value.getOrElse(0L)).sum,
+      totalFee = totalFee,
+      feePerByte = feePerByte
     )
+  }
 
   implicit val encoder: Encoder[TransactionSummaryInfo] = (ts: TransactionSummaryInfo) => Json.obj(
     "summary" -> Json.obj(
