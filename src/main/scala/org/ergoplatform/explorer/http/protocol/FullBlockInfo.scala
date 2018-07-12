@@ -13,12 +13,13 @@ object FullBlockInfo {
     */
   def apply(h: Header,
             txs: List[Transaction],
+            confirmations: List[(String, Long)],
             inputs: List[InputWithOutputInfo],
             outputs: List[SpentOutput],
             adProof: Option[AdProof],
             blockSize: Long): FullBlockInfo = {
 
-    val txsInfo = TransactionInfo.extractInfo(txs, inputs, outputs)
+    val txsInfo = TransactionInfo.extractInfo(txs, confirmations, inputs, outputs)
     val headerInfo = HeaderInfo(h, blockSize)
     val adProofInfo = adProof.map{ AdProofInfo.apply }
     new FullBlockInfo(headerInfo, txsInfo, adProofInfo)

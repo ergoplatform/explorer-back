@@ -96,7 +96,9 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val expected2 = {
       val txIds = outputs.filter(_.hash == randomHash).map(_.txId).toSet
       val relatedTxs = tx.filter(t => txIds.apply(t.id))
-      TransactionInfo.extractInfo(relatedTxs, inputsWithOutputInfo, outputsWithSpentTx)
+      val height = h.map(_.height).max
+      val confirmations = relatedTxs.map { tx => tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L) }
+      TransactionInfo.extractInfo(relatedTxs, confirmations, inputsWithOutputInfo, outputsWithSpentTx)
     }
 
     fromService2 should contain theSameElementsAs expected2

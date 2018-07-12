@@ -46,4 +46,7 @@ class TransactionsDao {
 
   def countTxsSince(ts: Long): ConnectionIO[Long] = TransactionsOps.txsSince(ts).unique
 
+  def txsHeights(ids: NonEmptyList[String]): ConnectionIO[List[(String, Long)]] =
+    TransactionsOps.txsHeight(ids).to[List]
+
 }

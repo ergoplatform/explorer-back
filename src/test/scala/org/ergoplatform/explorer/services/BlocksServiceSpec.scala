@@ -74,7 +74,9 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
       val header = h.find(_.id == randomBlockId).get
       val txs = tx.filter(_.headerId == randomBlockId)
       val size = info.find(_.headerId == randomBlockId).map(_.blockSize).getOrElse(0L)
-      FullBlockInfo(header, txs, inputsWithOutputInfo, outputsWithSpentTx, None, size)
+      val height = h.map(_.height).max
+      val confirmations = txs.map { tx => tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L) }
+      FullBlockInfo(header, txs, confirmations, inputsWithOutputInfo, outputsWithSpentTx, None, size)
     }
 
     val references = {
