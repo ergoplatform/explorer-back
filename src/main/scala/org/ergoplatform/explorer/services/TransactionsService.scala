@@ -1,8 +1,10 @@
 package org.ergoplatform.explorer.services
 
 import cats._
+import cats.data.NonEmptyList
 import cats.effect._
 import cats.implicits._
+import doobie.free.connection.ConnectionIO
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
@@ -55,9 +57,16 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   private def getTxsByAddressIdResult(addressId: String, p: Paging): F[List[TransactionInfo]] = (for {
     txs <- transactionsDao.getTxsByAddressId(addressId, p.offset, p.limit)
     ids = txs.map(_.id)
+    currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
+    confirmations <- if (ids.isEmpty) {
+      List.empty[(String, Long)].pure[ConnectionIO]
+    } else {
+      transactionsDao.txsHeights(NonEmptyList.fromListUnsafe(ids))
+        .map { list => list.map(v => v._1 -> (currentHeight - v._2 + 1L)) }
+    }
     is <- inputDao.findAllByTxsIdWithValue(ids)
     os <- outputDao.findAllByTxsIdWithSpent(ids)
-  } yield TransactionInfo.extractInfo(txs, is ,os)).transact(xa)
+  } yield TransactionInfo.extractInfo(txs, confirmations, is ,os)).transact(xa)
 
   def countTxsByAddressId(addressId: String): F[Long] = for {
     _ <- Async.shift[F](ec)

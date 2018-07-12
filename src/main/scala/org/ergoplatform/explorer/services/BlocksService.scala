@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.services
 
 import cats._
+import cats.data.NonEmptyList
 import cats.effect._
 import cats.implicits._
 import doobie.free.connection
@@ -60,11 +61,18 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     references = BlockReferencesInfo(h.parentId, nextIdOpt.map(_.id))
     txs <- transactionsDao.findAllByBlockId(h.id)
     txsIds = txs.map(_.id)
+    currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
+    confirmations <- if (txsIds.isEmpty) {
+      List.empty[(String, Long)].pure[ConnectionIO]
+    } else {
+      transactionsDao.txsHeights(NonEmptyList.fromListUnsafe(txsIds))
+        .map { list => list.map(v => v._1 -> (currentHeight - v._2 + 1L)) }
+    }
     blockSize <- blockInfoDao.find(h.id).map(_.map(_.blockSize).getOrElse(0L))
     is <- inputDao.findAllByTxsIdWithValue(txsIds)
     os <- outputDao.findAllByTxsIdWithSpent(txsIds)
     ad <- adProofDao.find(h.id)
-  } yield BlockSummaryInfo(FullBlockInfo(h, txs, is, os, ad, blockSize), references)).transact[F](xa)
+  } yield BlockSummaryInfo(FullBlockInfo(h, txs, confirmations, is, os, ad, blockSize), references)).transact[F](xa)
 
   override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlockInfo]] = for {
     _ <- Async.shift[F](ec)

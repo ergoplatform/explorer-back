@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import cats.data.NonEmptyList
-import doobie._
+import doobie.{Fragments, _}
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Transaction
@@ -38,7 +38,8 @@ object TransactionsOps {
           FROM node_outputs os
           WHERE (os.tx_id = t.id AND os.hash = $addressId)
         )
-        OFFSET ${offset.toLong} LIMIT ${limit.toLong};
+        ORDER BY t.timestamp DESC
+        OFFSET ${offset.toLong} LIMIT ${limit.toLong}
       """.query[Transaction]
 
   def countTxsByAddressId(addressId: String): Query0[Long] = {
@@ -62,4 +63,8 @@ object TransactionsOps {
     fr"SELECT id FROM node_transactions WHERE id LIKE ${"%" + substring + "%" }".query[String]
 
   def txsSince(ts: Long): Query0[Long] = fr"SELECT count(*) FROM node_transactions WHERE timestamp >= $ts".query[Long]
+
+  def txsHeight(ids: NonEmptyList[String]): Query0[(String, Long)] =
+    (fr"SELECT t.id, h.height FROM node_transactions t LEFT JOIN node_headers h ON t.header_id = h.id WHERE" ++
+      Fragments.in(fr"t.id", ids)).query[(String, Long)]
 }
