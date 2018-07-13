@@ -1,10 +1,9 @@
-package org.ergoplatform.explorer.http.directives.handlers
+package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.model.StatusCodes
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
-import org.ergoplatform.explorer.http.handlers.SearchHandler
 import org.ergoplatform.explorer.http.protocol.{MinerInfo, SearchBlockInfo}
 import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
 import org.mockito.Mockito._
