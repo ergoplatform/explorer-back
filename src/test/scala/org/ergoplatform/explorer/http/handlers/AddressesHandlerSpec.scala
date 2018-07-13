@@ -1,17 +1,14 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.effect.IO
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.http.protocol._
 import org.ergoplatform.explorer.services.{AddressesService, TransactionsService}
 import org.ergoplatform.explorer.utils.Paging
-import org.scalatest.{FlatSpec, Matchers}
 
-class AddressesHandlerSpec extends FlatSpec with Matchers with ScalatestRouteTest with FailFastCirceSupport {
+class AddressesHandlerSpec extends HttpSpec {
 
   val addressInfo = AddressInfo("test", 1L, 2L, 3L)
   val txs = List(

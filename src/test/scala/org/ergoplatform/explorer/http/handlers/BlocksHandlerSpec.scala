@@ -1,17 +1,14 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.effect.IO
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.http.protocol._
 import org.ergoplatform.explorer.services.BlockService
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
-import org.scalatest.{FlatSpec, Matchers}
 
-class BlocksHandlerSpec extends FlatSpec with Matchers with ScalatestRouteTest with FailFastCirceSupport {
+class BlocksHandlerSpec extends HttpSpec {
 
   val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", "e", List("g", "h"))
 
