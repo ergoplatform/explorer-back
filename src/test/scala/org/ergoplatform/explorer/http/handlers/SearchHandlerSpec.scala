@@ -1,60 +1,55 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.ValidationRejection
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
-import org.ergoplatform.explorer.http.protocol.{MinerInfo, SearchBlockInfo}
+import org.ergoplatform.explorer.http.protocol._
 import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
-import org.mockito.Mockito._
+import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
-class SearchHandlerSpec extends HandlerSpec {
-
-  val blockService = mock[BlockService[IO]]
-  val transactionService = mock[TransactionsService[IO]]
-  val addressService = mock[AddressesService[IO]]
-  val minerService = mock[MinerService[IO]]
-
-  private def response(blocks: List[SearchBlockInfo], transactionIds: List[String], addressIds: List[String]) =
-    Json.obj(
-      "blocks" -> blocks.asJson,
-      "transactions" -> transactionIds.asJson,
-      "addresses" -> addressIds.asJson
-    )
-
-  val prefix = "/search?query="
-  val queryNoMatch = "0123456789ABCDEF"
-  val querySingleMatch = "11111"
+class SearchHandlerSpec extends HttpSpec {
 
   val miner = MinerInfo("mock.miner.address", "Mock miner")
-  val blockSingleMatch = List(SearchBlockInfo("123123" + querySingleMatch, 1, System.currentTimeMillis(), 42, miner, 100, 0L, 0L))
-  val transactionSingleMatch = List("fff123" + querySingleMatch)
-  val addressSingleMatch = List("add123" +  querySingleMatch)
+  val block = List(SearchBlockInfo("123123", 1, System.currentTimeMillis(), 42, miner, 100, 0L, 0L))
+  val transaction = List("fff123")
+  val address = List("add123")
 
-  when(blockService.searchById(queryNoMatch)).thenReturn(IO(Nil))
-  when(transactionService.searchById(queryNoMatch)).thenReturn(IO(Nil))
-  when(addressService.searchById(queryNoMatch)).thenReturn(IO(Nil))
-  when(minerService.searchAddress(queryNoMatch)).thenReturn(IO(Nil))
+  val searchInfo = SearchInfo(block, transaction, address)
 
-  when(blockService.searchById(querySingleMatch)).thenReturn(IO(blockSingleMatch))
-  when(transactionService.searchById(querySingleMatch)).thenReturn(IO(transactionSingleMatch))
-  when(addressService.searchById(querySingleMatch)).thenReturn(IO(addressSingleMatch))
-  when(minerService.searchAddress(querySingleMatch)).thenReturn(IO(addressSingleMatch))
+  val blockService = new BlockService[IO] {
+    override def getBlock(id: String): IO[BlockSummaryInfo] = ???
+    override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): IO[List[SearchBlockInfo]] = ???
+    override def count(startTs: Long, endTs: Long): IO[Long] = ???
+    override def searchById(query: String): IO[List[SearchBlockInfo]] = IO.pure(block)
+  }
+
+  val transactionService = new TransactionsService[IO] {
+    override def getTxInfo(id: String): IO[TransactionSummaryInfo] = ???
+    override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = ???
+    override def countTxsByAddressId(addressId: String): IO[Long] = ???
+    override def searchById(query: String): IO[List[String]] = IO.pure(transaction)
+  }
+  val addressService = new AddressesService[IO] {
+    override def getAddressInfo(addressId: String): IO[AddressInfo] = ???
+    override def searchById(query: String): IO[List[String]] = IO.pure(address)
+  }
+  val minerService = new MinerService[IO] {
+    override def searchAddress(query: String): IO[List[String]] = IO.pure(address)
+  }
 
 
   val route = new SearchHandler(blockService, transactionService, addressService, minerService).route
 
   it should "return result" in {
-    Get(prefix + querySingleMatch) ~> route ~> check {
+    Get("/search?query=test44") ~> route ~> check {
       status shouldBe StatusCodes.OK
-      responseAs[Json] shouldBe response(blockSingleMatch, transactionSingleMatch, addressSingleMatch)
+      responseAs[Json] shouldBe searchInfo.asJson
     }
-  }
 
-  it should "not fail when no results found" in {
-    Get(prefix + queryNoMatch) ~> route ~> check {
-      status shouldBe StatusCodes.OK
-      responseAs[Json] shouldBe response(Nil, Nil, Nil)
+    Get("/search?query=test") ~> route ~> check {
+      rejection shouldBe ValidationRejection("'query' param should be at least 5 characters long", None)
     }
   }
 

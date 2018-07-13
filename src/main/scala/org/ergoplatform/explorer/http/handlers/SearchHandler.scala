@@ -2,8 +2,7 @@ package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
-import io.circe.Json
-import io.circe.syntax._
+import org.ergoplatform.explorer.http.protocol.SearchInfo
 import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
 
 class SearchHandler(blockService: BlockService[IO],
@@ -18,11 +17,7 @@ class SearchHandler(blockService: BlockService[IO],
         transactions <- transactionService.searchById(query)
         addresses <- addressService.searchById(query)
         minerAddresses <- minerService.searchAddress(query)
-      } yield Json.obj(
-        "blocks" -> blocks.asJson,
-        "transactions" -> transactions.asJson,
-        "addresses" -> (addresses ++ minerAddresses).distinct.asJson
-      )
+      } yield SearchInfo(blocks, transactions, (addresses ++ minerAddresses).distinct)
     }
   }
 
