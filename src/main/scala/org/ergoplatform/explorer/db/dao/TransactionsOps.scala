@@ -32,12 +32,12 @@ object TransactionsOps {
                        (implicit c: Composite[Transaction]): Query0[Transaction] =
     fr"""
         SELECT t.id, t.header_id, t.coinbase, t.timestamp, t.size
-        FROM node_transactions t
+        FROM node_transactions t LEFT JOIN node_headers h ON h.id  = t.header_id
         WHERE EXISTS (
           SELECT 1
           FROM node_outputs os
           WHERE (os.tx_id = t.id AND os.hash = $addressId)
-        )
+        ) AND h.main_chain = TRUE
         ORDER BY t.timestamp DESC
         OFFSET ${offset.toLong} LIMIT ${limit.toLong}
       """.query[Transaction]
@@ -45,12 +45,12 @@ object TransactionsOps {
   def countTxsByAddressId(addressId: String): Query0[Long] = {
       fr"""
          SELECT COUNT(t.id)
-         FROM node_transactions t
+         FROM node_transactions t LEFT JOIN node_headers h ON h.id  = t.header_id
          WHERE EXISTS (
            SELECT 1
            FROM node_outputs os
            WHERE (os.tx_id = t.id AND os.hash = $addressId)
-         )
+         ) AND h.main_chain = TRUE
          """.query[Long]
   }
 
