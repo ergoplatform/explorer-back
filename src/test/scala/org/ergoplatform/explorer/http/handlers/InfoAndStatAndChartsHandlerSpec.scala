@@ -18,6 +18,13 @@ class InfoAndStatAndChartsHandlerSpec extends HttpSpec {
     ChartSingleData(2L, 300L),
   )
 
+  val chartsDataOther = List(
+    ChartSingleData(1L, 101L),
+    ChartSingleData(2L, 202L),
+    ChartSingleData(3L, 303L),
+  )
+
+
   val minersData = List(
     MinerStatSingleInfo("test1", 20L),
     MinerStatSingleInfo("test2", 30L)
@@ -32,11 +39,13 @@ class InfoAndStatAndChartsHandlerSpec extends HttpSpec {
 
     override def avgBlockSizeForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
 
-    override def totalBlockChainSizeForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+    override def totalBlockChainSizeForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsDataOther)
 
     override def avgDifficultyForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
 
     override def avgTxsPerBlockForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+
+    override def sumTxsGroupByDayForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsDataOther)
 
     override def minerRevenueForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
 
@@ -76,7 +85,7 @@ class InfoAndStatAndChartsHandlerSpec extends HttpSpec {
 
     Get("/charts/blockchain-size") ~> route3 ~> check {
       status shouldBe StatusCodes.OK
-      responseAs[Json] shouldBe chartsData.asJson
+      responseAs[Json] shouldBe chartsDataOther.asJson
     }
 
     Get("/charts/transactions-per-block") ~> route3 ~> check {
@@ -84,12 +93,17 @@ class InfoAndStatAndChartsHandlerSpec extends HttpSpec {
       responseAs[Json] shouldBe chartsData.asJson
     }
 
+    Get("/charts/transactions-number") ~> route3 ~> check {
+      status shouldBe StatusCodes.OK
+      responseAs[Json] shouldBe chartsDataOther.asJson
+    }
+
     Get("/charts/difficulty") ~> route3 ~> check {
       status shouldBe StatusCodes.OK
       responseAs[Json] shouldBe chartsData.asJson
     }
 
-    Get("/charts/miners-revenuel") ~> route3 ~> check {
+    Get("/charts/miners-revenue") ~> route3 ~> check {
       status shouldBe StatusCodes.OK
       responseAs[Json] shouldBe chartsData.asJson
     }

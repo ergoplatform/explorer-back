@@ -58,6 +58,7 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(avgDifficultyGroupedByDay(10))
     check(sumDifficultyGroupedByDay(10))
     check(minerRevenueGroupedByDay(10))
+    check(sumTxsGroupedByDay(10))
     check(insert)
     check(deleteAll)
   }

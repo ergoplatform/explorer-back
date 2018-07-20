@@ -82,6 +82,11 @@ object BlockInfoOps {
     groupedByDayStatsPair(lastDays, selectStr)
   }
 
+  def sumTxsGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
+    val selectStr = "min(timestamp) as t, CAST(sum(txs_count) as BIGINT)"
+    groupedByDayStatsPair(lastDays, selectStr)
+  }
+
   def totalBlockchainSizeGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
     val selectStr = "min(timestamp) as t, CAST(max(block_chain_total_size) as BIGINT)"
     groupedByDayStatsPair(lastDays, selectStr)

@@ -11,6 +11,7 @@ class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
     avgBlockSize ~
     blockChainSize ~
     avgTxsPerBlock ~
+    sumTxsPerBlock ~
     avgDifficulty ~
     minerRevenue ~
     hashrateDistribution ~
@@ -31,6 +32,10 @@ class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
 
   val avgTxsPerBlock = (get & pathPrefix("transactions-per-block") & duration) { d =>
     ss.avgTxsPerBlockForDuration(d)
+  }
+
+  val sumTxsPerBlock = (get & pathPrefix("transactions-number") & duration) { d =>
+    ss.sumTxsGroupByDayForDuration(d)
   }
 
   val avgDifficulty = (get & pathPrefix("difficulty") & duration) { d =>

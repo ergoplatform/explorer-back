@@ -29,6 +29,8 @@ trait StatsService[F[_]] {
 
   def avgTxsPerBlockForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
+  def sumTxsGroupByDayForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
+
   def minerRevenueForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
 
   def hashrateForDuration(daysBack: Int): F[List[ChartSingleData[Long]]]
@@ -145,6 +147,11 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   override def avgTxsPerBlockForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
     _ <- Async.shift[F](ec)
     result <- infoDao.avgTxsCountGroupedByDay(d).map(pairsToChartData).transact[F](xa)
+  } yield result
+
+  def sumTxsGroupByDayForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
+    _ <- Async.shift[F](ec)
+    result <- infoDao.sumTxsCountGroupedByDay(d).map(pairsToChartData).transact[F](xa)
   } yield result
 
   override def minerRevenueForDuration(d: Int): F[List[ChartSingleData[Long]]] = for {
