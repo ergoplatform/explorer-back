@@ -48,6 +48,9 @@ class BlockInfoDao {
   def avgTxsCountGroupedByDay(lastDays: Int): ConnectionIO[List[BlockInfoOps.SingleDataType]] =
     BlockInfoOps.avgTxsGroupedByDay(lastDays).to[List]
 
+  def sumTxsCountGroupedByDay(lastDays: Int): ConnectionIO[List[BlockInfoOps.SingleDataType]] =
+    BlockInfoOps.sumTxsGroupedByDay(lastDays).to[List]
+
   def blockchainSizeGroupedByDay(lastDays: Int): ConnectionIO[List[BlockInfoOps.SingleDataType]] =
     BlockInfoOps.totalBlockchainSizeGroupedByDay(lastDays).to[List]
 

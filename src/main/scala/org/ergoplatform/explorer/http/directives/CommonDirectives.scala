@@ -3,6 +3,8 @@ package org.ergoplatform.explorer.http.directives
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import cats.data._
+import cats.instances.parallel._
+import cats.syntax.parallel._
 import org.ergoplatform.explorer.utils.SortOrder
 import scorex.crypto.encode.Base16
 
@@ -19,36 +21,34 @@ trait CommonDirectives {
 
   val paging: Directive[(Int, Int)] = parameters(("offset".as[Int] ? 0, "limit".as[Int] ? 20))
 
-
-  def checkField(mappings: NonEmptyMap[String, String])(fieldName: String): Boolean =
-    mappings.lookup(fieldName.trim.toLowerCase).nonEmpty
-
   def sorting(fieldMappings: NonEmptyMap[String, String],
               defaultSortBy: Option[String] = None): Directive[(String, SortOrder)] = {
+    val mappingKeys = fieldMappings.keys.toNonEmptyList
+
+    def checkSortOrder(s: String): Param[SortOrder] = {
+      SortOrder.fromString(s) match {
+        case Some(order) => Right(order)
+        case None => Left(NonEmptyList.one(malformedSortDirectionParameter(s)))
+      }
+    }
+
+    def checkSortBy(s: String): Param[String] = {
+      fieldMappings.lookup(s.trim.toLowerCase) match {
+        case Some(sortBy) => Right(sortBy)
+        case None => Left(NonEmptyList.one(malformedSortByParameter(s, mappingKeys)))
+      }
+    }
 
     val defaultSortField = defaultSortBy.getOrElse(fieldMappings.head._1)
-    val checker = checkField(fieldMappings) _
 
     parameters(("sortBy" ? defaultSortField, "sortDirection" ? "asc"))
       .tflatMap { case (field: String, order: String) =>
-        val sanitizedField = field.trim.toLowerCase
-        val sortOrder = SortOrder.fromString(order)
-
-        val sortByRej = malformedSortByParameter(field, fieldMappings.keys.toNonEmptyList)
-        val sortDirRej = malformedSortDirectionParameter(order)
-
-        val rejections = checkValue[Option[SortOrder]](sortDirRej)(sortOrder, _.nonEmpty).toList ++
-          checkValue[String](sortByRej)(sanitizedField, checker).toList
-
-        if (rejections.nonEmpty) {
-          reject(rejections: _*)
-        } else {
-          tprovide(fieldMappings(sanitizedField).get -> sortOrder.get)
+        (checkSortOrder(order), checkSortBy(field)).parMapN { case (order, field) => field -> order } match {
+          case Left(rjs) => reject(rjs.toList: _*)
+          case Right(params) => tprovide(params)
         }
       }
   }
-
-
 
   val duration: Directive1[Int] = parameters("timespan" ? "all")
     .flatMap{ v => stringToDaysBack(v) match {
@@ -59,9 +59,6 @@ trait CommonDirectives {
 
       }
     }
-
-  def checkValue[A](rej: Rejection)(value: A, f: A => Boolean): Option[Rejection] =
-    if (f(value)) { None } else { Some(rej) }
 
   val startEndDate: Directive[(Option[Long], Option[Long])] =
     parameters(("startDate".as[Long].?, "endDate".as[Long].?)).tflatMap { case (s, e) =>
@@ -81,6 +78,8 @@ trait CommonDirectives {
 }
 
 object CommonDirectives {
+
+  type Param[A] = EitherNel[MalformedQueryParamRejection, A]
 
   val malformedTimespanParameter = MalformedQueryParamRejection(
     "timespan",
