@@ -119,12 +119,12 @@ object BlockInfoOps {
       Fragment.empty
     } else {
       val ms = System.currentTimeMillis - limitDaysBack.days.toMillis
-      Fragment.const(s"WHERE timestamp >= $ms")
+      Fragment.const(s"WHERE (timestamp >= $ms AND EXISTS(SELECT 1 FROM node_headers h WHERE h.main_chain = TRUE))")
     }
 
     Fragment.const(
       s"SELECT $selectStr, TO_CHAR(TO_TIMESTAMP(timestamp / 1000), 'DD/MM/YYYY') as date " +
-        s"FROM blocks_info") ++ whereFragment ++ Fragment.const("GROUP BY date ORDER BY t ASC")
+        s"FROM blocks_info") ++whereFragment ++ Fragment.const("GROUP BY date ORDER BY t ASC")
   }
 
 }
