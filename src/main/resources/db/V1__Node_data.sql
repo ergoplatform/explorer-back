@@ -49,11 +49,12 @@ CREATE INDEX "blocks_info__height" ON node_headers (height);
 CREATE INDEX "blocks_info__ts" ON node_headers (timestamp);
 
 CREATE TABLE node_transactions (
-  id VARCHAR(64) NOT NULL PRIMARY KEY,
+  id VARCHAR(64) NOT NULL,
   header_id VARCHAR(64) NOT NULL,
   coinbase BOOLEAN NOT NULL,
   timestamp BIGINT NOT NULL,
-  size BIGINT NOT NULL
+  size BIGINT NOT NULL,
+  PRIMARY KEY(id, header_id)
 );
 
 ALTER TABLE node_transactions OWNER TO ergo;
