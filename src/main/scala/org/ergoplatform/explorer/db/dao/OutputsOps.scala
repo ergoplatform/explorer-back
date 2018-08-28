@@ -18,6 +18,8 @@ object OutputsOps extends JsonMeta {
     "additional_registers"
   )
 
+  private val BYTES = "968400020191a3c6a70300059784000201968400030193c2a7c2b2a505000000000000000093958fa30500000000000027600500000001bf08eb00990500000001bf08eb009c050000000011e1a3009a0500000000000000019d99a305000000000000276005000000000000087099c1a7c1b2a505000000000000000093c6b2a5050000000000000000030005a390c1a7050000000011e1a300"
+
   val fieldsString = fields.mkString(", ")
   val holdersString = fields.map(_ => "?").mkString(", ")
   val fieldsFr = Fragment.const(fieldsString)
@@ -65,13 +67,11 @@ object OutputsOps extends JsonMeta {
   //TODO: Make proper value evaluation, without tons of joins
   def estimatedOutputsSince(ts: Long): Query0[Long] = {
     Fragment.const(s"""
-                  SELECT COALESCE(CAST(SUM(op.value) as BIGINT),0)
+                  SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
                   FROM node_outputs o
                   LEFT JOIN node_inputs i ON o.box_id = i.box_id
-                  LEFT JOIN node_outputs op ON i.tx_id = op.tx_id
-                  LEFT JOIN node_inputs ip ON op.box_id = ip.box_id
                   LEFT JOIN node_transactions t ON o.tx_id = t.id
-                  WHERE o.hash <> op.hash AND ip.box_id IS NULL AND t.timestamp >= $ts""").query[Long]
+                  WHERE o.hash <> '$BYTES' AND i.box_id IS NULL AND t.timestamp >= $ts""").query[Long]
   }
 
   def addressStats(hash: String): Query0[AddressSummaryData] =
