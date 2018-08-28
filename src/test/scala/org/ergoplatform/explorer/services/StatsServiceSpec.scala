@@ -32,7 +32,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     val service = new StatsServiceIOImpl[IO](xa, ec)
 
     val expected1 = StatsSummary(
-      21L, 9150L, 157500000000L, 21L, 0L, 270000000000000L, 150000000000L, 157500000000L, 0.0, 0.0, 7500000000L, 1L, 1L
+      21L, 9150L, 157500000000L, 21L, 0L, 270000000000000L, 157500000000L, 157500000000L, 0.0, 0.0, 7500000000L, 1L, 1L
     )
 
     val fromService1 = service.findLastStats.unsafeRunSync()
