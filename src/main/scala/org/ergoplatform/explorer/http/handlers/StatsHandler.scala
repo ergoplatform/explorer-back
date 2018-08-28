@@ -4,9 +4,13 @@ import akka.http.scaladsl.server.Directives._
 import cats.effect.IO
 import org.ergoplatform.explorer.services.StatsService
 
+import scala.concurrent.duration._
+
 class StatsHandler(ss: StatsService[IO]) extends RouteHandler {
 
   val route = (pathPrefix("stats") & get) {
-    ss.findLastStats
+    withRequestTimeout(60.seconds) {
+      ss.findLastStats
+    }
   }
 }
