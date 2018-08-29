@@ -23,9 +23,9 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val now = System.currentTimeMillis()
 
-    hDao.insertMany(h.map(_.copy(timestamp = now))).transact(xa).unsafeRunSync()
-    tDao.insertMany(tx.map(_.copy(timestamp = now))).transact(xa).unsafeRunSync()
-    oDao.insertMany(outputs).transact(xa).unsafeRunSync()
+    hDao.insertMany(h.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
+    tDao.insertMany(tx.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
+    oDao.insertMany(outputs.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
     infoDao.insertMany(info.map(_.copy(timestamp = now))).transact(xa).unsafeRunSync()
 

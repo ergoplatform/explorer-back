@@ -36,7 +36,7 @@ object DBHelper {
     hInt <- NodeHeadersWriter.insert(nfb.header)
     txInt <- NodeTxWriter.insertMany(btToDb(nfb.bt, nfb.header.timestamp))
     isInt <- NodeInputWriter.insertMany(btToInputs(nfb.bt))
-    osInt <- NodeOutputWriter.insertMany(btToOutputs(nfb.bt))
+    osInt <- NodeOutputWriter.insertMany(btToOutputs(nfb.bt, nfb.header.timestamp))
     adInt <- NodeAdProofsWriter.insertMany(nfbToAd(nfb))
   } yield hInt + txInt + isInt + osInt + adInt
 
@@ -52,17 +52,17 @@ object DBHelper {
   def nodeInputsToDb(txId: String, list: List[ApiInput]): List[NodeInputWriter.ToInsert] = list
     .map { i => (i.boxId, txId, i.spendingProof.proofBytes, i.spendingProof.extension) }
 
-  def nodeOutputsToDb(txId: String, list: List[ApiOutput]): List[NodeOutputWriter.ToInsert] = list
+  def nodeOutputsToDb(txId: String, list: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = list
     .zipWithIndex.map { case (o, index) =>
-    (o.boxId, txId, o.value, index, o.proposition, o.proposition, o.additionalRegisters)
+    (o.boxId, txId, o.value, index, o.proposition, o.proposition, o.additionalRegisters, ts)
   }
 
   def btToInputs(bt: ApiBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>
     nodeInputsToDb(tx.id, tx.inputs)
   }
 
-  def btToOutputs(bt: ApiBlockTransactions): List[NodeOutputWriter.ToInsert] = bt.transactions.flatMap { tx =>
-    nodeOutputsToDb(tx.id, tx.outputs)
+  def btToOutputs(bt: ApiBlockTransactions, ts: Long): List[NodeOutputWriter.ToInsert] = bt.transactions.flatMap { tx =>
+    nodeOutputsToDb(tx.id, tx.outputs, ts)
   }
 
   def nfbToAd(nfb: ApiFullBlock): List[NodeAdProofsWriter.ToInsert] = nfb.adProofs.toList.map { ad =>

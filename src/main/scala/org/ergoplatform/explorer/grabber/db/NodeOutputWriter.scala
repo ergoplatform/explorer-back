@@ -4,8 +4,8 @@ import io.circe.Json
 
 object NodeOutputWriter extends BasicWriter {
 
-  type ToInsert = (String, String, Long, Int, String, String, Json)
+  type ToInsert = (String, String, Long, Int, String, String, Json, Long)
 
-  val insertSql = "INSERT INTO node_outputs (box_id, tx_id, value, index, proposition, hash, additional_registers)" +
-    " VALUES (?, ?, ?, ?, ?, ?, ?)"
+  val insertSql = "INSERT INTO node_outputs (box_id, tx_id, value, index," +
+    " proposition, hash, additional_registers, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 }
