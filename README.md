@@ -4,8 +4,8 @@ To run backend locally you need:
 
 0. Checkout this repo and open terminal in the root of this project.
 
-1. Install docker
+1. Install docker and add config file into `~/env/app.env` with two variables `DB_PASS=pass` `DB_USER=ergo` and `~/env/db.env` with two variables `POSTGRES_USER=ergo` `POSTGRES_PASSWORD=pass`. Example of files are stored in this project in the `env` folder.
 
-2. Run via docker compose `docker-compose up`
+2. Run db via `docker-compose up postgres` in the terminal in the root folder of this project
 
-3. Download data backup for db from [Tar backup file](https://drive.google.com/open?id=1XnNZ7vvV4SNfQYURiAzQaFi6Rrid9oD6) and apply it via pg admin restore command.
+3. Run `App.scala` or use `sbt run` command.
