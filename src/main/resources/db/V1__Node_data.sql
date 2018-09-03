@@ -91,8 +91,6 @@ CREATE INDEX "node_outputs__box_id" on node_outputs (box_id);
 CREATE INDEX "node_outputs__tx_id" on node_outputs (tx_id);
 CREATE INDEX "node_outputs__hash" on node_outputs (hash);
 CREATE INDEX "node_outputs__ts" on node_outputs (timestamp);
-CREATE INDEX "node_outputs__value_box_id" on node_outputs (value, box_id);
-CREATE INDEX "node_outputs__value_box_id_hash" on node_outputs (value, box_id, hash);
 
 CREATE TABLE node_ad_proofs (
   header_id VARCHAR(64) NOT NULL PRIMARY KEY,
