@@ -23,10 +23,12 @@ class BlocksHandler(bs: BlockService[IO]) extends RouteHandler {
     onSuccess(f) { info => complete(info) }
   }
 
+  private val oneDayMillis: Long = 24L * 60L * 60L * 1000L
+
   val getBlocks = (get & paging & sorting(sortByFieldMappings, Some("height")) & startEndDate) {
     (o, l, field, so, start, end) =>
       val sTs = start.getOrElse(0L)
-      val eTs = end.getOrElse(System.currentTimeMillis())
+      val eTs = end.getOrElse(System.currentTimeMillis() + oneDayMillis)
       val p = Paging(offset = o, limit = l)
       val s = Sorting(sortBy = field, order = so)
       val items = bs.getBlocks(p, s, sTs, eTs)
