@@ -15,7 +15,7 @@ object BlockInfoHelper {
 
   val blockInfoCache: Cache[String, BlockInfo] = Scaffeine()
     .recordStats()
-    .expireAfterWrite(2 minutes)
+    .expireAfterWrite(10 minutes)
     .maximumSize(1000)
     .build[String, BlockInfo]()
 
