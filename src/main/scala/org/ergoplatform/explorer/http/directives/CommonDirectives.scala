@@ -6,7 +6,7 @@ import cats.data._
 import cats.instances.parallel._
 import cats.syntax.parallel._
 import org.ergoplatform.explorer.utils.SortOrder
-import scorex.crypto.encode.Base16
+import scorex.util.encode.Base16
 
 trait CommonDirectives {
 

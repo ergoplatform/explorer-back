@@ -1,6 +1,5 @@
 package org.ergoplatform.explorer.grabber.db
 
-
 import cats.data._
 import cats.effect.IO
 import cats.implicits._
@@ -10,11 +9,15 @@ import doobie.postgres.implicits._
 import doobie.free.connection.ConnectionIO
 import io.circe.Json
 import io.circe.parser._
+import org.ergoplatform.{ErgoAddressEncoder, Pay2SAddress}
 import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
+import scorex.util.encode.Base16
+import sigmastate.SBoolean
+import sigmastate.Values.Value
+import sigmastate.serialization.ValueSerializer
 
-
-object DBHelper {
+class DBHelper(testnetMode: Boolean) {
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
     x => ApiDifficulty(x.toBigInt()),
@@ -53,9 +56,14 @@ object DBHelper {
     .map { i => (i.boxId, txId, i.spendingProof.proofBytes, i.spendingProof.extension) }
 
   def nodeOutputsToDb(txId: String, list: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = list
-    .zipWithIndex.map { case (o, index) =>
-    (o.boxId, txId, o.value, index, o.proposition, o.proposition, o.additionalRegisters, ts)
-  }
+    .zipWithIndex
+    .map { case (o, index) =>
+      implicit val encoder: ErgoAddressEncoder = ErgoAddressEncoder(if (testnetMode) 0x10 else 0x00)
+      val address: String = Base16.decode(o.proposition)
+        .map(r => new Pay2SAddress(ValueSerializer.deserialize(r).asInstanceOf[Value[SBoolean.type]], r).toString)
+        .getOrElse(o.proposition)
+      (o.boxId, txId, o.value, index, o.proposition, address, o.additionalRegisters, ts)
+    }
 
   def btToInputs(bt: ApiBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>
     nodeInputsToDb(tx.id, tx.inputs)

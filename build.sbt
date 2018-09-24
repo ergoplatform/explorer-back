@@ -7,6 +7,7 @@ version := "0.0.1"
 scalaVersion := "2.12.5"
 
 resolvers += Resolver.bintrayRepo("hseeberger", "maven")
+resolvers ++= Seq("Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
 
 lazy val doobieVersion = "0.5.3"
 lazy val akkaHttpVersion = "10.1.1"
@@ -42,7 +43,10 @@ lazy val otherDeps = Seq(
   "de.heikoseeberger" %% "akka-http-circe" % "1.20.1",
   "org.scalaj" %% "scalaj-http" % "2.4.0",
   "org.flywaydb" % "flyway-core" % "5.1.1",
-  "com.github.blemale" %% "scaffeine" % "2.5.0"
+  "com.github.blemale" %% "scaffeine" % "2.5.0",
+  ("org.scorexfoundation" %% "sigma-state" % "0.11.0-SNAPSHOT")
+    .exclude("ch.qos.logback", "logback-classic")
+    .exclude("org.scorexfoundation", "scrypto"),
 )
 lazy val circeDeps = Seq(
   "io.circe" %% "circe-core" % circeVersion,

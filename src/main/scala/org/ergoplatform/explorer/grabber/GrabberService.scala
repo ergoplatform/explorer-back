@@ -2,32 +2,31 @@ package org.ergoplatform.explorer.grabber
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import cats.data._
 import cats.effect.IO
 import cats.implicits._
-import doobie._
-import doobie.implicits._
-import doobie.postgres.implicits._
 import com.typesafe.scalalogging.Logger
+import doobie.implicits._
 import doobie.util.transactor.Transactor
-import org.ergoplatform.explorer.config.GrabberConfig
+import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.grabber.db.{BlockInfoWriter, DBHelper}
 import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServiceImpl}
 import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiNodeInfo}
 
 import scala.concurrent.ExecutionContext
 
-class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, grConfig: GrabberConfig) {
+class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, config: ExplorerConfig) {
 
   implicit val ec: ExecutionContext = executionContext
 
   val logger = Logger("grabber-service")
 
-  private val addressService = new NodeAddressService(grConfig.nodes.head)
+  private val addressService = NodeAddressService(config.grabber.nodes.head)
   private val requestService = new RequestServiceImpl[IO]
 
+  private val dBHelper = new DBHelper(config.testnetMode)
+
   private val active = new AtomicBoolean(false)
-  private val pause = grConfig.pollDelay
+  private val pause = config.grabber.pollDelay
 
 
   private def idsAtHeight(height: Long): IO[List[String]] =
@@ -58,7 +57,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, grC
     _ <- blocks.map { case (block, isMain) =>
       val h = block.header.copy(mainChain = isMain)
       val b = block.copy(header = h)
-      DBHelper.writeOne(b).transact[IO](xa)
+      dBHelper.writeOne(b).transact[IO](xa)
         .flatMap { _ => writeBlockInfo(b) }
     }.parSequence
     _ <- IO {
@@ -94,7 +93,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, grC
       logger.info("Starting sync task.")
     }
     info <- requestService.get[ApiNodeInfo](addressService.infoUri)
-    currentHeight <- DBHelper.readCurrentHeight.transact(xa)
+    currentHeight <- dBHelper.readCurrentHeight.transact(xa)
     _ <- IO {
       logger.info(s"Current full height in db: $currentHeight")
       logger.info(s"Current full height on node ${info.fullHeight}")
