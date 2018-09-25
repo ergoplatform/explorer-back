@@ -88,11 +88,12 @@ class DBHelper(networkConfig: NetworkConfig) {
       .query[Long].option.map { _.getOrElse(-1L) }
 
   def scriptToAddress(scriptBytes: Array[Byte]): Try[ErgoAddress] = Try {
+    val p2shSample: Array[Byte] = new Pay2SHAddress(ErgoAddressEncoder.hash192(Array(0: Byte))).script.bytes
     val script: Value[SType] = ValueSerializer.deserialize(scriptBytes)
     scriptBytes.head match {
       case OpCodes.ProveDlogCode if scriptBytes.tail.head == (OpCodes.ConstantCode + SGroupElement.typeCode).toByte =>
         P2PKAddress(script.asInstanceOf[ProveDlog])
-      case OpCodes.AndCode if scriptBytes.tail.head == OpCodes.ConcreteCollectionCode =>
+      case OpCodes.AndCode if scriptBytes.take(16) sameElements p2shSample.take(16) =>
         Pay2SHAddress(script.asInstanceOf[Value[SBoolean.type]])
       case _ => Pay2SAddress(script.asInstanceOf[Value[SBoolean.type]])
     }
