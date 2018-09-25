@@ -23,7 +23,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private val addressService = NodeAddressService(config.grabber.nodes.head)
   private val requestService = new RequestServiceImpl[IO]
 
-  private val dBHelper = new DBHelper(config.testnetMode)
+  private val dBHelper = new DBHelper(config.network)
 
   private val active = new AtomicBoolean(false)
   private val pause = config.grabber.pollDelay

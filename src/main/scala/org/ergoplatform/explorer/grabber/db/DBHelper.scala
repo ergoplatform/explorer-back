@@ -9,6 +9,8 @@ import doobie.postgres.implicits._
 import doobie.free.connection.ConnectionIO
 import io.circe.Json
 import io.circe.parser._
+import org.ergoplatform.explorer.config.NetworkConfig
+import org.ergoplatform.explorer.grabber.Constants
 import org.ergoplatform.{ErgoAddressEncoder, Pay2SAddress}
 import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
@@ -17,7 +19,7 @@ import sigmastate.SBoolean
 import sigmastate.Values.Value
 import sigmastate.serialization.ValueSerializer
 
-class DBHelper(testnetMode: Boolean) {
+class DBHelper(networkConfig: NetworkConfig) {
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
     x => ApiDifficulty(x.toBigInt()),
@@ -58,9 +60,10 @@ class DBHelper(testnetMode: Boolean) {
   def nodeOutputsToDb(txId: String, list: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = list
     .zipWithIndex
     .map { case (o, index) =>
-      implicit val encoder: ErgoAddressEncoder = ErgoAddressEncoder(if (testnetMode) 0x10 else 0x00)
+      val networkPrefix: Byte = if (networkConfig.testnet) Constants.testnetPrefix else Constants.testnetPrefix
+      val encoder: ErgoAddressEncoder = ErgoAddressEncoder(networkPrefix)
       val address: String = Base16.decode(o.proposition)
-        .map(r => new Pay2SAddress(ValueSerializer.deserialize(r).asInstanceOf[Value[SBoolean.type]], r).toString)
+        .map(r => new Pay2SAddress(ValueSerializer.deserialize(r).asInstanceOf[Value[SBoolean.type]], r)(encoder).toString)
         .getOrElse(o.proposition)
       (o.boxId, txId, o.value, index, o.proposition, address, o.additionalRegisters, ts)
     }
