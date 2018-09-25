@@ -9,15 +9,21 @@ import io.circe.Json
 import io.circe.parser._
 import org.ergoplatform.explorer.config.NetworkConfig
 import org.ergoplatform.explorer.grabber.Constants
-import org.ergoplatform.{ErgoAddressEncoder, Pay2SAddress}
+import org.ergoplatform._
 import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
+import scapi.sigma.DLogProtocol.ProveDlog
 import scorex.util.encode.Base16
-import sigmastate.SBoolean
+import sigmastate.{SBoolean, SGroupElement, SType}
 import sigmastate.Values.Value
-import sigmastate.serialization.ValueSerializer
+import sigmastate.serialization.{OpCodes, ValueSerializer}
+
+import scala.util.Try
 
 class DBHelper(networkConfig: NetworkConfig) {
+
+  private implicit val addressEncoder: ErgoAddressEncoder =
+    ErgoAddressEncoder(if (networkConfig.testnet) Constants.testnetPrefix else Constants.testnetPrefix)
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
     x => ApiDifficulty(x.toBigInt()),
@@ -58,10 +64,9 @@ class DBHelper(networkConfig: NetworkConfig) {
   def nodeOutputsToDb(txId: String, list: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = list
     .zipWithIndex
     .map { case (o, index) =>
-      val networkPrefix: Byte = if (networkConfig.testnet) Constants.testnetPrefix else Constants.testnetPrefix
-      val encoder: ErgoAddressEncoder = ErgoAddressEncoder(networkPrefix)
       val address: String = Base16.decode(o.proposition)
-        .map(r => new Pay2SAddress(ValueSerializer.deserialize(r).asInstanceOf[Value[SBoolean.type]], r)(encoder).toString)
+        .flatMap(scriptToAddress)
+        .map(_.toString)
         .getOrElse(o.proposition)
       (o.boxId, txId, o.value, index, o.proposition, address, o.additionalRegisters, ts)
     }
@@ -81,4 +86,15 @@ class DBHelper(networkConfig: NetworkConfig) {
   def readCurrentHeight: ConnectionIO[Long] =
     fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM node_headers ORDER BY height DESC LIMIT 1"
       .query[Long].option.map { _.getOrElse(-1L) }
+
+  def scriptToAddress(scriptBytes: Array[Byte]): Try[ErgoAddress] = Try {
+    val script: Value[SType] = ValueSerializer.deserialize(scriptBytes)
+    scriptBytes.head match {
+      case OpCodes.ProveDlogCode if scriptBytes.tail.head == (OpCodes.ConstantCode + SGroupElement.typeCode).toByte =>
+        P2PKAddress(script.asInstanceOf[ProveDlog])
+      case OpCodes.AndCode if scriptBytes.tail.head == OpCodes.ConcreteCollectionCode =>
+        Pay2SHAddress(script.asInstanceOf[Value[SBoolean.type]])
+      case _ => Pay2SAddress(script.asInstanceOf[Value[SBoolean.type]])
+    }
+  }
 }
