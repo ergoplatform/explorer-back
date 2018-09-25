@@ -1,7 +1,5 @@
 package org.ergoplatform.explorer.grabber.db
 
-import cats.data._
-import cats.effect.IO
 import cats.implicits._
 import doobie._
 import doobie.implicits._

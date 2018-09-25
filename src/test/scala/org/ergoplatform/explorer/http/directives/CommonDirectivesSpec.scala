@@ -5,7 +5,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.data._
 import cats.implicits.catsKernelStdOrderForString
 import org.scalatest.{FlatSpec, Matchers}
-import scorex.crypto.encode.Base16
+import scorex.util.encode.Base16
 
 class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTest with CommonDirectives {
 
