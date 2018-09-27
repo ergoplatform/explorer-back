@@ -3,7 +3,7 @@ package org.ergoplatform.explorer.db.dao
 import doobie.implicits._
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
-import scorex.crypto.encode.Base16
+import scorex.util.encode.Base16
 
 import scala.util.Random
 

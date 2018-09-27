@@ -1,20 +1,26 @@
 package org.ergoplatform.explorer.grabber.db
 
-
-import cats.data._
-import cats.effect.IO
 import cats.implicits._
 import doobie._
+import doobie.free.connection.ConnectionIO
 import doobie.implicits._
 import doobie.postgres.implicits._
-import doobie.free.connection.ConnectionIO
 import io.circe.Json
 import io.circe.parser._
+import org.ergoplatform._
+import org.ergoplatform.explorer.config.NetworkConfig
+import org.ergoplatform.explorer.grabber.Constants
 import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
+import scorex.util.encode.Base16
+import sigmastate.serialization.ValueSerializer
 
+import scala.util.Success
 
-object DBHelper {
+class DBHelper(networkConfig: NetworkConfig) {
+
+  private val addressEncoder: ErgoAddressEncoder =
+    ErgoAddressEncoder(if (networkConfig.testnet) Constants.testnetPrefix else Constants.testnetPrefix)
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
     x => ApiDifficulty(x.toBigInt()),
@@ -32,12 +38,12 @@ object DBHelper {
       }
     )
 
-  def writeOne(nfb: ApiFullBlock): ConnectionIO[Int] = for {
-    hInt <- NodeHeadersWriter.insert(nfb.header)
-    txInt <- NodeTxWriter.insertMany(btToDb(nfb.bt, nfb.header.timestamp))
-    isInt <- NodeInputWriter.insertMany(btToInputs(nfb.bt))
-    osInt <- NodeOutputWriter.insertMany(btToOutputs(nfb.bt, nfb.header.timestamp))
-    adInt <- NodeAdProofsWriter.insertMany(nfbToAd(nfb))
+  def writeOne(fullBlock: ApiFullBlock): ConnectionIO[Int] = for {
+    hInt <- NodeHeadersWriter.insert(fullBlock.header)
+    txInt <- NodeTxWriter.insertMany(btToDb(fullBlock.transactions, fullBlock.header.timestamp))
+    isInt <- NodeInputWriter.insertMany(btToInputs(fullBlock.transactions))
+    osInt <- NodeOutputWriter.insertMany(btToOutputs(fullBlock.transactions, fullBlock.header.timestamp))
+    adInt <- NodeAdProofsWriter.insertMany(nfbToAd(fullBlock))
   } yield hInt + txInt + isInt + osInt + adInt
 
   def btToDb(bt: ApiBlockTransactions, ts: Long): List[NodeTxWriter.ToInsert] = {
@@ -49,13 +55,17 @@ object DBHelper {
     coinbaseTx :: restTxs
   }
 
-  def nodeInputsToDb(txId: String, list: List[ApiInput]): List[NodeInputWriter.ToInsert] = list
+  def nodeInputsToDb(txId: String, inputs: List[ApiInput]): List[NodeInputWriter.ToInsert] = inputs
     .map { i => (i.boxId, txId, i.spendingProof.proofBytes, i.spendingProof.extension) }
 
-  def nodeOutputsToDb(txId: String, list: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = list
-    .zipWithIndex.map { case (o, index) =>
-    (o.boxId, txId, o.value, index, o.proposition, o.proposition, o.additionalRegisters, ts)
-  }
+  def nodeOutputsToDb(txId: String, inputs: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = inputs
+    .zipWithIndex
+    .map { case (o, index) =>
+      Base16.decode(o.proposition)
+        .flatMap { bytes => addressEncoder.fromProposition(ValueSerializer.deserialize(bytes)) }
+        .map { addr => (o.boxId, txId, o.value, index, o.proposition, addr.toString, o.additionalRegisters, ts) }
+    }
+    .collect { case Success(a) => a }
 
   def btToInputs(bt: ApiBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>
     nodeInputsToDb(tx.id, tx.inputs)

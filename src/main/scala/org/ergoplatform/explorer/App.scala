@@ -57,7 +57,7 @@ object App extends Configuration with DbTransactor with Services with Rest {
 
     val grabberEc = ExecutionContext.fromExecutor(Pools.grabberPool)
 
-    val grabberService = new GrabberService(transactor2, grabberEc, cfg.grabber)
+    val grabberService = new GrabberService(transactor2, grabberEc, cfg)
     grabberService.start
 
     sys.addShutdownHook {

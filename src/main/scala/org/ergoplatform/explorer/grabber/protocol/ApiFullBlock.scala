@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.grabber.protocol
 
 import io.circe.{Decoder, HCursor}
 
-case class ApiFullBlock(header: ApiHeader, bt: ApiBlockTransactions, adProofs: Option[ApiAdProofs], size: Long)
+case class ApiFullBlock(header: ApiHeader, transactions: ApiBlockTransactions, adProofs: Option[ApiAdProofs], size: Long)
 
 object ApiFullBlock {
 
