@@ -24,7 +24,7 @@ object BlockInfoHelper {
   private def findCoinbase(list: NonEmptyList[ApiTransaction]): ApiTransaction = list.last
 
   private def minerAddress(nfb: ApiFullBlock): String = {
-    val tx = NonEmptyList.fromList(nfb.bt.transactions).map(findCoinbase)
+    val tx = NonEmptyList.fromList(nfb.transactions.transactions).map(findCoinbase)
     tx.fold("unknown_miner") { t =>
       t.outputs.drop(1).headOption.map{v => v.proposition}.getOrElse("unknown_miner")
     }
@@ -32,7 +32,7 @@ object BlockInfoHelper {
 
   private def minerRewardAndFee(nfb: ApiFullBlock): (Long, Long) = {
     val reward = CoinsEmission.emissionAtHeight(nfb.header.height)
-    val tx = NonEmptyList.fromList(nfb.bt.transactions).map(findCoinbase)
+    val tx = NonEmptyList.fromList(nfb.transactions.transactions).map(findCoinbase)
     val fee = tx.fold(0L) { t =>
       t.outputs.drop(1).headOption.map { v => v.value - reward }.getOrElse(0L)
     }
@@ -45,7 +45,7 @@ object BlockInfoHelper {
 
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee
-    val blockCoins = nfb.bt.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
+    val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
     val mAddress = minerAddress(nfb)
     val blockInfo = if (nfb.header.height == 0) {
       BlockInfo(
@@ -56,14 +56,14 @@ object BlockInfoHelper {
         nfb.size,
         blockCoins,
         0L,
-        nfb.bt.transactions.length.toLong,
-        nfb.bt.transactions.map(_.size).sum,
+        nfb.transactions.transactions.length.toLong,
+        nfb.transactions.transactions.map(_.size).sum,
         mAddress,
         reward,
         reward + fee,
         fee,
         nfb.size,
-        nfb.bt.transactions.length.toLong,
+        nfb.transactions.transactions.length.toLong,
         CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
         0L,
         fee,
@@ -83,14 +83,14 @@ object BlockInfoHelper {
         nfb.size,
         blockCoins,
         nfb.header.timestamp - prev.timestamp,
-        nfb.bt.transactions.length.toLong,
-        nfb.bt.transactions.map(_.size).sum,
+        nfb.transactions.transactions.length.toLong,
+        nfb.transactions.transactions.map(_.size).sum,
         mAddress,
         reward,
         reward + fee,
         fee,
         prev.blockChainTotalSize + nfb.size,
-        nfb.bt.transactions.length.toLong + prev.totalTxsCount,
+        nfb.transactions.transactions.length.toLong + prev.totalTxsCount,
         CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
         prev.totalMiningTime + miningTime,
         prev.totalFees + fee,
