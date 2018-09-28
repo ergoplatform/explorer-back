@@ -94,4 +94,10 @@ test in assembly := {}
 
 mainClass in assembly := Some("org.ergoplatform.explorer.App")
 
+assemblyMergeStrategy in assembly := {
+  case "logback.xml" => MergeStrategy.first
+  case "module-info.class" => MergeStrategy.discard
+  case other => (assemblyMergeStrategy in assembly).value(other)
+}
+
 parallelExecution in Test := false
