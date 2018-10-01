@@ -6,17 +6,20 @@ import cats.data._
 import cats.instances.parallel._
 import cats.syntax.parallel._
 import org.ergoplatform.explorer.utils.SortOrder
-import scorex.util.encode.Base16
+import scorex.util.encode.{Base16, Base58}
 
 trait CommonDirectives {
 
   import CommonDirectives._
 
-  val base16Segment: Directive1[String] = pathPrefix(Segment).flatMap(v =>
-    v.forall(Base16.Alphabet.toSet.contains) match {
-      case true => provide(v)
-      case false => reject(base16ValidationError)
-    }
+  val base16Segment: Directive1[String] = pathPrefix(Segment).flatMap(f = v =>
+    if (v.forall(Base16.Alphabet.toSet.contains)) provide(v)
+    else reject(base16ValidationError)
+  )
+
+  val base58Segment: Directive1[String] = pathPrefix(Segment).flatMap(v =>
+    if (v.forall(Base58.Alphabet.toSet.contains)) provide(v)
+    else reject(base58ValidationError)
   )
 
   val paging: Directive[(Int, Int)] = parameters(("offset".as[Int] ? 0, "limit".as[Int] ? 20))
@@ -51,28 +54,23 @@ trait CommonDirectives {
   }
 
   val duration: Directive1[Int] = parameters("timespan" ? "all")
-    .flatMap{ v => stringToDaysBack(v) match {
-      case Some(d) =>
-        provide(d)
-      case None =>
-        reject(malformedTimespanParameter)
-
+    .flatMap { v =>
+      stringToDaysBack(v) match {
+        case Some(d) => provide(d)
+        case None => reject(malformedTimespanParameter)
       }
     }
 
   val startEndDate: Directive[(Option[Long], Option[Long])] =
     parameters(("startDate".as[Long].?, "endDate".as[Long].?)).tflatMap { case (s, e) =>
 
-      val check = (for {
+      val check: Boolean = (for {
         start <- s
         end <- e
       } yield start > end).getOrElse(false)
 
-      if (check) {
-        reject(malformedStartEndDateParam)
-      } else {
-        tprovide((s, e))
-      }
+      if (check) reject(malformedStartEndDateParam)
+      else tprovide((s, e))
     }
 
 }
@@ -94,6 +92,8 @@ object CommonDirectives {
   )
 
   val base16ValidationError = ValidationRejection("String isn't a Base16 representation")
+
+  val base58ValidationError = ValidationRejection("String isn't a Base58 representation")
 
   def malformedSortDirectionParameter(value: String) = MalformedQueryParamRejection(
     "sortDirection",
