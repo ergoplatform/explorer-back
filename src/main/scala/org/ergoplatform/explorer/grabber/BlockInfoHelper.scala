@@ -3,13 +3,17 @@ package org.ergoplatform.explorer.grabber
 import cats.data.NonEmptyList
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import com.typesafe.scalalogging.Logger
+import org.ergoplatform.ErgoAddressEncoder
+import org.ergoplatform.explorer.config.NetworkConfig
 import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.grabber.db.BlockInfoWriter
 import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiTransaction}
+import scorex.util.encode.Base16
+import sigmastate.serialization.ValueSerializer
 
 import scala.concurrent.duration._
 
-object BlockInfoHelper {
+class BlockInfoHelper(networkConfig: NetworkConfig) {
 
   val logger = Logger("blocks-info-helper")
 
@@ -19,14 +23,24 @@ object BlockInfoHelper {
     .maximumSize(1000)
     .build[String, BlockInfo]()
 
-  private val BYTES = "968400020191a3c6a70300059784000201968400030193c2a7c2b2a505000000000000000093958fa30500000000000027600500000001bf08eb00990500000001bf08eb009c050000000011e1a3009a0500000000000000019d99a305000000000000276005000000000000087099c1a7c1b2a505000000000000000093c6b2a5050000000000000000030005a390c1a7050000000011e1a300"
+  private val addressEncoder: ErgoAddressEncoder =
+    ErgoAddressEncoder(if (networkConfig.testnet) Constants.testnetPrefix else Constants.testnetPrefix)
 
   private def findCoinbase(list: NonEmptyList[ApiTransaction]): ApiTransaction = list.last
 
   private def minerAddress(nfb: ApiFullBlock): String = {
     val tx = NonEmptyList.fromList(nfb.transactions.transactions).map(findCoinbase)
     tx.fold("unknown_miner") { t =>
-      t.outputs.drop(1).headOption.map{v => v.proposition}.getOrElse("unknown_miner")
+      t.outputs
+        .drop(1)
+        .headOption
+        .flatMap { o =>
+          Base16.decode(o.proposition)
+            .flatMap { bytes => addressEncoder.fromProposition(ValueSerializer.deserialize(bytes)) }
+            .map(_.toString)
+            .toOption
+        }
+        .getOrElse("unknown_miner")
     }
   }
 
@@ -34,12 +48,13 @@ object BlockInfoHelper {
     val reward = CoinsEmission.emissionAtHeight(nfb.header.height)
     val tx = NonEmptyList.fromList(nfb.transactions.transactions).map(findCoinbase)
     val fee = tx.fold(0L) { t =>
-      t.outputs.drop(1).headOption.map { v => v.value - reward }.getOrElse(0L)
+      t.outputs
+        .drop(1)
+        .headOption
+        .map(_.value - reward).getOrElse(0L)
     }
     (reward, fee)
   }
-
-
 
   def extractBlockInfo(nfb: ApiFullBlock): BlockInfoWriter.ToInsert = {
 

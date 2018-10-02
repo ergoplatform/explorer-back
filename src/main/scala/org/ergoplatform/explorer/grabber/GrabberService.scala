@@ -16,9 +16,11 @@ import scala.concurrent.ExecutionContext
 
 class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, config: ExplorerConfig) {
 
+  private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.network)
+
   implicit val ec: ExecutionContext = executionContext
 
-  val logger = Logger("grabber-service")
+  private val logger = Logger("grabber-service")
 
   private val addressService = NodeAddressService(config.grabber.nodes.head)
   private val requestService = new RequestServiceImpl[IO]
@@ -31,9 +33,6 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
 
   private def idsAtHeight(height: Long): IO[List[String]] =
     requestService.get[List[String]](addressService.idsAtHeightUri(height))
-
-  private def fullBlock(id: String): IO[ApiFullBlock] =
-    requestService.get[ApiFullBlock](addressService.fullBlockUri(id))
 
   private def fullBlocksSafe(id: String): IO[Option[ApiFullBlock]] = {
     requestService.getSafe[ApiFullBlock](addressService.fullBlockUri(id)).flatMap {
@@ -68,21 +67,21 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private def writeBlockInfo(nfb: ApiFullBlock): IO[Unit] = for {
     _ <- if (nfb.header.height == 0L) IO.pure(()) else prepareCache(nfb.header.parentId)
     blockInfo <- IO {
-      BlockInfoHelper.extractBlockInfo(nfb)
+      blockInfoHelper.extractBlockInfo(nfb)
     }
     _ <- BlockInfoWriter.insert(blockInfo).transact(xa)
   } yield ()
 
   def prepareCache(id: String): IO[Unit] = for {
     maybePresented <- IO {
-      BlockInfoHelper.blockInfoCache.getIfPresent(id)
+      blockInfoHelper.blockInfoCache.getIfPresent(id)
     }
     _ <- IO.suspend {
       maybePresented match {
         case Some(v) => IO { logger.trace(s"got block info from cache for height ${v.height}")}
         case None => BlockInfoWriter.get(id).transact(xa).map { bi =>
           logger.trace(s"not found in cache for id ${id}")
-          BlockInfoHelper.blockInfoCache.put(id, bi)
+          blockInfoHelper.blockInfoCache.put(id, bi)
         }
       }
     }
@@ -126,12 +125,12 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     }
   }
 
-  def stop: Unit = {
+  def stop(): Unit = {
     logger.info("Stopping service.")
     active.set(false)
   }
 
-  def start: Unit = if (!active.get()) {
+  def start(): Unit = if (!active.get()) {
     active.set(true)
     (IO.shift(ec) *> run(sync)).unsafeRunAsync { r =>
       logger.info(s"Grabber stopped. Cause: $r")
