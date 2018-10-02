@@ -51,7 +51,8 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
       t.outputs
         .drop(1)
         .headOption
-        .map(_.value - reward).getOrElse(0L)
+        .map(_.value - reward)
+        .getOrElse(0L)
     }
     (reward, fee)
   }
