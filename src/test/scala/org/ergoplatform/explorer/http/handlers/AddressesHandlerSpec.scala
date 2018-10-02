@@ -38,15 +38,15 @@ class AddressesHandlerSpec extends HttpSpec {
 
   val route = new AddressesHandler(addressServiceStub, txServiceStub).route
 
-  it should "get address by base16 id" in {
-    Get("/addresses/000111abbbcccf") ~> route ~> check {
+  it should "get address by base58 id" in {
+    Get("/addresses/tJPvQ5UwUKLtgaB3iCALNcjpUQJLcFJNiudZpiAHNtLVFScyubHkoz") ~> route ~> check {
       status shouldBe StatusCodes.OK
       responseAs[Json] shouldBe addressInfo.asJson
     }
   }
 
   it should "get txs by address id" in {
-    Get("/addresses/000111abbbcccf/transactions") ~> route ~> check {
+    Get("/addresses/tJPvQ5UwUKLtgaB3iCALNcjpUQJLcFJNiudZpiAHNtLVFScyubHkoz/transactions") ~> route ~> check {
       status shouldBe StatusCodes.OK
       responseAs[Json] shouldBe ItemsResponse(txs, 3L).asJson
     }

@@ -4,16 +4,14 @@ import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models.{BlockInfo, Header, RawSearchBlock}
 
-case class SearchBlockInfo(
-                            id: String,
+case class SearchBlockInfo(id: String,
                            height: Long,
                            timestamp: Long,
                            transactionsCount: Long,
                            miner: MinerInfo,
                            size: Long,
                            difficulty: Long,
-                           minerReward: Long
-                          )
+                           minerReward: Long)
 
 object SearchBlockInfo {
 

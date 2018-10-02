@@ -4,7 +4,7 @@ name := "ergo-explorer"
 
 version := "0.0.1"
 
-scalaVersion := "2.12.5"
+scalaVersion := "2.12.7"
 
 resolvers += Resolver.bintrayRepo("hseeberger", "maven")
 resolvers ++= Seq("Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
