@@ -15,8 +15,6 @@ import org.postgresql.util.PGobject
 import scorex.util.encode.Base16
 import sigmastate.serialization.ValueSerializer
 
-import scala.util.Success
-
 class DBHelper(networkConfig: NetworkConfig) {
 
   private val addressEncoder: ErgoAddressEncoder =
@@ -61,11 +59,12 @@ class DBHelper(networkConfig: NetworkConfig) {
   def nodeOutputsToDb(txId: String, inputs: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = inputs
     .zipWithIndex
     .map { case (o, index) =>
-      Base16.decode(o.proposition)
+      val address: String = Base16.decode(o.proposition)
         .flatMap { bytes => addressEncoder.fromProposition(ValueSerializer.deserialize(bytes)) }
-        .map { addr => (o.boxId, txId, o.value, index, o.proposition, addr.toString, o.additionalRegisters, ts) }
+        .map { _.toString }
+        .getOrElse("unable to derive address from proposition")
+      (o.boxId, txId, o.value, index, o.proposition, address, o.additionalRegisters, ts)
     }
-    .collect { case Success(a) => a }
 
   def btToInputs(bt: ApiBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>
     nodeInputsToDb(tx.id, tx.inputs)
