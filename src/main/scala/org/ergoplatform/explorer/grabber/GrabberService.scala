@@ -50,26 +50,27 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     .map(_.flatten.toList)
     .map(blocks => blocks.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
 
-  def writeBlocksFromHeight(h: Long): IO[Unit] = for {
-    ids <- idsAtHeight(h)
-    blocks <- fullBlocksForIds(ids)
-    _ <- blocks.map { case (block, isMain) =>
-      val h = block.header.copy(mainChain = isMain)
-      val b = block.copy(header = h)
-      dBHelper.writeOne(b).transact[IO](xa)
-        .flatMap { _ => writeBlockInfo(b) }
-    }.parSequence
-    _ <- IO {
-      logger.info(s"${blocks.length} block(s) from height $h has been written to db")
-    }
-  } yield ()
+  def writeBlocksFromHeight(h: Long): IO[Unit] = {
+    def updatedBlock(b: ApiFullBlock, isMain: Boolean) = b.copy(header = b.header.copy(mainChain = isMain))
+    for {
+      ids <- idsAtHeight(h)
+      blocks <- fullBlocksForIds(ids)
+      _ <- blocks.map { case (block, isMain) =>
+        dBHelper.writeOne(updatedBlock(block, isMain)).transact[IO](xa)
+      }.parSequence
+      _ <- blocks.map { case (block, isMain) =>
+        writeBlockInfo(updatedBlock(block, isMain))
+      }.parSequence
+      _ <- IO {
+        logger.info(s"${blocks.length} block(s) from height $h has been written to db")
+      }
+    } yield ()
+  }
 
-  private def writeBlockInfo(nfb: ApiFullBlock): IO[Unit] = for {
-    _ <- if (nfb.header.height == 0L) IO.pure(()) else prepareCache(nfb.header.parentId)
-    blockInfo <- IO {
-      blockInfoHelper.extractBlockInfo(nfb)
-    }
-    _ <- BlockInfoWriter.insert(blockInfo).transact(xa)
+  private def writeBlockInfo(apiBlock: ApiFullBlock): IO[Unit] = for {
+    _ <- if (apiBlock.header.height == 0L) IO.pure(()) else prepareCache(apiBlock.header.parentId)
+    blockInfo <- IO { blockInfoHelper.extractBlockInfo(apiBlock) }
+    _ <- BlockInfoWriter.insert(blockInfo).transact[IO](xa)
   } yield ()
 
   def prepareCache(id: String): IO[Unit] = for {
