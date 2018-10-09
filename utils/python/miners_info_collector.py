@@ -38,12 +38,12 @@ def load_config(path):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('config_url', type=str, default='')
+    parser.add_argument('config_path', type=str, default='')
     args = parser.parse_args()
 
     if args.config_url:
 
-        config = load_config(args.config_url)
+        config = load_config(args.config_path)
 
         miners_info = {k: v for k, v in fetch_info(config["peers"])}
         query = QUERY_CONST + "\n"
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         conn.commit()
         conn.close()
 
-        print("{} record(s) commited".format(sum([len(arr) for arr in miners_info.values()])))
+        print("{} record(s) committed".format(sum([len(arr) for arr in miners_info.values()])))
 
         exit(0)
 
