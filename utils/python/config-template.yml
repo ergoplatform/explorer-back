@@ -1,0 +1,9 @@
+peers:
+  - "http://0.0.0.0:9090"
+
+db:
+  database: "database"
+  user: "user"
+  password: "password"
+  host: "db_host"
+  port: "db_port"
