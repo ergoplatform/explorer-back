@@ -30,7 +30,7 @@ object PreparedData extends App {
       adProofsRoot = data(8),
       transactionsRoot = data(9),
       extensionHash = data(10),
-      equihashSolutions = data(11),
+      powSolutions = data(11),
       interlinks = readArray(data(12)),
       mainChain = data(13).contains("t")
     )

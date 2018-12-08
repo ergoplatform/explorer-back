@@ -7,7 +7,7 @@ import org.ergoplatform.explorer.db.models._
 case class TransactionInfo(
                             id: String,
                             timestamp: Long,
-                            confiramtionCount: Long,
+                            confirmationsQty: Long,
                             inputs: List[InputInfo],
                             outputs: List[OutputInfo]
                           )
@@ -37,7 +37,7 @@ object TransactionInfo {
   implicit val encoder: Encoder[TransactionInfo] = (tx: TransactionInfo) => Json.obj(
     "id" -> Json.fromString(tx.id),
     "timestamp" -> Json.fromLong(tx.timestamp),
-    "confirmationsCount" -> Json.fromLong(tx.confiramtionCount),
+    "confirmationsCount" -> Json.fromLong(tx.confirmationsQty),
     "inputs" -> tx.inputs.asJson,
     "outputs" -> tx.outputs.asJson
   )

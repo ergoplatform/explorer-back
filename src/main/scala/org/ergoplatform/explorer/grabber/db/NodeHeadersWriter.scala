@@ -24,7 +24,7 @@ object NodeHeadersWriter extends BasicWriter {
     "ad_proofs_root",
     "transactions_root",
     "extension_hash",
-    "equihash_solutions",
+    "pow_solutions",
     "interlinks",
     "main_chain"
   )
@@ -34,10 +34,9 @@ object NodeHeadersWriter extends BasicWriter {
     x => BigDecimal.apply(x.value)
   )
 
-  implicit val c = Composite[ApiHeader]
+  implicit val c: Composite[ApiHeader] = Composite[ApiHeader]
 
-  val insertSql = s"INSERT INTO node_headers ${fields.mkString("(", ", ", ")")} " +
+  val insertSql: String = s"INSERT INTO node_headers ${fields.mkString("(", ", ", ")")} " +
     s"VALUES ${fields.map(_ => "?").mkString("(", ", ", ")")}"
 
 }
-

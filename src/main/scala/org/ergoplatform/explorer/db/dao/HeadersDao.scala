@@ -4,7 +4,6 @@ import cats.implicits._
 import doobie._, doobie.implicits._, doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Header
 
-
 class HeadersDao {
 
   val fields = HeadersOps.fields
@@ -54,4 +53,5 @@ class HeadersDao {
     case Some(h) => h.pure[ConnectionIO]
     case None => (-1L).pure[ConnectionIO]
   }
+
 }

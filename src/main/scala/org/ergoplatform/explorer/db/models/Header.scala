@@ -12,7 +12,7 @@ case class Header(
                    adProofsRoot: String,
                    transactionsRoot: String,
                    extensionHash: String,
-                   equihashSolutions: String,
+                   powSolutions: String,
                    interlinks: List[String],
                    mainChain: Boolean
                  )
