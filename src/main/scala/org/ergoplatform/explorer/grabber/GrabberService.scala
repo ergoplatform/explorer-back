@@ -48,7 +48,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private def fullBlocksForIds(ids: List[String]): IO[List[(ApiFullBlock, Boolean)]] = ids
     .parTraverse(fullBlocksSafe)
     .map(_.flatten.toList)
-    .map(blocks => blocks.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
+    .map(_.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
 
   def writeBlocksFromHeight(h: Long): IO[Unit] = {
     def updatedBlock(b: ApiFullBlock, isMain: Boolean) = b.copy(header = b.header.copy(mainChain = isMain))
@@ -116,7 +116,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
       ()
     }
     case Left(f) => IO {
-      logger.error("OOPS", f)
+      logger.error("An error has occurred: ", f)
     }
   } *> IO.sleep(pause) *> IO.suspend {
     if (active.get) {
@@ -139,4 +139,5 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   } else {
     logger.warn("Trying to start service that already has been started.")
   }
+
 }
