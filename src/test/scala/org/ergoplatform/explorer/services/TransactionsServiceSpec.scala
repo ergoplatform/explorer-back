@@ -5,6 +5,7 @@ import doobie.implicits._
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
 import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, SpentOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
+import org.ergoplatform.explorer.grabber.Constants
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.utils.Paging
 import org.scalactic.Equality
@@ -41,8 +42,6 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     }
   }
 
-
-
   it should "get txs info correctly" in {
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
@@ -71,7 +70,7 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val service = new TransactionsServiceIOImpl[IO](xa, ec)
 
     val randomTx1 = Random.shuffle(tx).head
-    val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(0L)
+    val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)
     val currentHeight = h.map(_.height).max
     val is = inputsWithOutputInfo.filter(_.input.txId == randomTx1.id)
     val os = outputsWithSpentTx.filter(_.output.txId == randomTx1.id)

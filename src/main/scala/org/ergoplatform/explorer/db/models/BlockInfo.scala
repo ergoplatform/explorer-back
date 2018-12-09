@@ -22,9 +22,9 @@ case class BlockInfo(
                       totalMinersReward: Long,
                       totalCoinsInTxs: Long
                     ) {
-  val avgBlockSize: Long = blockChainTotalSize / height
-  val avgTxsCount: Long = totalTxsCount / height
-  val avgMiningTime: Long = totalMiningTime / height
+  val avgBlockSize: Long = if (height != 0) blockChainTotalSize / height else 0L
+  val avgTxsCount: Long = if (height != 0) totalTxsCount / height else 0L
+  val avgMiningTime: Long = if (height != 0) totalMiningTime / height else 0L
 }
 
 object BlockInfo {
