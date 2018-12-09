@@ -68,7 +68,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   }
 
   private def writeBlockInfo(apiBlock: ApiFullBlock): IO[Unit] = for {
-    _ <- if (apiBlock.header.height == 0L) IO.pure(()) else prepareCache(apiBlock.header.parentId)
+    _ <- if (apiBlock.header.height == Constants.GenesisHeight) IO.pure(()) else prepareCache(apiBlock.header.parentId)
     blockInfo <- IO { blockInfoHelper.extractBlockInfo(apiBlock) }
     _ <- BlockInfoWriter.insert(blockInfo).transact[IO](xa)
   } yield ()
@@ -81,7 +81,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
       maybePresented match {
         case Some(v) => IO { logger.trace(s"got block info from cache for height ${v.height}")}
         case None => BlockInfoWriter.get(id).transact(xa).map { bi =>
-          logger.trace(s"not found in cache for id ${id}")
+          logger.trace(s"not found in cache for id $id")
           blockInfoHelper.blockInfoCache.put(id, bi)
         }
       }
