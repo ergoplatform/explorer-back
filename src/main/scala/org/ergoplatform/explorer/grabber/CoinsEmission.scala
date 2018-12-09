@@ -2,7 +2,6 @@ package org.ergoplatform.explorer.grabber
 
 import scala.annotation.tailrec
 
-
 //TODO: get rid when node api will provide this data
 object CoinsEmission {
 

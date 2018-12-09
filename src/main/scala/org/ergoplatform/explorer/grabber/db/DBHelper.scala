@@ -18,7 +18,7 @@ import sigmastate.serialization.ValueSerializer
 class DBHelper(networkConfig: NetworkConfig) {
 
   private val addressEncoder: ErgoAddressEncoder =
-    ErgoAddressEncoder(if (networkConfig.testnet) Constants.testnetPrefix else Constants.testnetPrefix)
+    ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
     x => ApiDifficulty(x.toBigInt()),
@@ -79,5 +79,5 @@ class DBHelper(networkConfig: NetworkConfig) {
 
   def readCurrentHeight: ConnectionIO[Long] =
     fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM node_headers ORDER BY height DESC LIMIT 1"
-      .query[Long].option.map { _.getOrElse(-1L) }
+      .query[Long].option.map { _.getOrElse(Constants.PreGenesisHeight) }
 }

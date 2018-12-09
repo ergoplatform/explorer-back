@@ -24,7 +24,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
     .build[String, BlockInfo]()
 
   private val addressEncoder: ErgoAddressEncoder =
-    ErgoAddressEncoder(if (networkConfig.testnet) Constants.testnetPrefix else Constants.testnetPrefix)
+    ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
 
   private def findCoinbase(list: NonEmptyList[ApiTransaction]): ApiTransaction = list.last
 
@@ -36,7 +36,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
         .headOption
         .flatMap { o =>
           Base16.decode(o.proposition)
-            .flatMap { bytes => addressEncoder.fromProposition(ValueSerializer.deserialize(bytes)) }
+            .flatMap(bytes => addressEncoder.fromProposition(ValueSerializer.deserialize(bytes)))
             .map(_.toString)
             .toOption
         }
@@ -63,7 +63,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
     val coinBaseValue = reward + fee
     val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
     val mAddress = minerAddress(nfb)
-    val blockInfo = if (nfb.header.height == 0) {
+    val blockInfo = if (nfb.header.height == Constants.GenesisHeight) {
       BlockInfo(
         nfb.header.id,
         nfb.header.timestamp,
