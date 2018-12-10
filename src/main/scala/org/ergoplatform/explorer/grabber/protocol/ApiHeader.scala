@@ -14,7 +14,7 @@ case class ApiHeader(
                       adProofsRoot: String,
                       transactionsRoot: String,
                       extensionHash: String,
-                      equihashSolutions: String,
+                      powSolutions: String,
                       interlinks: List[String],
                       mainChain: Boolean = true
                     )
@@ -33,7 +33,7 @@ object ApiHeader {
     adProofsRoot <- c.downField("adProofsRoot").as[String]
     transactionsRoot <- c.downField("transactionsRoot").as[String]
     extensionHash <- c.downField("extensionHash").as[String]
-    equihashSolutions <- c.downField("equihashSolutions").as[String]
+    powSolutions <- c.downField("powSolutions").as[ApiPowSolutions]
     interlinks <- c.downField("interlinks").as[List[String]]
   } yield ApiHeader(
     id,
@@ -47,9 +47,8 @@ object ApiHeader {
     adProofsRoot,
     transactionsRoot,
     extensionHash,
-    equihashSolutions,
+    powSolutions.toString,
     interlinks
   )
-
 
 }

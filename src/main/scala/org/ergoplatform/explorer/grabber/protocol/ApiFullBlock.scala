@@ -15,4 +15,5 @@ object ApiFullBlock {
     }
     size <- c.downField("size").as[Long]
   } yield ApiFullBlock(header, bt, adProofs, size)
+
 }

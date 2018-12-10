@@ -44,7 +44,7 @@ lazy val otherDeps = Seq(
   "org.scalaj" %% "scalaj-http" % "2.4.0",
   "org.flywaydb" % "flyway-core" % "5.1.1",
   "com.github.blemale" %% "scaffeine" % "2.5.0",
-  ("org.scorexfoundation" %% "sigma-state" % "master-401311d3-SNAPSHOT")
+  ("org.scorexfoundation" %% "sigma-state" % "master-c645b1a1-SNAPSHOT")
     .exclude("ch.qos.logback", "logback-classic")
     .exclude("org.scorexfoundation", "scrypto"),
 )

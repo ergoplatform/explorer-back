@@ -39,8 +39,9 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     fromService1 shouldBe expected1
 
     val fromService2 = service.findBlockchainInfo.unsafeRunSync()
-    val expected2 = BlockchainInfo("1", 157500000000L, 21L, 1L)
+    val expected2 = BlockchainInfo("1", 165000000000L, 21L, 1L)
 
     fromService2 shouldBe expected2
   }
+
 }

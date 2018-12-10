@@ -17,16 +17,16 @@ object HeadersOps {
     "ad_proofs_root",
     "transactions_root",
     "extension_hash",
-    "equihash_solutions",
+    "pow_solutions",
     "interlinks",
     "main_chain"
   )
 
-  val fieldsString = fields.mkString(", ")
-  val holdersString = fields.map(_ => "?").mkString(", ")
-  val updateString = fields.map(f => s"$f = ?").mkString(", ")
+  val fieldsString: String = fields.mkString(", ")
+  val holdersString: String = fields.map(_ => "?").mkString(", ")
+  val updateString: String = fields.map(f => s"$f = ?").mkString(", ")
 
-  val fieldsFr = Fragment.const(fields.mkString(", "))
+  val fieldsFr: Fragment = Fragment.const(fields.mkString(", "))
   val insertSql = s"INSERT INTO node_headers($fieldsString) VALUES ($holdersString)"
   val updateByIdSql = s"UPDATE node_headers SET $updateString WHERE id = ?"
 

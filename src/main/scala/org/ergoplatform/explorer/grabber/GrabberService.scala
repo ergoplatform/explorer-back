@@ -48,7 +48,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private def fullBlocksForIds(ids: List[String]): IO[List[(ApiFullBlock, Boolean)]] = ids
     .parTraverse(fullBlocksSafe)
     .map(_.flatten.toList)
-    .map(blocks => blocks.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
+    .map(_.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
 
   def writeBlocksFromHeight(h: Long): IO[Unit] = {
     def updatedBlock(b: ApiFullBlock, isMain: Boolean) = b.copy(header = b.header.copy(mainChain = isMain))
@@ -68,7 +68,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   }
 
   private def writeBlockInfo(apiBlock: ApiFullBlock): IO[Unit] = for {
-    _ <- if (apiBlock.header.height == 0L) IO.pure(()) else prepareCache(apiBlock.header.parentId)
+    _ <- if (apiBlock.header.height == Constants.GenesisHeight) IO.pure(()) else prepareCache(apiBlock.header.parentId)
     blockInfo <- IO { blockInfoHelper.extractBlockInfo(apiBlock) }
     _ <- BlockInfoWriter.insert(blockInfo).transact[IO](xa)
   } yield ()
@@ -81,7 +81,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
       maybePresented match {
         case Some(v) => IO { logger.trace(s"got block info from cache for height ${v.height}")}
         case None => BlockInfoWriter.get(id).transact(xa).map { bi =>
-          logger.trace(s"not found in cache for id ${id}")
+          logger.trace(s"not found in cache for id $id")
           blockInfoHelper.blockInfoCache.put(id, bi)
         }
       }
@@ -116,7 +116,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
       ()
     }
     case Left(f) => IO {
-      logger.error("OOPS", f)
+      logger.error("An error has occurred: ", f)
     }
   } *> IO.sleep(pause) *> IO.suspend {
     if (active.get) {
@@ -139,4 +139,5 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   } else {
     logger.warn("Trying to start service that already has been started.")
   }
+
 }

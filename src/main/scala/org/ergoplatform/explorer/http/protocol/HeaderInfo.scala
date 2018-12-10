@@ -17,7 +17,7 @@ case class HeaderInfo(
                        nBits: Long,
                        size: Long,
                        extensionHash: String,
-                       equihashSolution: String,
+                       powSolutions: String,
                        interlinks: List[String]
                      )
 
@@ -38,7 +38,7 @@ object HeaderInfo {
       h.nBits,
       size,
       h.extensionHash,
-      h.equihashSolutions,
+      h.powSolutions,
       h.interlinks
     )
   }
@@ -57,6 +57,6 @@ object HeaderInfo {
     "size" -> Json.fromLong(h.size),
     "timestamp" -> Json.fromLong(h.timestamp),
     "extensionHash" -> Json.fromString(h.extensionHash),
-    "equihashSolutions" -> Json.fromString(h.equihashSolution)
+    "powSolutions" -> Json.fromString(h.powSolutions)
   )
 }

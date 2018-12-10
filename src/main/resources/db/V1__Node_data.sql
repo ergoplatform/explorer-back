@@ -15,10 +15,11 @@ CREATE TABLE node_headers (
   ad_proofs_root VARCHAR(64) NOT NULL,
   transactions_root VARCHAR(64) NOT NULL,
   extension_hash VARCHAR(64) NOT NULL,
-  equihash_solutions VARCHAR NOT NULL,
+  pow_solutions VARCHAR NOT NULL,
   interlinks VARCHAR ARRAY NOT NULL,
   main_chain BOOLEAN NOT NULL
 );
+
 /*
    Headers indexes. By parent_id, height, ts, main_chain
  */
@@ -28,7 +29,6 @@ CREATE INDEX "node_headers__ts" ON node_headers (timestamp);
 CREATE INDEX "node_headers__main_chain" ON node_headers (main_chain);
 
 ALTER TABLE node_headers OWNER TO ergo;
-
 
 /*
     Main table that being used for storing stats.
@@ -55,10 +55,10 @@ CREATE TABLE blocks_info (
   total_miners_reward BIGINT NOT NULL,
   total_coins_in_txs BIGINT NOT NULL
 );
+
 /*
     Stats table indexes. By height and ts.
  */
-
 CREATE INDEX "blocks_info__height" ON node_headers (height);
 CREATE INDEX "blocks_info__ts" ON node_headers (timestamp);
 
@@ -75,11 +75,13 @@ CREATE TABLE node_transactions (
 );
 
 ALTER TABLE node_transactions OWNER TO ergo;
+
 /*
     Indexes that being used by transactions table.
  */
 CREATE INDEX "node_transactions__header_id" on node_transactions (header_id);
 CREATE INDEX "node_transactions__timestamp" on node_transactions (timestamp);
+
 /*
     Table that represents inputs in ergo transactions.
     Has tx_id field that point to the tx where this input was spent.
@@ -98,7 +100,6 @@ ALTER TABLE node_inputs OWNER TO ergo;
  */
 CREATE INDEX "node_inputs__tx_id" on node_inputs (tx_id);
 CREATE INDEX "node_inputs__box_id" on node_inputs (box_id);
-
 
 /*
     Table that represents outputs in ergo transactions.
@@ -135,7 +136,6 @@ CREATE TABLE node_ad_proofs (
 );
 
 ALTER TABLE node_ad_proofs OWNER TO ergo;
-
 
 /*
     Table for storing names for known miners.

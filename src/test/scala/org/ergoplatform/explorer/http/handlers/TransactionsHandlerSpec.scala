@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
@@ -12,7 +13,7 @@ class TransactionsHandlerSpec extends HttpSpec {
 
   val infoResp = TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
 
-  val service = new TransactionsService[IO] {
+  private val service = new TransactionsService[IO] {
 
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(infoResp)
 
@@ -23,7 +24,7 @@ class TransactionsHandlerSpec extends HttpSpec {
     override def searchById(query: String): IO[List[String]] = ???
   }
 
-  val route = new TransactionsHandler(service).route
+  val route: Route = new TransactionsHandler(service).route
 
   it should "return tx info by id" in {
     Get("/transactions/0001111abb") ~> route ~> check {

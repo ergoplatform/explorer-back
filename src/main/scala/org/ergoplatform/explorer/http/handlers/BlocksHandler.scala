@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import cats.data._
 import cats.effect.IO
 import cats.implicits.catsKernelStdOrderForString
@@ -14,18 +15,18 @@ class BlocksHandler(bs: BlockService[IO]) extends RouteHandler {
 
   import BlocksHandler._
 
-  val route = pathPrefix("blocks") {
+  private val oneDayMillis: Long = 24L * 60L * 60L * 1000L
+
+  def route: Route = pathPrefix("blocks") {
     getBlockById ~ getBlocks
   }
 
-  val getBlockById = (get & base16Segment) { base58String =>
+  def getBlockById: Route = (get & base16Segment) { base58String =>
     val f = bs.getBlock(base58String).unsafeToFuture()
     onSuccess(f) { info => complete(info) }
   }
 
-  private val oneDayMillis: Long = 24L * 60L * 60L * 1000L
-
-  val getBlocks = (get & paging & sorting(sortByFieldMappings, Some("height")) & startEndDate) {
+  def getBlocks: Route = (get & paging & sorting(sortByFieldMappings, Some("height")) & startEndDate) {
     (o, l, field, so, start, end) =>
       val sTs = start.getOrElse(0L)
       val eTs = end.getOrElse(System.currentTimeMillis() + oneDayMillis)
