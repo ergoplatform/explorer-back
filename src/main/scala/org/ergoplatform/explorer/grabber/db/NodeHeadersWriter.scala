@@ -11,24 +11,9 @@ import org.ergoplatform.explorer.grabber.protocol.{ApiDifficulty, ApiHeader}
 
 object NodeHeadersWriter extends BasicWriter {
 
-  type ToInsert = ApiHeader
+  import org.ergoplatform.explorer.db.dao.HeadersOps.fields
 
-  val fields = Seq(
-    "id",
-    "parent_id",
-    "version",
-    "height",
-    "n_bits",
-    "difficulty",
-    "timestamp",
-    "state_root",
-    "ad_proofs_root",
-    "transactions_root",
-    "extension_hash",
-    "pow_solutions",
-    "interlinks",
-    "main_chain"
-  )
+  type ToInsert = ApiHeader
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
     x => ApiDifficulty(x.toBigInt()),

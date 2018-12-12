@@ -17,7 +17,10 @@ object HeadersOps {
     "ad_proofs_root",
     "transactions_root",
     "extension_hash",
-    "pow_solutions",
+    "miner_pk",
+    "w",
+    "n",
+    "d",
     "interlinks",
     "main_chain"
   )

@@ -4,13 +4,20 @@ import akka.http.scaladsl.model.StatusCodes
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
+import org.ergoplatform.explorer.grabber.protocol.ApiPowSolutions
 import org.ergoplatform.explorer.http.protocol._
 import org.ergoplatform.explorer.services.BlockService
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 class BlocksHandlerSpec extends HttpSpec {
 
-  val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", "e", List("g", "h"))
+  val pow = ApiPowSolutions(
+    "020dbc0e4f5f57235250f840988e025e8ef54348cc6ae3f2e3c3a4cc88724295d0",
+    "0320514b1620dedb092edefbbe8d883289caceccb2f23707058396606f482ed650",
+    "00000000000083ae",
+    "549147274744846704056800281002663775202262031175081146646290287367723"
+  )
+  val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, List("g", "h"))
 
   val txs = List(
     TransactionInfo("test1", 0L, 1L, List.empty, List.empty),

@@ -15,7 +15,10 @@ CREATE TABLE node_headers (
   ad_proofs_root VARCHAR(64) NOT NULL,
   transactions_root VARCHAR(64) NOT NULL,
   extension_hash VARCHAR(64) NOT NULL,
-  pow_solutions VARCHAR NOT NULL,
+  miner_pk VARCHAR NOT NULL,
+  w VARCHAR NOT NULL,
+  n VARCHAR NOT NULL,
+  d VARCHAR NOT NULL,
   interlinks VARCHAR ARRAY NOT NULL,
   main_chain BOOLEAN NOT NULL
 );
@@ -55,6 +58,8 @@ CREATE TABLE blocks_info (
   total_miners_reward BIGINT NOT NULL,
   total_coins_in_txs BIGINT NOT NULL
 );
+
+ALTER TABLE blocks_info OWNER TO ergo;
 
 /*
     Stats table indexes. By height and ts.

@@ -12,7 +12,10 @@ case class Header(
                    adProofsRoot: String,
                    transactionsRoot: String,
                    extensionHash: String,
-                   powSolutions: String,
+                   minerPk: String,
+                   w: String,
+                   n: String,
+                   d: String,
                    interlinks: List[String],
                    mainChain: Boolean
                  )
