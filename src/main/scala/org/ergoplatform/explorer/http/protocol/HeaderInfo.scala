@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models.Header
+import org.ergoplatform.explorer.grabber.protocol.ApiPowSolutions
 
 case class HeaderInfo(
                        id: String,
@@ -17,14 +18,14 @@ case class HeaderInfo(
                        nBits: Long,
                        size: Long,
                        extensionHash: String,
-                       powSolutions: String,
+                       powSolutions: ApiPowSolutions,
                        interlinks: List[String]
                      )
 
 object HeaderInfo {
 
   def apply(h: Header, size: Long): HeaderInfo = {
-
+    val powSolutions = ApiPowSolutions(h.minerPk, h.w, h.n, h.d)
     new HeaderInfo(
       h.id,
       h.parentId,
@@ -38,7 +39,7 @@ object HeaderInfo {
       h.nBits,
       size,
       h.extensionHash,
-      h.powSolutions,
+      powSolutions,
       h.interlinks
     )
   }
@@ -57,6 +58,6 @@ object HeaderInfo {
     "size" -> Json.fromLong(h.size),
     "timestamp" -> Json.fromLong(h.timestamp),
     "extensionHash" -> Json.fromString(h.extensionHash),
-    "powSolutions" -> Json.fromString(h.powSolutions)
+    "powSolutions" -> h.powSolutions.asJson
   )
 }

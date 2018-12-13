@@ -14,7 +14,10 @@ case class ApiHeader(
                       adProofsRoot: String,
                       transactionsRoot: String,
                       extensionHash: String,
-                      powSolutions: String,
+                      minerPk: String,
+                      w: String,
+                      n: String,
+                      d: String,
                       interlinks: List[String],
                       mainChain: Boolean = true
                     )
@@ -47,7 +50,10 @@ object ApiHeader {
     adProofsRoot,
     transactionsRoot,
     extensionHash,
-    powSolutions.toString,
+    powSolutions.pk,
+    powSolutions.w,
+    powSolutions.n,
+    powSolutions.d,
     interlinks
   )
 

@@ -6,11 +6,9 @@ import scala.annotation.tailrec
 object CoinsEmission {
 
   private val FixedRatePeriod = 10080
-  private val FixedRate = 7500000000L
+  private val FixedRate = 75000000000L
   private val EpochLength = 2160
-  private val OneEpochReduction = 300000000L
-
-  val coinsInOneErgo: Long = 100000000
+  private val OneEpochReduction = 3000000000L
 
   lazy val (coinsTotal, blocksTotal) = {
     @tailrec
@@ -53,6 +51,5 @@ object CoinsEmission {
       Math.max(FixedRate - OneEpochReduction * epoch, 0)
     }
   }.ensuring(_ >= 0, s"Negative at $h")
-
 
 }
