@@ -77,7 +77,7 @@ object OutputsOps extends JsonMeta {
         SELECT
         o.hash as hash,
         COUNT(o.tx_id),
-        CAST(SUM(CASE WHEN i.box_id IS NOT NULL THEN o.value ELSE 0 END) AS BIGINT) as spent,
+        CAST(SUM(CASE WHEN i.box_id IS NOT NULL THEN o.value ELSE 0 END) AS DECIMAL) as spent,
         CAST(SUM(CASE WHEN i.box_id IS NULL THEN o.value ELSE 0 END) AS BIGINT) as unspent
         FROM node_outputs o
         LEFT JOIN node_inputs i ON o.box_id = i.box_id

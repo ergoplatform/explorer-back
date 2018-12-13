@@ -3,7 +3,7 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models.AddressSummaryData
 
-case class AddressInfo(id: String, transactionsCount: Long, totalReceived: Long, currentBalance: Long)
+case class AddressInfo(id: String, transactionsCount: Long, totalReceived: BigInt, currentBalance: Long)
 
 object AddressInfo {
 
@@ -14,7 +14,7 @@ object AddressInfo {
     "summary" -> Json.obj("id" -> Json.fromString(a.id)),
     "transactions" -> Json.obj(
       "total" -> Json.fromLong(a.transactionsCount),
-      "totalReceived" -> Json.fromLong(a.totalReceived),
+      "totalReceived" -> Json.fromBigInt(a.totalReceived),
       "balance" ->  Json.fromLong(a.currentBalance)
     )
   )
