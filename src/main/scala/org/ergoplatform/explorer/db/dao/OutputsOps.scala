@@ -82,6 +82,13 @@ object OutputsOps extends JsonMeta {
         FROM node_outputs o
         LEFT JOIN node_inputs i ON o.box_id = i.box_id
         WHERE hash = $hash
+        AND (
+          SELECT h.main_chain FROM node_headers h
+          WHERE h.id = (
+            SELECT tx.header_id FROM node_transactions tx
+            WHERE tx.id = o.tx_id
+          )
+        ) = TRUE
         GROUP BY (hash)""".query[AddressSummaryData]
 
 }
