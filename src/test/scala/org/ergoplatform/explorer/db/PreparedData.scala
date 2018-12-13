@@ -30,7 +30,10 @@ object PreparedData extends App {
       adProofsRoot = data(8),
       transactionsRoot = data(9),
       extensionHash = data(10),
-      powSolutions = data(11),
+      minerPk = "020dbc0e4f5f57235250f840988e025e8ef54348cc6ae3f2e3c3a4cc88724295d0",
+      w = "0320514b1620dedb092edefbbe8d883289caceccb2f23707058396606f482ed650",
+      n = "00000000000083ae",
+      d = "549147274744846704056800281002663775202262031175081146646290287367723e",
       interlinks = readArray(data(12)),
       mainChain = data(13).contains("t")
     )
