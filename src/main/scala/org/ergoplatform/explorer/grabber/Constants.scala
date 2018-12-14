@@ -17,7 +17,7 @@ object Constants {
   val PreGenesisHeight: Long = 0L
   val GenesisHeight: Long = PreGenesisHeight + 1
 
-  val PublicKeyLength = 32
+  val PublicKeyLength = 33
 
   val MinerRewardDelta = 720
 
