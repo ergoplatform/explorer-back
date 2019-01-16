@@ -1,10 +1,10 @@
 package org.ergoplatform.explorer.grabber
 
 import org.ergoplatform.{Height, Self}
-import scapi.sigma.BcDlogFp
-import scapi.sigma.DLogProtocol.ProveDlog
 import sigmastate.{AND, GE, Plus, SBoolean}
 import sigmastate.Values.{LongConstant, Value}
+import sigmastate.basics.BcDlogFp
+import sigmastate.basics.DLogProtocol.ProveDlog
 import sigmastate.interpreter.CryptoConstants
 import sigmastate.interpreter.CryptoConstants.EcPointType
 import sigmastate.utxo.{ExtractCreationInfo, SelectField}

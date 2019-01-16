@@ -9,8 +9,8 @@ import org.ergoplatform.explorer.config.NetworkConfig
 import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.grabber.db.BlockInfoWriter
 import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiTransaction}
-import scapi.sigma.DLogProtocol.ProveDlog
 import scorex.util.encode.Base16
+import sigmastate.basics.DLogProtocol.ProveDlog
 
 import scala.concurrent.duration._
 import scala.util.Try
