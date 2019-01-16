@@ -4,6 +4,7 @@ import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models.Header
 import org.ergoplatform.explorer.grabber.protocol.ApiPowSolutions
+import scorex.util.encode.Base16
 
 case class HeaderInfo(
                        id: String,
@@ -46,21 +47,35 @@ object HeaderInfo {
     )
   }
 
-  implicit val encoder: Encoder[HeaderInfo] = (h: HeaderInfo) => Json.obj(
-    "id" -> Json.fromString(h.id),
-    "parentId" -> Json.fromString(h.parentId),
-    "version" -> Json.fromInt(h.version.toInt),
-    "height" -> Json.fromLong(h.height),
-    "difficulty" -> Json.fromLong(h.difficulty),
-    "interlinks" -> h.interlinks.asJson,
-    "adProofsRoot" -> Json.fromString(h.adProofsRoot),
-    "stateRoot" -> Json.fromString(h.stateRoot),
-    "transactionsRoot" -> Json.fromString(h.transactionsRoot),
-    "nBits" -> Json.fromLong(h.nBits),
-    "size" -> Json.fromLong(h.size),
-    "timestamp" -> Json.fromLong(h.timestamp),
-    "extensionHash" -> Json.fromString(h.extensionHash),
-    "powSolutions" -> h.powSolutions.asJson,
-    "votes" -> h.powSolutions.asJson
-  )
+  implicit val encoder: Encoder[HeaderInfo] = { hi: HeaderInfo =>
+    Json.obj(
+      "id" -> Json.fromString(hi.id),
+      "parentId" -> Json.fromString(hi.parentId),
+      "version" -> Json.fromInt(hi.version.toInt),
+      "height" -> Json.fromLong(hi.height),
+      "difficulty" -> Json.fromLong(hi.difficulty),
+      "interlinks" -> hi.interlinks.asJson,
+      "adProofsRoot" -> Json.fromString(hi.adProofsRoot),
+      "stateRoot" -> Json.fromString(hi.stateRoot),
+      "transactionsRoot" -> Json.fromString(hi.transactionsRoot),
+      "nBits" -> Json.fromLong(hi.nBits),
+      "timestamp" -> Json.fromLong(hi.timestamp),
+      "extensionHash" -> Json.fromString(hi.extensionHash),
+      "powSolutions" -> hi.powSolutions.asJson,
+      "votes" -> expandVotes(hi.votes).asJson,
+      "size" -> Json.fromLong(hi.size)
+    )
+  }
+
+  private def expandVotes(votesHex: String) = {
+    val defaultVotes = (0: Byte, 0: Byte, 0: Byte)
+    val paramsQty = 3
+    Base16.decode(votesHex)
+      .map {
+        case votes if votes.length == paramsQty => (votes(0): Byte, votes(1): Byte, votes(2): Byte)
+        case _ => defaultVotes
+      }
+      .getOrElse(defaultVotes)
+  }
+
 }
