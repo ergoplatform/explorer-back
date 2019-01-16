@@ -16,6 +16,7 @@ case class Header(
                    w: String,
                    n: String,
                    d: String,
+                   votes: String,
                    interlinks: List[String],
                    mainChain: Boolean
                  )

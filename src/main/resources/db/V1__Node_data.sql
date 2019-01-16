@@ -19,6 +19,7 @@ CREATE TABLE node_headers (
   w VARCHAR NOT NULL,
   n VARCHAR NOT NULL,
   d VARCHAR NOT NULL,
+  votes VARCHAR NOT NULL,
   interlinks VARCHAR ARRAY NOT NULL,
   main_chain BOOLEAN NOT NULL
 );

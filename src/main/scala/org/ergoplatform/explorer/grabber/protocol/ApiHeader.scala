@@ -18,6 +18,7 @@ case class ApiHeader(
                       w: String,
                       n: String,
                       d: String,
+                      votes: String,
                       interlinks: List[String],
                       mainChain: Boolean = true
                     )
@@ -37,6 +38,7 @@ object ApiHeader {
     transactionsRoot <- c.downField("transactionsRoot").as[String]
     extensionHash <- c.downField("extensionHash").as[String]
     powSolutions <- c.downField("powSolutions").as[ApiPowSolutions]
+    votes <- c.downField("votes").as[String]
     interlinks <- c.downField("interlinks").as[List[String]]
   } yield ApiHeader(
     id,
@@ -54,6 +56,7 @@ object ApiHeader {
     powSolutions.w,
     powSolutions.n,
     powSolutions.d,
+    votes,
     interlinks
   )
 

@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
@@ -17,7 +18,7 @@ class BlocksHandlerSpec extends HttpSpec {
     "00000000000083ae",
     "549147274744846704056800281002663775202262031175081146646290287367723"
   )
-  val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, List("g", "h"))
+  val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, "0000", List("g", "h"))
 
   val txs = List(
     TransactionInfo("test1", 0L, 1L, List.empty, List.empty),
@@ -50,7 +51,7 @@ class BlocksHandlerSpec extends HttpSpec {
     override def searchById(query: String): IO[List[SearchBlockInfo]] = IO.pure(blocks)
   }
 
-  val route = new BlocksHandler(blockServiceStub).route
+  val route: Route = new BlocksHandler(blockServiceStub).route
 
   it should "get block by id" in {
     Get("/blocks/0001111abcbbbc") ~> route ~> check {
@@ -65,4 +66,5 @@ class BlocksHandlerSpec extends HttpSpec {
       responseAs[Json] shouldBe ItemsResponse(blocks, 3L).asJson
     }
   }
+
 }
