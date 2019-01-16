@@ -13,12 +13,14 @@ import org.ergoplatform.explorer.grabber.Constants
 import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
 import scorex.util.encode.Base16
-import sigmastate.serialization.ValueSerializer
+import sigmastate.serialization.ErgoTreeSerializer
 
 class DBHelper(networkConfig: NetworkConfig) {
 
   private val addressEncoder: ErgoAddressEncoder =
-    ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
+    ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)
+
+  private val treeSerializer: ErgoTreeSerializer = new ErgoTreeSerializer
 
   implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
     x => ApiDifficulty(x.toBigInt()),
@@ -59,7 +61,7 @@ class DBHelper(networkConfig: NetworkConfig) {
     .zipWithIndex
     .map { case (o, index) =>
       val address: String = Base16.decode(o.proposition)
-        .flatMap { bytes => addressEncoder.fromProposition(ValueSerializer.deserialize(bytes)) }
+        .flatMap { bytes => addressEncoder.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition) }
         .map { _.toString }
         .getOrElse("unable to derive address from proposition")
       (o.boxId, txId, o.value, index, o.proposition, address, o.additionalRegisters, ts)

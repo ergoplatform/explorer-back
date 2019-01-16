@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.grabber
 
 import org.ergoplatform.{Height, Self}
 import sigmastate.{AND, GE, Plus, SBoolean}
-import sigmastate.Values.{LongConstant, Value}
+import sigmastate.Values.{IntConstant, Value}
 import sigmastate.basics.BcDlogFp
 import sigmastate.basics.DLogProtocol.ProveDlog
 import sigmastate.interpreter.CryptoConstants
@@ -25,7 +25,7 @@ object Constants {
 
   def rewardOutputScript(delta: Int, minerPk: ProveDlog): Value[SBoolean.type] = {
     AND(
-      GE(Height, Plus(SelectField(ExtractCreationInfo(Self), 1).asLongValue, LongConstant(delta))),
+      GE(Height, Plus(SelectField(ExtractCreationInfo(Self), 1).asIntValue, IntConstant(delta))),
       minerPk
     )
   }
