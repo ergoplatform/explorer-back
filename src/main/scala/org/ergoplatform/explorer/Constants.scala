@@ -43,10 +43,6 @@ object Constants {
     )
   }
 
-  def rewardOutputScriptConstantBytes: Array[Byte] = {
-    rewardOutputScript(MinerRewardDelta, ProveDlog(group.generator)).bytes.dropRight(PublicKeyLength)
-  }
-
   private def boxCreationHeight(box: Value[SBox.type]): Value[SInt.type] =
     SelectField(ExtractCreationInfo(box), 1).asIntValue
 
