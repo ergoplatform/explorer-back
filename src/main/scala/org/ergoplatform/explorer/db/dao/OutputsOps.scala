@@ -57,22 +57,23 @@ object OutputsOps extends JsonMeta {
      fr"WHERE o.hash = $hash").query[SpentOutput]
 
   /** Search address identifiers by the fragment of the identifier */
-  def searchByHash(substring: String): Query0[String] = {
+  def searchByHash(substring: String): Query0[String] =
     fr"SELECT hash FROM node_outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
-  }
 
   def sumOfAllUnspentOutputsSince(ts: Long): Query0[Long] =
    (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0)" ++
     fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
     fr"WHERE i.box_id IS NULL AND o.timestamp >= $ts").query[Long]
 
-  def estimatedOutputsSince(ts: Long): Query0[Long] = {
-    Fragment.const(s"""
-                  SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
-                  FROM node_outputs o
-                  LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
-                  WHERE o.hash <> '$BYTES' AND o.timestamp >= $ts""").query[Long]
-  }
+  def estimatedOutputsSince(ts: Long): Query0[Long] =
+    Fragment.const(
+      s"""
+          SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
+          FROM node_outputs o
+          LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
+          WHERE o.hash <> '$BYTES' AND o.timestamp >= $ts
+      """
+    ).query[Long]
 
   def addressStats(hash: String): Query0[AddressSummaryData] =
     fr"""
@@ -84,13 +85,13 @@ object OutputsOps extends JsonMeta {
         FROM node_outputs o
         LEFT JOIN node_inputs i ON o.box_id = i.box_id
         WHERE hash = $hash
-        AND (
+        AND TRUE = ANY(
           SELECT h.main_chain FROM node_headers h
-          WHERE h.id = (
+          WHERE h.id IN (
             SELECT tx.header_id FROM node_transactions tx
             WHERE tx.id = o.tx_id
           )
-        ) = TRUE
-        GROUP BY (hash)""".query[AddressSummaryData]
-
+        )
+        GROUP BY (hash)
+    """.query[AddressSummaryData]
 }
