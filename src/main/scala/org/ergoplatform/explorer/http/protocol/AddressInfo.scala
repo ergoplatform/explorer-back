@@ -10,12 +10,15 @@ object AddressInfo {
   def apply(data: AddressSummaryData): AddressInfo =
     AddressInfo(data.hash, data.txsCount, data.spent + data.unspent, data.unspent)
 
-  implicit val encoder: Encoder[AddressInfo] = (a: AddressInfo) => Json.obj(
-    "summary" -> Json.obj("id" -> Json.fromString(a.id)),
-    "transactions" -> Json.obj(
-      "total" -> Json.fromLong(a.transactionsCount),
-      "totalReceived" -> Json.fromBigInt(a.totalReceived),
-      "balance" ->  Json.fromLong(a.currentBalance)
+  implicit val encoder: Encoder[AddressInfo] = { a: AddressInfo =>
+    Json.obj(
+      "summary" -> Json.obj("id" -> Json.fromString(a.id)),
+      "transactions" -> Json.obj(
+        "total" -> Json.fromLong(a.transactionsCount),
+        "totalReceived" -> Json.fromBigInt(a.totalReceived),
+        "balance" ->  Json.fromLong(a.currentBalance)
+      )
     )
-  )
+  }
+
 }

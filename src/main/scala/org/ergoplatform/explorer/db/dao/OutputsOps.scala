@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.db.dao
 import cats.data._
 import doobie._
 import doobie.implicits._
+import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.db.mappings.JsonMeta
 import org.ergoplatform.explorer.db.models.{AddressSummaryData, Output, SpentOutput}
 
@@ -18,10 +19,6 @@ object OutputsOps extends JsonMeta {
     "additional_registers",
     "timestamp"
   )
-
-  private val BYTES = "968400020191a3c6a70300059784000201968400030193c2a7c2b2a505000000000000000093958fa3050000000000" +
-    "0027600500000001bf08eb00990500000001bf08eb009c050000000011e1a3009a0500000000000000019d99a30500000000000027600500" +
-    "0000000000087099c1a7c1b2a505000000000000000093c6b2a5050000000000000000030005a390c1a7050000000011e1a300"
 
   val fieldsString: String = fields.mkString(", ")
   val holdersString: String = fields.map(_ => "?").mkString(", ")
@@ -66,13 +63,15 @@ object OutputsOps extends JsonMeta {
     fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
     fr"WHERE i.box_id IS NULL AND o.timestamp >= $ts").query[Long]
 
-  def estimatedOutputsSince(ts: Long): Query0[Long] = {
-    Fragment.const(s"""
-                  SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
-                  FROM node_outputs o
-                  LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
-                  WHERE o.hash <> '$BYTES' AND o.timestamp >= $ts""").query[Long]
-  }
+  def estimatedOutputsSince(ts: Long): Query0[Long] =
+    Fragment.const(
+      s"""
+          SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
+          FROM node_outputs o
+          LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
+          WHERE o.hash <> '${Constants.EmissionScriptHex}' AND o.timestamp >= $ts
+      """
+    ).query[Long]
 
   def addressStats(hash: String): Query0[AddressSummaryData] =
     fr"""

@@ -8,8 +8,8 @@ import doobie.postgres.implicits._
 import io.circe.Json
 import io.circe.parser._
 import org.ergoplatform._
+import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.NetworkConfig
-import org.ergoplatform.explorer.grabber.Constants
 import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
 import scorex.util.encode.Base16
