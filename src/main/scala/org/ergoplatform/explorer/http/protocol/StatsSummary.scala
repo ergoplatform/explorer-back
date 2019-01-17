@@ -17,8 +17,7 @@ case class StatsSummary(blocksCount: Long,
                         percentTransactionVolume: Double,
                         costPerTx: Long,
                         lastDifficulty: Long,
-                        totalHashrate: Long
-                       )
+                        totalHashrate: Long)
 
 object StatsSummary {
 
@@ -38,8 +37,8 @@ object StatsSummary {
     ),
     "miningCost" -> Json.obj(
       "totalMinersRevenue" -> Json.fromLong(s.totalMinerRevenue),
-      "percentEarnedTransactionsFees" -> Json.fromDoubleOrNull(s.percentEarnedTransactionsFees),
-      "percentTransactionVolume" -> Json.fromDoubleOrNull(s.percentTransactionVolume),
+      "percentEarnedTransactionsFees" -> Json.fromDoubleOrNull(s.percentEarnedTransactionsFees.floatValue()),
+      "percentTransactionVolume" -> Json.fromDoubleOrNull(s.percentTransactionVolume.floatValue()),
       "costPerTransaction" -> Json.fromLong(s.costPerTx),
       "difficulty" -> Json.fromLong(s.lastDifficulty),
       "hashRate" -> Json.fromLong(s.totalHashrate)

@@ -42,9 +42,9 @@ trait StatsService[F[_]] {
 class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
                         (implicit F: Monad[F], A: Async[F]) extends StatsService[F] {
 
-  val emptyStatsResponse = StatsSummary.empty
+  val emptyStatsResponse: StatsSummary = StatsSummary.empty
   val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
-  private val SecondsIn24H: Long = (24*60*60).toLong
+  private val SecondsIn24H: Long = (24 * 60 * 60).toLong
   private val MillisIn24H: Long = SecondsIn24H * 1000L
 
   val infoDao = new BlockInfoDao
@@ -58,36 +58,36 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     pastTs <- F.pure(System.currentTimeMillis() - MillisIn24H)
     totalOutputs <- outputsDao.sumOfAllUnspentOutputsSince(pastTs).transact[F](xa)
     estimatedOutputs <- outputsDao.estimateOutputSince(pastTs).transact[F](xa)
-    stats <- infoDao.findSince(pastTs).transact[F](xa).map{list => recentToStats(list, totalOutputs, estimatedOutputs)}
+    stats <- infoDao.findSince(pastTs).transact[F](xa).map(recentToStats(_, totalOutputs, estimatedOutputs))
   } yield stats
 
-  private def percentOfFee(fees: Long, minersReward: Long): Double = if (fees + minersReward == 0L) {
+  private def percentOfFee(fees: Long, minersReward: Long) = if (fees + minersReward == 0L) {
     0.0
   } else {
     val result = fees.toDouble / (minersReward.toDouble + fees.toDouble)
-    BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    BigDecimal(result * 100).setScale(8, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
   private def percentOfTxVolume(minersReward: Long, totalCoins: Long): Double = if (totalCoins == 0L) {
     0.0
   } else {
     val result = minersReward.toDouble / totalCoins.toDouble
-    BigDecimal(result * 100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    BigDecimal(result * 100).setScale(8, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
-  private def recentToStats(list: List[BlockInfo], totalOutputs: Long, estimatedOutputs: Long): StatsSummary =
-    list.sortBy(info => -info.height) match {
+  private def recentToStats(blocks: List[BlockInfo], totalOutputs: Long, estimatedOutputs: Long): StatsSummary =
+    blocks.sortBy(info => -info.height) match {
       case Nil =>
         StatsSummary.empty
       case x :: _ =>
-        val blocksCount = list.length.toLong
-        val avgMiningTime = list.map(_.blockMiningTime).sum / blocksCount
-        val coins = list.map(_.blockCoins).sum
-        val txsCount = list.map(_.txsCount).sum
-        val totalFee = list.map(_.blockFee).sum
-        val minersRevenue = list.map(_.minerRevenue).sum
-        val minersReward = list.map(_.minerReward).sum
-        val hashrate = hashrateForSecs(list.map(_.difficulty).sum, SecondsIn24H)
+        val blocksCount = blocks.length.toLong
+        val avgMiningTime = blocks.map(_.blockMiningTime).sum / blocksCount
+        val coins = blocks.map(_.blockCoins).sum
+        val txsCount = blocks.map(_.txsCount).sum
+        val totalFee = blocks.map(_.blockFee).sum
+        val minersRevenue = blocks.map(_.minerRevenue).sum
+        val minersReward = blocks.map(_.minerReward).sum
+        val hashrate = hashrateForSecs(blocks.map(_.difficulty).sum, SecondsIn24H)
 
         StatsSummary(
           blocksCount = blocksCount,
@@ -100,7 +100,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
           totalMinerRevenue = minersRevenue,
           percentEarnedTransactionsFees = percentOfFee(totalFee, minersReward),
           percentTransactionVolume = percentOfTxVolume(minersReward, coins),
-          costPerTx = if (txsCount == 0L) { 0L } else { minersRevenue / txsCount },
+          costPerTx = if (txsCount == 0L) 0L else minersRevenue / txsCount,
           lastDifficulty = x.difficulty,
           totalHashrate = hashrate
         )
@@ -186,16 +186,15 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
       MinerStatSingleInfo(info.printableName, info.blocksMined)
     }
 
-    (bigOnes :+ otherSumStats).sortBy(v => -v.value).filterNot(_.value == 0L)
+    (bigOnes :+ otherSumStats).sortBy(x => -x.value).filterNot(_.value == 0L)
   }
 
   private def hashRate24H: F[Long] = for {
     difficulties <- infoDao.difficultiesSumSince(System.currentTimeMillis() - MillisIn24H).transact[F](xa)
-    hashrate = difficulties / SecondsIn24H
-  } yield hashrate
+  } yield difficulties / SecondsIn24H
 
   private def pairsToChartData(list: List[(Long, Long, String)]): List[ChartSingleData[Long]] =
-    list.map{ case (ts, data, _) => ChartSingleData(ts, data)}
+    list.map { case (ts, data, _) => ChartSingleData(ts, data) }
 
   private def hashrateForSecs(difficulty: Long, seconds: Long): Long = (difficulty / seconds) + 1L
 }

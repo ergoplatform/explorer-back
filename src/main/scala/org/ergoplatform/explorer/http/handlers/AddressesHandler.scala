@@ -26,4 +26,5 @@ class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO]) ex
     val count: IO[Long] = ts.countTxsByAddressId(addressId)
     onSuccess((items, count).parMapN((i, c) => ItemsResponse(i, c)).unsafeToFuture()) { complete(_) }
   }
+
 }

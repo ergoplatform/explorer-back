@@ -7,6 +7,7 @@ import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import doobie.implicits._
 import doobie.util.transactor.Transactor
+import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.grabber.db.{BlockInfoWriter, DBHelper}
 import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServiceImpl}

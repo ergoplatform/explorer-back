@@ -53,17 +53,17 @@ object OutputsOps extends JsonMeta {
 
   def findByHashWithSpent(hash: String): Query0[SpentOutput] =
     (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
-     fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
-     fr"WHERE o.hash = $hash").query[SpentOutput]
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
+      fr"WHERE o.hash = $hash").query[SpentOutput]
 
   /** Search address identifiers by the fragment of the identifier */
   def searchByHash(substring: String): Query0[String] =
     fr"SELECT hash FROM node_outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
 
   def sumOfAllUnspentOutputsSince(ts: Long): Query0[Long] =
-   (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0)" ++
-    fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-    fr"WHERE i.box_id IS NULL AND o.timestamp >= $ts").query[Long]
+    (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0)" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"WHERE i.box_id IS NULL AND o.timestamp >= $ts").query[Long]
 
   def estimatedOutputsSince(ts: Long): Query0[Long] =
     Fragment.const(

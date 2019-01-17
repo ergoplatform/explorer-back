@@ -1,14 +1,14 @@
 package org.ergoplatform.explorer.grabber
 
-import cats.data.NonEmptyList
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import com.typesafe.scalalogging.Logger
 import org.bouncycastle.math.ec.custom.djb.Curve25519Point
-import org.ergoplatform.{ErgoAddressEncoder, P2PKAddress}
+import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.NetworkConfig
 import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.grabber.db.BlockInfoWriter
-import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiTransaction}
+import org.ergoplatform.explorer.grabber.protocol.ApiFullBlock
+import org.ergoplatform.{ErgoAddressEncoder, P2PKAddress}
 import scorex.util.encode.Base16
 import sigmastate.basics.DLogProtocol.ProveDlog
 
@@ -28,13 +28,6 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
   private val addressEncoder: ErgoAddressEncoder =
     ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
 
-  private def findMinerTxs(txs: List[ApiTransaction]): List[ApiTransaction] = {
-    txs.takeRight(2).filter(_.outputs.exists { out =>
-      val rewardScript = Constants.rewardOutputScriptConstantBytes
-      out.proposition.take(rewardScript.length * 2) == Base16.encode(rewardScript)
-    })
-  }
-
   private def minerAddress(nfb: ApiFullBlock): String = {
     Base16.decode(nfb.header.minerPk).flatMap(bytes => Try(Constants.group.curve.decodePoint(bytes))) match {
       case scala.util.Success(x: Curve25519Point) => P2PKAddress(ProveDlog(x))(addressEncoder).toString
@@ -44,48 +37,41 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
 
   private def minerRewardAndFee(nfb: ApiFullBlock): (Long, Long) = {
     val reward = CoinsEmission.emissionAtHeight(nfb.header.height)
-    val txsOpt = NonEmptyList.fromList(nfb.transactions.transactions).map(x => findMinerTxs(x.toList))
-    val fee = if (txsOpt.exists(_.size == 2)) {
-      txsOpt.fold(0L) {
-        _.last
-          .outputs
-          .map(_.value)
-          .sum
-      }
-    } else {
-      0L
-    }
+    val fee = nfb.transactions.transactions
+      .flatMap(_.outputs)
+      .filter(_.proposition == Constants.FeePropositionScriptHex)
+      .map(_.value)
+      .sum
     (reward, fee)
   }
 
   def extractBlockInfo(nfb: ApiFullBlock): BlockInfoWriter.ToInsert = {
-
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee
     val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
     val mAddress = minerAddress(nfb)
     val blockInfo = if (nfb.header.height == Constants.GenesisHeight) {
       BlockInfo(
-        nfb.header.id,
-        nfb.header.timestamp,
-        nfb.header.height,
-        nfb.header.difficulty.value.toLong,
-        nfb.size,
-        blockCoins,
-        0L,
-        nfb.transactions.transactions.length.toLong,
-        nfb.transactions.transactions.map(_.size).sum,
-        mAddress,
-        reward,
-        reward + fee,
-        fee,
-        nfb.size,
-        nfb.transactions.transactions.length.toLong,
-        CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
-        0L,
-        fee,
-        reward,
-        blockCoins
+        headerId = nfb.header.id,
+        timestamp = nfb.header.timestamp,
+        height = nfb.header.height,
+        difficulty = nfb.header.difficulty.value.toLong,
+        blockSize = nfb.size,
+        blockCoins = blockCoins,
+        blockMiningTime = 0L,
+        txsCount = nfb.transactions.transactions.length.toLong,
+        txsSize = nfb.transactions.transactions.map(_.size).sum,
+        minerAddress = mAddress,
+        minerReward = reward,
+        minerRevenue = reward + fee,
+        blockFee = fee,
+        blockChainTotalSize = nfb.size,
+        totalTxsCount = nfb.transactions.transactions.length.toLong,
+        totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+        totalMiningTime = 0L,
+        totalFees = fee,
+        totalMinersReward = reward,
+        totalCoinsInTxs = blockCoins
       )
     } else {
       logger.trace("Getting prev blockInfo from cache.")
@@ -93,26 +79,26 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
       val miningTime = nfb.header.timestamp - prev.timestamp
 
       BlockInfo(
-        nfb.header.id,
-        nfb.header.timestamp,
-        nfb.header.height,
-        nfb.header.difficulty.value.toLong,
-        nfb.size,
-        blockCoins,
-        nfb.header.timestamp - prev.timestamp,
-        nfb.transactions.transactions.length.toLong,
-        nfb.transactions.transactions.map(_.size).sum,
-        mAddress,
-        reward,
-        reward + fee,
-        fee,
-        prev.blockChainTotalSize + nfb.size,
-        nfb.transactions.transactions.length.toLong + prev.totalTxsCount,
-        CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
-        prev.totalMiningTime + miningTime,
-        prev.totalFees + fee,
-        prev.totalMinersReward + reward,
-        prev.totalCoinsInTxs + blockCoins
+        headerId = nfb.header.id,
+        timestamp = nfb.header.timestamp,
+        height = nfb.header.height,
+        difficulty = nfb.header.difficulty.value.toLong,
+        blockSize = nfb.size,
+        blockCoins = blockCoins,
+        blockMiningTime = nfb.header.timestamp - prev.timestamp,
+        txsCount = nfb.transactions.transactions.length.toLong,
+        txsSize = nfb.transactions.transactions.map(_.size).sum,
+        minerAddress = mAddress,
+        minerReward = reward,
+        minerRevenue = reward + fee,
+        blockFee = fee,
+        blockChainTotalSize = prev.blockChainTotalSize + nfb.size,
+        totalTxsCount = nfb.transactions.transactions.length.toLong + prev.totalTxsCount,
+        totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+        totalMiningTime = prev.totalMiningTime + miningTime,
+        totalFees = prev.totalFees + fee,
+        totalMinersReward = prev.totalMinersReward + reward,
+        totalCoinsInTxs = prev.totalCoinsInTxs + blockCoins
       )
     }
     logger.trace(s"Putting block info for height ${blockInfo.height} into cache.")
