@@ -26,11 +26,6 @@ object Constants {
 
   val group: BcDlogFp[EcPointType] = CryptoConstants.dlogGroup
 
-  val EmissionScriptHex: String =
-    "4FHL3zghhZXXKom5gVKhxCyLxGXFUBjohXS7WNdwwarKbg8PnGyJJ3NUnebQEpSRYWUkfmHUnPVpStvMHpj6oRhrHo8xLC9zjS4a5sbrSSopKgZx" +
-      "pgPQd9SXiQiMnvvGqtAaA3eybnC1KdJL9oPvjj4x7oeuteH3UPZzTdC4KSJH1JGM87hwg7husYu1GFMwidz7UEZDJjj5WzzUTdvUqjnuaC84JN" +
-      "JC4DiKJhWc4iept9ZK2x8EHZnEWhy1j43ER1rdb6VCTj3z69Gxz6kbLwhibachJRo8myTM95KTgFvyx9MD3vLafAs4Sj3dq6DiB"
-
   val FeePropositionScriptHex: String= {
     val out = ByIndex(Outputs, IntConstant(0))
     val script = AND(

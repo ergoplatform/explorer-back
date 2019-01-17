@@ -9,7 +9,7 @@ import org.ergoplatform.explorer.db.models.{Output, SpentOutput}
 
 class OutputsDao extends JsonMeta {
 
-  val fields = OutputsOps.fields
+  val fields: Seq[String] = OutputsOps.fields
 
   def insert(i: Output): ConnectionIO[Output] = OutputsOps.insert.withUniqueGeneratedKeys[Output](fields: _*)(i)
 
@@ -36,9 +36,7 @@ class OutputsDao extends JsonMeta {
     OutputsOps.findByHashWithSpent(address).to[List]
 
   /** Search address identifiers by the fragment of the identifier */
-  def searchByAddressId(substring: String): ConnectionIO[List[String]] = {
-    OutputsOps.searchByHash(substring).to[List]
-  }
+  def searchByAddressId(substring: String): ConnectionIO[List[String]] = OutputsOps.searchByHash(substring).to[List]
 
   def sumOfAllUnspentOutputsSince(ts: Long): ConnectionIO[Long] = OutputsOps.sumOfAllUnspentOutputsSince(ts).unique
 
