@@ -30,7 +30,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
 
   private val active = new AtomicBoolean(false)
   private val pause = config.grabber.pollDelay
-
+  private val MaxRetriesNumber = 4
 
   private def idsAtHeight(height: Long): IO[List[String]] =
     requestService.get[List[String]](addressService.idsAtHeightUri(height))
@@ -51,7 +51,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     .map(_.flatten.toList)
     .map(_.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
 
-  def writeBlocksFromHeight(h: Long): IO[Unit] = {
+  def writeBlocksFromHeight(h: Long, retries: Int = 0): IO[Unit] = {
     def updatedBlock(b: ApiFullBlock, isMain: Boolean) = b.copy(header = b.header.copy(mainChain = isMain))
     for {
       ids <- idsAtHeight(h)
@@ -62,9 +62,14 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
       _ <- blocks.map { case (block, isMain) =>
         writeBlockInfo(updatedBlock(block, isMain))
       }.parSequence
-      _ <- IO {
-        logger.info(s"${blocks.length} block(s) from height $h has been written to db")
+      retryNeeded <- IO {
+        blocks.isEmpty && retries < MaxRetriesNumber
       }
+      _ <- IO {
+        val retryInfo = if (retryNeeded) "Retrying.." else ""
+        logger.info(s"${blocks.length} block(s) from height $h has been written. $retryInfo")
+      }
+      _ <- if (retryNeeded) writeBlocksFromHeight(h, retries + 1) else IO.unit
     } yield ()
   }
 
@@ -106,7 +111,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
         Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
       }
     }
-    _ <- heightsRange.map { writeBlocksFromHeight }.sequence[IO, Unit]
+    _ <- heightsRange.map(writeBlocksFromHeight(_)).sequence[IO, Unit]
     _ <- IO {
       logger.info(s"Sync task has been finished. Current height now is ${info.fullHeight}.")
     }
