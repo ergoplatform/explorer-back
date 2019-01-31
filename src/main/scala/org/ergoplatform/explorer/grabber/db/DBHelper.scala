@@ -80,6 +80,6 @@ class DBHelper(networkConfig: NetworkConfig) {
   }
 
   def readCurrentHeight: ConnectionIO[Long] =
-    fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM node_headers ORDER BY height DESC LIMIT 1"
+    fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM blocks_info ORDER BY height DESC LIMIT 1"
       .query[Long].option.map { _.getOrElse(Constants.PreGenesisHeight) }
 }
