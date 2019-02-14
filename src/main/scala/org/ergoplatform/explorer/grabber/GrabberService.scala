@@ -23,7 +23,8 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
 
   private val logger = Logger("grabber-service")
 
-  private val addressService = NodeAddressService(config.grabber.nodes.head)
+  private val addressServices = config.grabber.nodes.map(NodeAddressService)
+  private val mandatoryAddressService = addressServices.head
   private val requestService = new RequestServiceImpl[IO]
 
   private val dBHelper = new DBHelper(config.network)
@@ -33,16 +34,24 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private val MaxRetriesNumber = 4
 
   private def idsAtHeight(height: Long): IO[List[String]] =
-    requestService.get[List[String]](addressService.idsAtHeightUri(height))
+    requestService.get[List[String]](mandatoryAddressService.idsAtHeightUri(height))
 
   private def fullBlocksSafe(id: String): IO[Option[ApiFullBlock]] = {
-    requestService.getSafe[ApiFullBlock](addressService.fullBlockUri(id)).flatMap {
-      case Left(f) =>
-        logger.error(s"Error while requesting block with id $id", f)
+    def tryGet(numRetries: Int = 0): IO[Option[ApiFullBlock]] = {
+      if (numRetries < addressServices.size) {
+        val currentService = addressServices(numRetries)
+        requestService.getSafe[ApiFullBlock](currentService.fullBlockUri(id)).flatMap {
+          case Left(f) =>
+            logger.error(s"Error while requesting block with id = $id from ${currentService.nodeAddress}", f)
+            tryGet(numRetries + 1)
+          case Right(v) =>
+            IO.pure(Some(v))
+        }
+      } else {
         IO.pure(None)
-      case Right(v) =>
-        IO.pure(Some(v))
+      }
     }
+    tryGet()
   }
 
   //Looking for a block. In case of error just move forward.
@@ -57,10 +66,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
       ids <- idsAtHeight(h)
       blocks <- fullBlocksForIds(ids)
       _ <- blocks.map { case (block, isMain) =>
-        dBHelper.writeOne(updatedBlock(block, isMain)).transact[IO](xa)
-      }.parSequence
-      _ <- blocks.map { case (block, isMain) =>
-        writeBlockInfo(updatedBlock(block, isMain))
+        writeBlock(updatedBlock(block, isMain))
       }.parSequence
       retryNeeded <- IO {
         blocks.isEmpty && retries < MaxRetriesNumber
@@ -73,10 +79,10 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     } yield ()
   }
 
-  private def writeBlockInfo(apiBlock: ApiFullBlock): IO[Unit] = for {
+  private def writeBlock(apiBlock: ApiFullBlock): IO[Unit] = for {
     _ <- if (apiBlock.header.height == Constants.GenesisHeight) IO.pure(()) else prepareCache(apiBlock.header.parentId)
     blockInfo <- IO { blockInfoHelper.extractBlockInfo(apiBlock) }
-    _ <- BlockInfoWriter.insert(blockInfo).transact[IO](xa)
+    _ <- BlockInfoWriter.insert(blockInfo).flatMap(_ => dBHelper.writeOne(apiBlock)).transact[IO](xa)
   } yield ()
 
   def prepareCache(id: String): IO[Unit] = for {
@@ -98,7 +104,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     _ <- IO {
       logger.info("Starting sync task.")
     }
-    info <- requestService.get[ApiNodeInfo](addressService.infoUri)
+    info <- requestService.get[ApiNodeInfo](mandatoryAddressService.infoUri)
     currentHeight <- dBHelper.readCurrentHeight.transact(xa)
     _ <- IO {
       logger.info(s"Current full height in db: $currentHeight")
