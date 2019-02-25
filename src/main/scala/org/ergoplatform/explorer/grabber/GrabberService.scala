@@ -92,9 +92,12 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     _ <- IO.suspend {
       maybePresented match {
         case Some(v) => IO { logger.trace(s"got block info from cache for height ${v.height}")}
-        case None => BlockInfoWriter.get(id).transact(xa).map { bi =>
-          logger.trace(s"not found in cache for id $id")
-          blockInfoHelper.blockInfoCache.put(id, bi)
+        case None => BlockInfoWriter.get(id).transact(xa).map {
+          case Some(blockInfo) =>
+            logger.trace(s"block $id not found in cache")
+            blockInfoHelper.blockInfoCache.put(id, blockInfo)
+          case None =>
+            // todo: handle fork
         }
       }
     }

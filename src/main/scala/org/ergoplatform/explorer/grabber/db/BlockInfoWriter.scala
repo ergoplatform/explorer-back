@@ -16,6 +16,6 @@ object BlockInfoWriter extends BasicWriter {
   def selectById(id: String): Query0[BlockInfo] =
     (fr"SELECT" ++ selectFR ++ fr"FROM blocks_info WHERE header_id = $id").query[BlockInfo]
 
-  def get(id: String): ConnectionIO[BlockInfo] = selectById(id).unique
+  def get(id: String): ConnectionIO[Option[BlockInfo]] = selectById(id).option
 
 }
