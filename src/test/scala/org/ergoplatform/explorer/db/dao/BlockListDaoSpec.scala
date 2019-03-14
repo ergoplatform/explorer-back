@@ -8,9 +8,9 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
 
   it should "find all search blocks correctly" in {
-    val h1 = Header("1", "0", 1: Short, 1L, 0L, 0L, 100L, "", "", "", "", "", "", "", "", "", List.empty, mainChain = true)
-    val h2 = Header("2", "1", 1: Short, 2L, 0L, 0L, 150L, "", "", "", "", "", "", "", "", "", List.empty, mainChain = true)
-    val h3 = Header("3", "2", 1: Short, 3L, 0L, 0L, 200L, "", "", "", "", "", "", "", "", "", List.empty, mainChain = true)
+    val h1 = Header("1", "0", 1: Short, 1L, 0L, 0L, 100L, "", "", "", "", "", "", "", "", "", mainChain = true)
+    val h2 = Header("2", "1", 1: Short, 2L, 0L, 0L, 150L, "", "", "", "", "", "", "", "", "", mainChain = true)
+    val h3 = Header("3", "2", 1: Short, 3L, 0L, 0L, 200L, "", "", "", "", "", "", "", "", "", mainChain = true)
 
     val bi1 = BlockInfo("1", 100L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, "addr1", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
     val bi2 = BlockInfo("2", 150L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, "addr2", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
@@ -40,8 +40,8 @@ class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
   }
 
   it should "search by id correctly" in {
-    val h1 = Header("aaab", "0", 1: Short, 1L, 0L, 0L, 100L, "", "", "", "", "", "", "", "", "", List.empty, mainChain = true)
-    val h2 = Header("aab", "1", 1: Short, 2L, 0L, 0L, 150L, "", "", "", "", "", "", "", "", "", List.empty, mainChain = true)
+    val h1 = Header("aaab", "0", 1: Short, 1L, 0L, 0L, 100L, "", "", "", "", "", "", "", "", "", mainChain = true)
+    val h2 = Header("aab", "1", 1: Short, 2L, 0L, 0L, 150L, "", "", "", "", "", "", "", "", "", mainChain = true)
     val bi1 = BlockInfo("aaab", 100L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, "addr3", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
     val bi2 = BlockInfo("aab", 150L, 2L, 0L, 0L, 0L, 0L, 0L, 0L,  "addr4", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
 
