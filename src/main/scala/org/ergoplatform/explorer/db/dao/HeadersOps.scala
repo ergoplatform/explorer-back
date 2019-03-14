@@ -22,7 +22,6 @@ object HeadersOps {
     "n",
     "d",
     "votes",
-    "interlinks",
     "main_chain"
   )
 

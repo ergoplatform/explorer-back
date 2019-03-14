@@ -11,6 +11,8 @@ import org.ergoplatform.explorer.grabber.protocol.ApiFullBlock
 import org.ergoplatform.{ErgoAddressEncoder, P2PKAddress}
 import scorex.util.encode.Base16
 import sigmastate.basics.DLogProtocol.ProveDlog
+import sigmastate.interpreter.CryptoConstants
+import sigmastate.serialization.{GroupElementSerializer, SigmaSerializer}
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -29,8 +31,10 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
     ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
 
   private def minerAddress(nfb: ApiFullBlock): String = {
-    Base16.decode(nfb.header.minerPk).flatMap(bytes => Try(Constants.group.curve.decodePoint(bytes))) match {
-      case scala.util.Success(x: Curve25519Point) => P2PKAddress(ProveDlog(x))(addressEncoder).toString
+    Base16.decode(nfb.header.minerPk).flatMap { bytes =>
+      Try(GroupElementSerializer.parse(SigmaSerializer.startReader(bytes)))
+    } match {
+      case scala.util.Success(x: CryptoConstants.EcPointType) => P2PKAddress(ProveDlog(x))(addressEncoder).toString
       case _ => throw new Exception("Failed to decode miner pk")
     }
   }
