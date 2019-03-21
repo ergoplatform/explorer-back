@@ -45,6 +45,68 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
     (reward, fee)
   }
 
+  def assembleGenesisInfo(nfb: ApiFullBlock): BlockInfoWriter.ToInsert = {
+    val (reward, fee) = minerRewardAndFee(nfb)
+    val coinBaseValue = reward + fee
+    val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
+    val mAddress = minerAddress(nfb)
+
+    BlockInfo(
+      headerId = nfb.header.id,
+      timestamp = nfb.header.timestamp,
+      height = nfb.header.height,
+      difficulty = nfb.header.difficulty.value.toLong,
+      blockSize = nfb.size,
+      blockCoins = blockCoins,
+      blockMiningTime = 0L,
+      txsCount = nfb.transactions.transactions.length.toLong,
+      txsSize = nfb.transactions.transactions.map(_.size).sum,
+      minerAddress = mAddress,
+      minerReward = reward,
+      minerRevenue = reward + fee,
+      blockFee = fee,
+      blockChainTotalSize = nfb.size,
+      totalTxsCount = nfb.transactions.transactions.length.toLong,
+      totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+      totalMiningTime = 0L,
+      totalFees = fee,
+      totalMinersReward = reward,
+      totalCoinsInTxs = blockCoins
+    )
+  }
+
+  def assembleNonGenesisInfo(nfb: ApiFullBlock, parentBlockInfo: BlockInfo): BlockInfoWriter.ToInsert = {
+    val (reward, fee) = minerRewardAndFee(nfb)
+    val coinBaseValue = reward + fee
+    val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
+    val mAddress = minerAddress(nfb)
+    val miningTime = nfb.header.timestamp - parentBlockInfo.timestamp
+
+    BlockInfo(
+      headerId = nfb.header.id,
+      timestamp = nfb.header.timestamp,
+      height = nfb.header.height,
+      difficulty = nfb.header.difficulty.value.toLong,
+      blockSize = nfb.size,
+      blockCoins = blockCoins,
+      blockMiningTime = nfb.header.timestamp - parentBlockInfo.timestamp,
+      txsCount = nfb.transactions.transactions.length.toLong,
+      txsSize = nfb.transactions.transactions.map(_.size).sum,
+      minerAddress = mAddress,
+      minerReward = reward,
+      minerRevenue = reward + fee,
+      blockFee = fee,
+      blockChainTotalSize = parentBlockInfo.blockChainTotalSize + nfb.size,
+      totalTxsCount = nfb.transactions.transactions.length.toLong + parentBlockInfo.totalTxsCount,
+      totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+      totalMiningTime = parentBlockInfo.totalMiningTime + miningTime,
+      totalFees = parentBlockInfo.totalFees + fee,
+      totalMinersReward = parentBlockInfo.totalMinersReward + reward,
+      totalCoinsInTxs = parentBlockInfo.totalCoinsInTxs + blockCoins
+    )
+  }
+
+  // todo: remove, cache
   def extractBlockInfo(nfb: ApiFullBlock): BlockInfoWriter.ToInsert = {
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee

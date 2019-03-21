@@ -9,6 +9,7 @@ import doobie.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ExplorerConfig
+import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.grabber.db.{BlockInfoWriter, DBHelper}
 import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServiceImpl}
 import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiNodeInfo}
@@ -60,31 +61,51 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     .map(_.flatten.toList)
     .map(_.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
 
-  def writeBlocksFromHeight(h: Long, retries: Int = 0): IO[Unit] = {
+  def writeBlocksFromHeight(height: Long,
+                            excluding: List[String] = List.empty,
+                            retries: Int = 0): IO[List[BlockInfo]] = {
     def updatedBlock(b: ApiFullBlock, isMain: Boolean) = b.copy(header = b.header.copy(mainChain = isMain))
     for {
-      ids <- idsAtHeight(h)
+      ids <- idsAtHeight(height)
       blocks <- fullBlocksForIds(ids)
-      _ <- blocks.map { case (block, isMain) =>
+      blockInfos <- blocks.map { case (block, isMain) =>
         writeBlock(updatedBlock(block, isMain))
       }.parSequence
-      retryNeeded <- IO {
-        blocks.isEmpty && retries < MaxRetriesNumber
-      }
+      retryNeeded <- IO(blocks.isEmpty && retries < MaxRetriesNumber)
       _ <- IO {
         val retryInfo = if (retryNeeded) "Retrying.." else ""
-        logger.info(s"${blocks.length} block(s) from height $h has been written. $retryInfo")
+        logger.info(s"${blocks.length} block(s) from height $height has been written. $retryInfo")
       }
-      _ <- if (retryNeeded) writeBlocksFromHeight(h, retries + 1) else IO.unit
-    } yield ()
+      _ <- IO.suspend(if (retryNeeded) writeBlocksFromHeight(height, excluding, retries + 1) else IO.unit)
+    } yield blockInfos
   }
 
-  private def writeBlock(apiBlock: ApiFullBlock): IO[Unit] = for {
-    _ <- if (apiBlock.header.height == Constants.GenesisHeight) IO.pure(()) else prepareCache(apiBlock.header.parentId)
-    blockInfo <- IO { blockInfoHelper.extractBlockInfo(apiBlock) }
+  private def writeBlock(apiBlock: ApiFullBlock): IO[BlockInfo] = for {
+    blockInfo <- {
+      if (apiBlock.header.height == Constants.GenesisHeight) IO(blockInfoHelper.assembleGenesisInfo(apiBlock))
+      else getBlockInfo(apiBlock.header.parentId, apiBlock.header.height - 1)
+        .map(blockInfoHelper.assembleNonGenesisInfo(apiBlock, _))
+    }
     _ <- BlockInfoWriter.insert(blockInfo).flatMap(_ => dBHelper.writeOne(apiBlock)).transact[IO](xa)
-  } yield ()
+  } yield blockInfo
 
+  private def getBlockInfo(id: String, height: Long): IO[BlockInfo] = for {
+    blockInfoFromCacheOpt <- IO(blockInfoHelper.blockInfoCache.getIfPresent(id))
+    blockInfo <- IO.suspend {
+      blockInfoFromCacheOpt match {
+        case Some(blockInfoFromCache) => IO(blockInfoFromCache)
+        case None => BlockInfoWriter.get(id).transact[IO](xa).flatMap {
+          case Some(blockInfoFromDb) =>
+            blockInfoHelper.blockInfoCache.put(id, blockInfoFromDb)
+            IO(blockInfoFromDb)
+          case None => // todo: fork occurred, mark blocks we have at this height as non-best
+            writeBlocksFromHeight(height).map(_.head)
+        }
+      }
+    }
+  } yield blockInfo
+
+  // todo: remove
   def prepareCache(id: String): IO[Unit] = for {
     maybePresented <- IO {
       blockInfoHelper.blockInfoCache.getIfPresent(id)
