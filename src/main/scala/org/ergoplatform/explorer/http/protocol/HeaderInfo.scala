@@ -20,8 +20,7 @@ case class HeaderInfo(
                        size: Long,
                        extensionHash: String,
                        powSolutions: ApiPowSolutions,
-                       votes: String,
-                       interlinks: List[String]
+                       votes: String
                      )
 
 object HeaderInfo {
@@ -42,8 +41,7 @@ object HeaderInfo {
       size,
       h.extensionHash,
       powSolutions,
-      h.votes,
-      h.interlinks
+      h.votes
     )
   }
 
@@ -54,7 +52,6 @@ object HeaderInfo {
       "version" -> Json.fromInt(hi.version.toInt),
       "height" -> Json.fromLong(hi.height),
       "difficulty" -> Json.fromLong(hi.difficulty),
-      "interlinks" -> hi.interlinks.asJson,
       "adProofsRoot" -> Json.fromString(hi.adProofsRoot),
       "stateRoot" -> Json.fromString(hi.stateRoot),
       "transactionsRoot" -> Json.fromString(hi.transactionsRoot),

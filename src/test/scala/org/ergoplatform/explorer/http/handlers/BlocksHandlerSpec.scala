@@ -18,7 +18,7 @@ class BlocksHandlerSpec extends HttpSpec {
     "00000000000083ae",
     "549147274744846704056800281002663775202262031175081146646290287367723"
   )
-  val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, "0000", List("g", "h"))
+  val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, "0000")
 
   val txs = List(
     TransactionInfo("test1", 0L, 1L, List.empty, List.empty),

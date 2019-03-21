@@ -35,7 +35,6 @@ object PreparedData extends App {
       n = "00000000000083ae",
       d = "549147274744846704056800281002663775202262031175081146646290287367723e",
       votes = "000000",
-      interlinks = readArray(data(12)),
       mainChain = data(13).contains("t")
     )
   }
