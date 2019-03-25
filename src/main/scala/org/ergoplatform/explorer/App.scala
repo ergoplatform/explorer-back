@@ -10,15 +10,15 @@ import doobie.hikari.implicits._
 import org.ergoplatform.explorer.grabber.GrabberService
 import org.flywaydb.core.Flyway
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object App extends Configuration with DbTransactor with Services with Rest {
 
-  implicit val system = ActorSystem("explorer-system")
-  implicit val mat = ActorMaterializer()
-  implicit val ec = system.dispatcher
+  implicit val system: ActorSystem = ActorSystem("explorer-system")
+  implicit val mat: ActorMaterializer = ActorMaterializer()
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
   val logger = Logger("server")
 
   def main(args: Array[String]): Unit = {
@@ -58,13 +58,13 @@ object App extends Configuration with DbTransactor with Services with Rest {
     val grabberEc = ExecutionContext.fromExecutor(Pools.grabberPool)
 
     val grabberService = new GrabberService(transactor2, grabberEc, cfg)
-    grabberService.start
+    grabberService.start()
 
     sys.addShutdownHook {
-      grabberService.stop
-      val stop = binding.flatMap { x => x.unbind() }
+      grabberService.stop()
+      val stop = binding.flatMap(_.unbind())
       stop.onComplete { _ =>
-        Pools.shutdown
+        Pools.shutdown()
         transactor.shutdown.unsafeRunSync()
         transactor2.shutdown.unsafeRunSync()
         system.terminate()

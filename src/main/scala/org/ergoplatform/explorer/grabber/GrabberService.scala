@@ -9,6 +9,8 @@ import doobie.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ExplorerConfig
+import org.ergoplatform.explorer.db.dao.HeadersDao
+import org.ergoplatform.explorer.db.models.{BlockInfo, Header}
 import org.ergoplatform.explorer.grabber.db.{BlockInfoWriter, DBHelper}
 import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServiceImpl}
 import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiNodeInfo}
@@ -28,6 +30,8 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private val requestService = new RequestServiceImpl[IO]
 
   private val dBHelper = new DBHelper(config.network)
+
+  private val headersDao = new HeadersDao
 
   private val active = new AtomicBoolean(false)
   private val pause = config.grabber.pollDelay
@@ -55,50 +59,63 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   }
 
   //Looking for a block. In case of error just move forward.
-  private def fullBlocksForIds(ids: List[String]): IO[List[(ApiFullBlock, Boolean)]] = ids
+  private def fullBlocksForIds(ids: List[String]): IO[List[ApiFullBlock]] = ids
     .parTraverse(fullBlocksSafe)
     .map(_.flatten.toList)
-    .map(_.zipWithIndex.map { case (bs, i) => bs -> (i == 0)})
 
-  def writeBlocksFromHeight(h: Long, retries: Int = 0): IO[Unit] = {
+  def writeBlocksFromHeight(height: Long,
+                            existingHeadersAtHeight: List[Header] = List.empty,
+                            retries: Int = 0): IO[List[BlockInfo]] = {
     def updatedBlock(b: ApiFullBlock, isMain: Boolean) = b.copy(header = b.header.copy(mainChain = isMain))
     for {
-      ids <- idsAtHeight(h)
-      blocks <- fullBlocksForIds(ids)
-      _ <- blocks.map { case (block, isMain) =>
-        writeBlock(updatedBlock(block, isMain))
-      }.parSequence
-      retryNeeded <- IO {
-        blocks.isEmpty && retries < MaxRetriesNumber
+      ids <- idsAtHeight(height)
+      blocks <- fullBlocksForIds(ids.filterNot(existingHeadersAtHeight.map(_.id).contains))
+      existingHeadersUpdated <- IO(existingHeadersAtHeight.map(h => h.copy(mainChain = ids.headOption.contains(h.id))))
+      _ <- {
+        if (ids.size > existingHeadersAtHeight.size) headersDao.updateMany(existingHeadersUpdated).transact[IO](xa)
+        else IO.unit
       }
+      blockInfos <- blocks.map { block =>
+        writeBlock(updatedBlock(block, ids.headOption.contains(block.header.id)))
+      }.parSequence
+      retryNeeded <- IO(blocks.isEmpty && retries < MaxRetriesNumber && ids.size > existingHeadersAtHeight.size)
       _ <- IO {
         val retryInfo = if (retryNeeded) "Retrying.." else ""
-        logger.info(s"${blocks.length} block(s) from height $h has been written. $retryInfo")
+        logger.info(s"${blocks.length} block(s) from height $height has been written. $retryInfo")
       }
-      _ <- if (retryNeeded) writeBlocksFromHeight(h, retries + 1) else IO.unit
-    } yield ()
+      _ <- IO.suspend(if (retryNeeded) writeBlocksFromHeight(height, existingHeadersAtHeight, retries + 1) else IO.unit)
+    } yield blockInfos
   }
 
-  private def writeBlock(apiBlock: ApiFullBlock): IO[Unit] = for {
-    _ <- if (apiBlock.header.height == Constants.GenesisHeight) IO.pure(()) else prepareCache(apiBlock.header.parentId)
-    blockInfo <- IO { blockInfoHelper.extractBlockInfo(apiBlock) }
-    _ <- BlockInfoWriter.insert(blockInfo).flatMap(_ => dBHelper.writeOne(apiBlock)).transact[IO](xa)
-  } yield ()
-
-  def prepareCache(id: String): IO[Unit] = for {
-    maybePresented <- IO {
-      blockInfoHelper.blockInfoCache.getIfPresent(id)
+  private def writeBlock(apiBlock: ApiFullBlock): IO[BlockInfo] = for {
+    blockInfo <- {
+      if (apiBlock.header.height == Constants.GenesisHeight) IO(blockInfoHelper.assembleGenesisInfo(apiBlock))
+      else getBlockInfo(apiBlock.header.parentId, apiBlock.header.height - 1)
+        .map(blockInfoHelper.assembleNonGenesisInfo(apiBlock, _))
     }
-    _ <- IO.suspend {
-      maybePresented match {
-        case Some(v) => IO { logger.trace(s"got block info from cache for height ${v.height}")}
-        case None => BlockInfoWriter.get(id).transact(xa).map { bi =>
-          logger.trace(s"not found in cache for id $id")
-          blockInfoHelper.blockInfoCache.put(id, bi)
+    _ <- IO(blockInfoHelper.blockInfoCache.put(blockInfo.headerId, blockInfo))
+    _ <- BlockInfoWriter.insert(blockInfo).flatMap(_ => dBHelper.writeOne(apiBlock)).transact[IO](xa)
+  } yield blockInfo
+
+  private def getBlockInfo(id: String, height: Long): IO[BlockInfo] = for {
+    blockInfoFromCacheOpt <- IO(blockInfoHelper.blockInfoCache.getIfPresent(id))
+    blockInfo <- IO.suspend {
+      blockInfoFromCacheOpt match {
+        case Some(blockInfoFromCache) => IO(blockInfoFromCache)
+        case None => BlockInfoWriter.get(id).transact[IO](xa).flatMap {
+          case Some(blockInfoFromDb) =>
+            blockInfoHelper.blockInfoCache.put(id, blockInfoFromDb)
+            IO(blockInfoFromDb)
+          case None => // fork occurred, mark blocks we have at this height as non-best
+            IO(logger.info(s"Chain differs at height: $height")).flatMap { _ =>
+              headersDao.getAtHeight(height).transact[IO](xa).flatMap { existingHeaders =>
+                writeBlocksFromHeight(height, existingHeaders).map(_.head)
+              }
+            }
         }
       }
     }
-  } yield ()
+  } yield blockInfo
 
   private val sync: IO[Unit] = for {
     _ <- IO {
@@ -117,7 +134,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
         Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
       }
     }
-    _ <- heightsRange.map(writeBlocksFromHeight(_)).sequence[IO, Unit]
+    _ <- heightsRange.map(writeBlocksFromHeight(_).map(_ => ())).sequence[IO, Unit]
     _ <- IO {
       logger.info(s"Sync task has been finished. Current height now is ${info.fullHeight}.")
     }

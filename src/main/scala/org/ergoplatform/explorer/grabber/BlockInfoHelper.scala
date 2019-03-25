@@ -49,65 +49,65 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
     (reward, fee)
   }
 
-  def extractBlockInfo(nfb: ApiFullBlock): BlockInfoWriter.ToInsert = {
+  def assembleGenesisInfo(nfb: ApiFullBlock): BlockInfoWriter.ToInsert = {
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee
     val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
     val mAddress = minerAddress(nfb)
-    val blockInfo = if (nfb.header.height == Constants.GenesisHeight) {
-      BlockInfo(
-        headerId = nfb.header.id,
-        timestamp = nfb.header.timestamp,
-        height = nfb.header.height,
-        difficulty = nfb.header.difficulty.value.toLong,
-        blockSize = nfb.size,
-        blockCoins = blockCoins,
-        blockMiningTime = 0L,
-        txsCount = nfb.transactions.transactions.length.toLong,
-        txsSize = nfb.transactions.transactions.map(_.size).sum,
-        minerAddress = mAddress,
-        minerReward = reward,
-        minerRevenue = reward + fee,
-        blockFee = fee,
-        blockChainTotalSize = nfb.size,
-        totalTxsCount = nfb.transactions.transactions.length.toLong,
-        totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
-        totalMiningTime = 0L,
-        totalFees = fee,
-        totalMinersReward = reward,
-        totalCoinsInTxs = blockCoins
-      )
-    } else {
-      logger.trace("Getting prev blockInfo from cache.")
-      val prev = blockInfoCache.getIfPresent(nfb.header.parentId).get
-      val miningTime = nfb.header.timestamp - prev.timestamp
 
-      BlockInfo(
-        headerId = nfb.header.id,
-        timestamp = nfb.header.timestamp,
-        height = nfb.header.height,
-        difficulty = nfb.header.difficulty.value.toLong,
-        blockSize = nfb.size,
-        blockCoins = blockCoins,
-        blockMiningTime = nfb.header.timestamp - prev.timestamp,
-        txsCount = nfb.transactions.transactions.length.toLong,
-        txsSize = nfb.transactions.transactions.map(_.size).sum,
-        minerAddress = mAddress,
-        minerReward = reward,
-        minerRevenue = reward + fee,
-        blockFee = fee,
-        blockChainTotalSize = prev.blockChainTotalSize + nfb.size,
-        totalTxsCount = nfb.transactions.transactions.length.toLong + prev.totalTxsCount,
-        totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
-        totalMiningTime = prev.totalMiningTime + miningTime,
-        totalFees = prev.totalFees + fee,
-        totalMinersReward = prev.totalMinersReward + reward,
-        totalCoinsInTxs = prev.totalCoinsInTxs + blockCoins
-      )
-    }
-    logger.trace(s"Putting block info for height ${blockInfo.height} into cache.")
-    blockInfoCache.put(blockInfo.headerId, blockInfo)
-    blockInfo
+    BlockInfo(
+      headerId = nfb.header.id,
+      timestamp = nfb.header.timestamp,
+      height = nfb.header.height,
+      difficulty = nfb.header.difficulty.value.toLong,
+      blockSize = nfb.size,
+      blockCoins = blockCoins,
+      blockMiningTime = 0L,
+      txsCount = nfb.transactions.transactions.length.toLong,
+      txsSize = nfb.transactions.transactions.map(_.size).sum,
+      minerAddress = mAddress,
+      minerReward = reward,
+      minerRevenue = reward + fee,
+      blockFee = fee,
+      blockChainTotalSize = nfb.size,
+      totalTxsCount = nfb.transactions.transactions.length.toLong,
+      totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+      totalMiningTime = 0L,
+      totalFees = fee,
+      totalMinersReward = reward,
+      totalCoinsInTxs = blockCoins
+    )
+  }
+
+  def assembleNonGenesisInfo(nfb: ApiFullBlock, parentBlockInfo: BlockInfo): BlockInfoWriter.ToInsert = {
+    val (reward, fee) = minerRewardAndFee(nfb)
+    val coinBaseValue = reward + fee
+    val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
+    val mAddress = minerAddress(nfb)
+    val miningTime = nfb.header.timestamp - parentBlockInfo.timestamp
+
+    BlockInfo(
+      headerId = nfb.header.id,
+      timestamp = nfb.header.timestamp,
+      height = nfb.header.height,
+      difficulty = nfb.header.difficulty.value.toLong,
+      blockSize = nfb.size,
+      blockCoins = blockCoins,
+      blockMiningTime = nfb.header.timestamp - parentBlockInfo.timestamp,
+      txsCount = nfb.transactions.transactions.length.toLong,
+      txsSize = nfb.transactions.transactions.map(_.size).sum,
+      minerAddress = mAddress,
+      minerReward = reward,
+      minerRevenue = reward + fee,
+      blockFee = fee,
+      blockChainTotalSize = parentBlockInfo.blockChainTotalSize + nfb.size,
+      totalTxsCount = nfb.transactions.transactions.length.toLong + parentBlockInfo.totalTxsCount,
+      totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+      totalMiningTime = parentBlockInfo.totalMiningTime + miningTime,
+      totalFees = parentBlockInfo.totalFees + fee,
+      totalMinersReward = parentBlockInfo.totalMinersReward + reward,
+      totalCoinsInTxs = parentBlockInfo.totalCoinsInTxs + blockCoins
+    )
   }
 
 }
