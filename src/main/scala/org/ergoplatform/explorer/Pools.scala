@@ -1,12 +1,14 @@
 package org.ergoplatform.explorer
 
+import java.util.concurrent.ExecutorService
+
 object Pools {
 
-  val dbCallsFixedThreadPool = java.util.concurrent.Executors.newFixedThreadPool(15)
+  val dbCallsFixedThreadPool: ExecutorService = java.util.concurrent.Executors.newFixedThreadPool(15)
 
-  val grabberPool = java.util.concurrent.Executors.newFixedThreadPool(5)
+  val grabberPool: ExecutorService = java.util.concurrent.Executors.newFixedThreadPool(5)
 
-  def shutdown = {
+  def shutdown(): Unit = {
     dbCallsFixedThreadPool.shutdown()
     grabberPool.shutdown()
   }
