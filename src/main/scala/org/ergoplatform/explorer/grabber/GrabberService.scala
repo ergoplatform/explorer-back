@@ -132,7 +132,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
         Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
       }
     }
-    _ <- heightsRange.map(writeBlocksFromHeight(_)).sequence[IO, Unit]
+    _ <- heightsRange.map(writeBlocksFromHeight(_).map(_ => ())).sequence[IO, Unit]
     _ <- IO {
       logger.info(s"Sync task has been finished. Current height now is ${info.fullHeight}.")
     }
