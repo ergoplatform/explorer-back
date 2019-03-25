@@ -107,8 +107,10 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
             blockInfoHelper.blockInfoCache.put(id, blockInfoFromDb)
             IO(blockInfoFromDb)
           case None => // fork occurred, mark blocks we have at this height as non-best
-            headersDao.getAtHeight(height).transact[IO](xa).flatMap { existingHeaders =>
-              writeBlocksFromHeight(height, existingHeaders).map(_.head)
+            IO(logger.info(s"Chain differs at height: $height")).flatMap { _ =>
+              headersDao.getAtHeight(height).transact[IO](xa).flatMap { existingHeaders =>
+                writeBlocksFromHeight(height, existingHeaders).map(_.head)
+              }
             }
         }
       }
