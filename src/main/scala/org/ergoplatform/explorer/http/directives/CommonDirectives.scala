@@ -13,7 +13,7 @@ trait CommonDirectives {
   import CommonDirectives._
 
   val base16Segment: Directive1[String] = pathPrefix(Segment).flatMap(f = v =>
-    if (v.forall(Base16.Alphabet.toSet.contains)) provide(v)
+    if (Base16.decode(v).isSuccess) provide(v)
     else reject(base16ValidationError)
   )
 

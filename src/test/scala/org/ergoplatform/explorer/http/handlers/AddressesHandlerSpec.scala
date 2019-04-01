@@ -34,6 +34,10 @@ class AddressesHandlerSpec extends HttpSpec {
     override def countTxsByAddressId(addressId: String): IO[Long] = IO.pure(3L)
 
     override def searchById(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
+
+    override def getOutputsByErgoTree(ergoTree: String): IO[List[OutputInfo]] = ???
+
+    override def getOutputsByHash(hash: String): IO[List[OutputInfo]] = ???
   }
 
   val route = new AddressesHandler(addressServiceStub, txServiceStub).route

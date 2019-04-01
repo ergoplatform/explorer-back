@@ -38,7 +38,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
       totalTransactionsCount = 21L,
       totalFee = 0L,
       totalOutput = 270000000000000L,
-      estimatedOutput = 157500000000L,
+      estimatedOutput = 5668425000000000L,
       totalMinerRevenue = 157500000000L,
       percentEarnedTransactionsFees = 0.0,
       percentTransactionVolume = 0.00277855,

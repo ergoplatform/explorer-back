@@ -9,7 +9,7 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
+import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.utils.Paging
 
 import scala.concurrent.ExecutionContext
@@ -24,6 +24,10 @@ trait TransactionsService[F[_]] {
 
   def searchById(query: String): F[List[String]]
 
+  def getOutputsByHash(hash: String): F[List[OutputInfo]]
+
+  def getOutputsByErgoTree(ergoTree: String): F[List[OutputInfo]]
+
 }
 
 class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
@@ -33,7 +37,6 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
-
 
   override def getTxInfo(id: String): F[TransactionSummaryInfo] = for {
     _ <- Async.shift[F](ec)
@@ -66,7 +69,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     }
     is <- inputDao.findAllByTxsIdWithValue(ids)
     os <- outputDao.findAllByTxsIdWithSpent(ids)
-  } yield TransactionInfo.extractInfo(txs, confirmations, is ,os)).transact(xa)
+  } yield TransactionInfo.extractInfo(txs, confirmations, is, os)).transact(xa)
 
   def countTxsByAddressId(addressId: String): F[Long] = for {
     _ <- Async.shift[F](ec)
@@ -80,5 +83,11 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   def searchById(substring: String): F[List[String]] = {
     transactionsDao.searchById(substring).transact(xa)
   }
+
+  def getOutputsByHash(hash: String): F[List[OutputInfo]] = outputDao.findAllByHash(hash).transact(xa)
+    .map(_.map(OutputInfo.fromOutput))
+
+  def getOutputsByErgoTree(ergoTree: String): F[List[OutputInfo]] = outputDao.findAllByErgoTree(ergoTree).transact(xa)
+    .map(_.map(OutputInfo.fromOutput))
 
 }
