@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
-import org.ergoplatform.explorer.http.protocol.{MiniBlockInfo, TransactionInfo, TransactionSummaryInfo}
+import org.ergoplatform.explorer.http.protocol.{MiniBlockInfo, OutputInfo, TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.services.TransactionsService
 import org.ergoplatform.explorer.utils.Paging
 
@@ -22,6 +22,10 @@ class TransactionsHandlerSpec extends HttpSpec {
     override def countTxsByAddressId(addressId: String): IO[Long] = ???
 
     override def searchById(query: String): IO[List[String]] = ???
+
+    override def getOutputsByErgoTree(ergoTree: String): IO[List[OutputInfo]] = ???
+
+    override def getOutputsByHash(hash: String): IO[List[OutputInfo]] = ???
   }
 
   val route: Route = new TransactionsHandler(service).route

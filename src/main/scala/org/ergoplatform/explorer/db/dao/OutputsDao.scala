@@ -18,6 +18,10 @@ class OutputsDao extends JsonMeta {
 
   def findAllByTxId(txId: String): ConnectionIO[List[Output]] = OutputsOps.findAllByTxId(txId).to[List]
 
+  def findAllByHash(hash: String): ConnectionIO[List[Output]] = OutputsOps.findByHash(hash).to[List]
+
+  def findAllByErgoTree(ergoTree: String): ConnectionIO[List[Output]] = OutputsOps.findByErgoTree(ergoTree).to[List]
+
   def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Output]] = NonEmptyList.fromList(txsId) match {
     case Some(ids) => OutputsOps.findAllByTxsId(ids).to[List]
     case None => List.empty[Output].pure[ConnectionIO]

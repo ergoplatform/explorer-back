@@ -19,9 +19,11 @@ object OutputsOps extends JsonMeta {
     "timestamp"
   )
 
-  private val BYTES = "968400020191a3c6a70300059784000201968400030193c2a7c2b2a505000000000000000093958fa3050000000000" +
-    "0027600500000001bf08eb00990500000001bf08eb009c050000000011e1a3009a0500000000000000019d99a30500000000000027600500" +
-    "0000000000087099c1a7c1b2a505000000000000000093c6b2a5050000000000000000030005a390c1a7050000000011e1a300"
+  private val BYTES = "101004020e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea" +
+    "02d192a39a8cc7a7017300730110010204020404040004c0fd4f05808c82f5f6030580b8c9e5ae040580f882ad16040204c0944004c0f407" +
+    "040004000580f882ad16d19683030191a38cc7a7019683020193c2b2a57300007473017302830108cdeeac93a38cc7b2a573030001978302" +
+    "019683040193b1a5730493c2a7c2b2a573050093958fa3730673079973089c73097e9a730a9d99a3730b730c0599c1a7c1b2a5730d00938c" +
+    "c7b2a5730e0001a390c1a7730f"
 
   val fieldsString: String = fields.mkString(", ")
   val holdersString: String = fields.map(_ => "?").mkString(", ")
@@ -50,6 +52,9 @@ object OutputsOps extends JsonMeta {
 
   def findByHash(hash: String): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE hash = $hash").query[Output]
+
+  def findByErgoTree(ergoTree: String): Query0[Output] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE proposition = $ergoTree").query[Output]
 
   def findByHashWithSpent(hash: String): Query0[SpentOutput] =
     (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++

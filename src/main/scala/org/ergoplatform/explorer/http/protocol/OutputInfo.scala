@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.SpentOutput
+import org.ergoplatform.explorer.db.models.{Output, SpentOutput}
 
 case class OutputInfo(id: String, value: Long, script: String, hash: String, spentTxIs: Option[String])
 
@@ -14,6 +14,14 @@ object OutputInfo {
     o.output.proposition,
     o.output.hash,
     o.spentTxId
+  )
+
+  def fromOutput(o: Output): OutputInfo = OutputInfo(
+    o.boxId,
+    o.value,
+    o.proposition,
+    o.hash,
+    None
   )
 
   implicit val encoder: Encoder[OutputInfo] = (o: OutputInfo) => Json.obj(
