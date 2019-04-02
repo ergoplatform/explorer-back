@@ -17,11 +17,11 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
     service.getTxInfo
   }
 
-  def getOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree") & base16Segment) {
+  def getOutputsByErgoTree: Route = (pathPrefix("boxes" / "byProposition") & base16Segment) {
     service.getOutputsByErgoTree
   }
 
-  def getOutputsByHash: Route = (pathPrefix("boxes" / "byHash") & base16Segment) {
+  def getOutputsByHash: Route = (pathPrefix("boxes" / "byAddress") & base58Segment) {
     service.getOutputsByHash
   }
 
