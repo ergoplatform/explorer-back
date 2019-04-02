@@ -26,7 +26,7 @@ trait TransactionsService[F[_]] {
 
   def getOutputsByHash(hash: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
-  def getOutputsByProposition(ergoTree: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
+  def getOutputsByProposition(proposition: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
 }
 

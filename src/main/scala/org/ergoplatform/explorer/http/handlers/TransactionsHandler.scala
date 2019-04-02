@@ -17,7 +17,7 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
     service.getTxInfo
   }
 
-  def getOutputsByProposition: Route = (pathPrefix("boxes" / "byProposition") & base16Segment) { prop =>
+  def getOutputsByProposition: Route = (pathPrefix("boxes" / "byErgoTree") & base16Segment) { prop =>
     service.getOutputsByProposition(prop)
   }
 
@@ -25,7 +25,7 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
     service.getOutputsByHash(hash)
   }
 
-  def getUnspentOutputsByProposition: Route = (pathPrefix("boxes" / "byProposition" / "unspent") & base16Segment) { prop =>
+  def getUnspentOutputsByProposition: Route = (pathPrefix("boxes" / "byErgoTree" / "unspent") & base16Segment) { prop =>
     service.getOutputsByProposition(prop, unspentOnly = true)
   }
 
