@@ -24,9 +24,9 @@ trait TransactionsService[F[_]] {
 
   def searchById(query: String): F[List[String]]
 
-  def getOutputsByHash(hash: String): F[List[OutputInfo]]
+  def getOutputsByHash(hash: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
-  def getOutputsByErgoTree(ergoTree: String): F[List[OutputInfo]]
+  def getOutputsByProposition(ergoTree: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
 }
 
@@ -84,10 +84,18 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     transactionsDao.searchById(substring).transact(xa)
   }
 
-  def getOutputsByHash(hash: String): F[List[OutputInfo]] = outputDao.findAllByHash(hash).transact(xa)
-    .map(_.map(OutputInfo.fromOutput))
+  def getOutputsByHash(hash: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
+    if (unspentOnly) outputDao.findUnspentByHash(hash).transact(xa)
+      .map(_.map(OutputInfo.fromOutputWithSpent))
+    else outputDao.findAllByHash(hash).transact(xa)
+      .map(_.map(OutputInfo.fromOutput))
+  }
 
-  def getOutputsByErgoTree(ergoTree: String): F[List[OutputInfo]] = outputDao.findAllByErgoTree(ergoTree).transact(xa)
-    .map(_.map(OutputInfo.fromOutput))
+  def getOutputsByProposition(proposition: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
+    if (unspentOnly) outputDao.findUnspentByProposition(proposition).transact(xa)
+      .map(_.map(OutputInfo.fromOutputWithSpent))
+    else outputDao.findAllByProposition(proposition).transact(xa)
+      .map(_.map(OutputInfo.fromOutput))
+  }
 
 }

@@ -53,8 +53,16 @@ object OutputsOps extends JsonMeta {
   def findByHash(hash: String): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE hash = $hash").query[Output]
 
-  def findByErgoTree(ergoTree: String): Query0[Output] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE proposition = $ergoTree").query[Output]
+  def findByProposition(proposition: String): Query0[Output] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE proposition = $proposition").query[Output]
+
+  def findUnspentByHash(hash: String): Query0[SpentOutput] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"WHERE i.box_id IS NULL AND o.hash = $hash").query[SpentOutput]
+
+  def findUnspentByProposition(proposition: String): Query0[SpentOutput] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"WHERE i.box_id IS NULL AND o.proposition = $proposition").query[SpentOutput]
 
   def findByHashWithSpent(hash: String): Query0[SpentOutput] =
     (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
