@@ -9,7 +9,7 @@ object ApiOutput {
   implicit val decoder: Decoder[ApiOutput] = (c: HCursor) => for {
     boxId <- c.downField("boxId").as[String]
     value <- c.downField("value").as[Long]
-    proposition <- c.downField("proposition").as[String]
+    proposition <- c.downField("ergoTree").as[String]
     additionalRegisters <- c.downField("additionalRegisters").as[Json]
   } yield ApiOutput(boxId, value, proposition, additionalRegisters)
 }
