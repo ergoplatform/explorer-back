@@ -20,7 +20,11 @@ class OutputsDao extends JsonMeta {
 
   def findAllByHash(hash: String): ConnectionIO[List[Output]] = OutputsOps.findByHash(hash).to[List]
 
-  def findAllByErgoTree(ergoTree: String): ConnectionIO[List[Output]] = OutputsOps.findByErgoTree(ergoTree).to[List]
+  def findAllByProposition(proposition: String): ConnectionIO[List[Output]] = OutputsOps.findByProposition(proposition).to[List]
+
+  def findUnspentByHash(hash: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByHash(hash).to[List]
+
+  def findUnspentByProposition(proposition: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByProposition(proposition).to[List]
 
   def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Output]] = NonEmptyList.fromList(txsId) match {
     case Some(ids) => OutputsOps.findAllByTxsId(ids).to[List]
