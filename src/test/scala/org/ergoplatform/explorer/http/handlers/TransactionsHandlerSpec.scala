@@ -23,9 +23,9 @@ class TransactionsHandlerSpec extends HttpSpec {
 
     override def searchById(query: String): IO[List[String]] = ???
 
-    override def getOutputsByErgoTree(ergoTree: String): IO[List[OutputInfo]] = ???
+    override def getOutputsByHash(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
 
-    override def getOutputsByHash(hash: String): IO[List[OutputInfo]] = ???
+    override def getOutputsByProposition(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
   }
 
   val route: Route = new TransactionsHandler(service).route
