@@ -31,8 +31,6 @@ CREATE INDEX "node_headers__height" ON node_headers (height);
 CREATE INDEX "node_headers__ts" ON node_headers (timestamp);
 CREATE INDEX "node_headers__main_chain" ON node_headers (main_chain);
 
-ALTER TABLE node_headers OWNER TO ergo;
-
 /*
     Main table that being used for storing stats.
  */
@@ -59,8 +57,6 @@ CREATE TABLE blocks_info (
   total_coins_in_txs BIGINT NOT NULL
 );
 
-ALTER TABLE blocks_info OWNER TO ergo;
-
 /*
     Stats table indexes. By height and ts.
  */
@@ -79,8 +75,6 @@ CREATE TABLE node_transactions (
   PRIMARY KEY(id, header_id)
 );
 
-ALTER TABLE node_transactions OWNER TO ergo;
-
 /*
     Indexes that being used by transactions table.
  */
@@ -97,8 +91,6 @@ CREATE TABLE node_inputs (
   proof_bytes VARCHAR NOT NULL,
   extension JSON NOT NULL
 );
-
-ALTER TABLE node_inputs OWNER TO ergo;
 
 /*
     Indexes that being used by inputs table.
@@ -121,8 +113,6 @@ CREATE TABLE node_outputs (
   timestamp BIGINT NOT NULL
 );
 
-ALTER TABLE node_outputs OWNER to ergo;
-
 /*
     Indexes that being used by outputs table.
  */
@@ -140,8 +130,6 @@ CREATE TABLE node_ad_proofs (
   digest VARCHAR NOT NULL
 );
 
-ALTER TABLE node_ad_proofs OWNER TO ergo;
-
 /*
     Table for storing names for known miners.
  */
@@ -149,8 +137,6 @@ CREATE TABLE known_miners (
   miner_address VARCHAR NOT NULL PRIMARY KEY,
   miner_name VARCHAR NOT NULL
 );
-
-ALTER TABLE known_miners OWNER TO ergo;
 
 /*
   Initial data for known_miners table.
