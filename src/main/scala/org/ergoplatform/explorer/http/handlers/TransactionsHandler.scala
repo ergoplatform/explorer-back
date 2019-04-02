@@ -8,7 +8,9 @@ import org.ergoplatform.explorer.services.TransactionsService
 class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler {
 
   val route: Route = pathPrefix("transactions") {
-    getOutputsByProposition ~
+    getUnspentOutputsByProposition ~
+      getUnspentOutputsByHash ~
+      getOutputsByProposition ~
       getOutputsByHash ~
       getTxById
   }
