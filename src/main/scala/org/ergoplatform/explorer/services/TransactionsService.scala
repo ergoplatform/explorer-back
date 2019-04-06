@@ -80,22 +80,20 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     transactionsDao.countTxsByAddressId(addressId).transact(xa)
 
   /** Search transaction identifiers by the fragment of the identifier */
-  def searchById(substring: String): F[List[String]] = {
-    transactionsDao.searchById(substring).transact(xa)
-  }
+  def searchById(substring: String): F[List[String]] = transactionsDao.searchById(substring).transact(xa)
 
   def getOutputsByHash(hash: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
-    if (unspentOnly) outputDao.findUnspentByHash(hash).transact(xa)
+    (if (unspentOnly) outputDao.findUnspentByHash(hash)
+    else outputDao.findAllByHash(hash))
+      .transact(xa)
       .map(_.map(OutputInfo.fromOutputWithSpent))
-    else outputDao.findAllByHash(hash).transact(xa)
-      .map(_.map(OutputInfo.fromOutput))
   }
 
   def getOutputsByProposition(proposition: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
-    if (unspentOnly) outputDao.findUnspentByProposition(proposition).transact(xa)
+    (if (unspentOnly) outputDao.findUnspentByProposition(proposition)
+    else outputDao.findAllByProposition(proposition))
+      .transact(xa)
       .map(_.map(OutputInfo.fromOutputWithSpent))
-    else outputDao.findAllByProposition(proposition).transact(xa)
-      .map(_.map(OutputInfo.fromOutput))
   }
 
 }
