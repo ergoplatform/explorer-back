@@ -15,9 +15,13 @@ object OutputsOps extends JsonMeta {
     "index",
     "proposition",
     "hash",
+    "assets",
     "additional_registers",
     "timestamp"
   )
+
+  val allFieldsFef: String = "o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.assets," +
+    "o.additional_registers, o.timestamp"
 
   private val BYTES = "101004020e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea" +
     "02d192a39a8cc7a7017300730110010204020404040004c0fd4f05808c82f5f6030580b8c9e5ae040580f882ad16040204c0944004c0f407" +
@@ -35,7 +39,7 @@ object OutputsOps extends JsonMeta {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE tx_id = $txId").query[Output]
 
   def findAllByTxIdWithSpent(txId: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+    (fr"SELECT $allFieldsFef, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
       fr"LEFT JOIN node_transactions t ON i.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
       fr"WHERE o.tx_id = $txId AND (h.main_chain = TRUE OR i.tx_id IS NULL)").query[SpentOutput]
@@ -44,34 +48,34 @@ object OutputsOps extends JsonMeta {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE" ++ Fragments.in(fr"tx_id", txsId)).query[Output]
 
   def findAllByTxsIdWithSpent(txsId: NonEmptyList[String]): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+    (fr"SELECT $allFieldsFef, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
       fr"WHERE" ++ Fragments.in(fr"o.tx_id", txsId)).query[SpentOutput]
 
   def insert: Update[Output] = Update[Output](insertSql)
 
   def findByHash(hash: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+    (fr"SELECT $allFieldsFef, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
       fr"WHERE hash = $hash").query[SpentOutput]
 
   def findByProposition(proposition: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+    (fr"SELECT $allFieldsFef, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
       fr"WHERE proposition = $proposition").query[SpentOutput]
 
   def findUnspentByHash(hash: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+    (fr"SELECT $allFieldsFef, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
       fr"WHERE i.box_id IS NULL AND o.hash = $hash").query[SpentOutput]
 
   def findUnspentByProposition(proposition: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+    (fr"SELECT $allFieldsFef, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
       fr"WHERE i.box_id IS NULL AND o.proposition = $proposition").query[SpentOutput]
 
   def findByHashWithSpent(hash: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+    (fr"SELECT $allFieldsFef, i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
       fr"WHERE o.hash = $hash").query[SpentOutput]
 

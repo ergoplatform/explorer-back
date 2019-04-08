@@ -109,6 +109,7 @@ CREATE TABLE node_outputs (
   index INTEGER NOT NULL,
   proposition VARCHAR NOT NULL,
   hash VARCHAR NOT NULL,
+  assets JSON NOT NULL,
   additional_registers JSON NOT NULL,
   timestamp BIGINT NOT NULL
 );
