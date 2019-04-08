@@ -50,11 +50,15 @@ object OutputsOps extends JsonMeta {
 
   def insert: Update[Output] = Update[Output](insertSql)
 
-  def findByHash(hash: String): Query0[Output] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE hash = $hash").query[Output]
+  def findByHash(hash: String): Query0[SpentOutput] =
+    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"WHERE hash = $hash").query[SpentOutput]
 
-  def findByProposition(proposition: String): Query0[Output] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE proposition = $proposition").query[Output]
+  def findByProposition(proposition: String): Query0[SpentOutput] =
+    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"WHERE proposition = $proposition").query[SpentOutput]
 
   def findUnspentByHash(hash: String): Query0[SpentOutput] =
     (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++

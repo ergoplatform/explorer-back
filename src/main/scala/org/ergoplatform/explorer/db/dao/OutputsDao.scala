@@ -18,9 +18,9 @@ class OutputsDao extends JsonMeta {
 
   def findAllByTxId(txId: String): ConnectionIO[List[Output]] = OutputsOps.findAllByTxId(txId).to[List]
 
-  def findAllByHash(hash: String): ConnectionIO[List[Output]] = OutputsOps.findByHash(hash).to[List]
+  def findAllByHash(hash: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByHash(hash).to[List]
 
-  def findAllByProposition(proposition: String): ConnectionIO[List[Output]] = OutputsOps.findByProposition(proposition).to[List]
+  def findAllByProposition(proposition: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByProposition(proposition).to[List]
 
   def findUnspentByHash(hash: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByHash(hash).to[List]
 
