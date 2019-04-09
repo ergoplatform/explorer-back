@@ -311,8 +311,6 @@ paths:
                     items:
                       $ref: '#/components/schemas/AddressId'
 
-
-
   '/info':
     get:
       summary: Get blockchain info
