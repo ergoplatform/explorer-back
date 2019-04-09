@@ -99,7 +99,7 @@ object PreparedData extends App {
       index = data(3).toInt,
       proposition = data(4),
       hash = data(5),
-      assets = Json.Null,
+      assets = readJson(data(7)),
       additionalRegisters = readJson(data(6)),
       0L
     )
