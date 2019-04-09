@@ -16,6 +16,8 @@ class OutputsDao extends JsonMeta {
   def insertMany(list: List[Output]): ConnectionIO[List[Output]] =
     OutputsOps.insert.updateManyWithGeneratedKeys[Output](fields: _*)(list).compile.to[List]
 
+  def findByBoxId(boxId: String): ConnectionIO[SpentOutput] = OutputsOps.findByBoxId(boxId).unique
+
   def findAllByTxId(txId: String): ConnectionIO[List[Output]] = OutputsOps.findAllByTxId(txId).to[List]
 
   def findAllByAddress(address: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByAddress(address).to[List]

@@ -12,11 +12,16 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
       getUnspentOutputsByAddress ~
       getOutputsByErgoTree ~
       getOutputsByAddress ~
+      getOutputsById ~
       getTxById
   }
 
   def getTxById: Route = (get & base16Segment) {
     service.getTxInfo
+  }
+
+  def getOutputsById: Route = (pathPrefix("boxes") & base16Segment) {
+    service.getOutputById
   }
 
   def getOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree") & base16Segment) {

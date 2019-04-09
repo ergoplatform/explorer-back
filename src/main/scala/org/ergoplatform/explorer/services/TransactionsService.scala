@@ -24,6 +24,8 @@ trait TransactionsService[F[_]] {
 
   def searchById(query: String): F[List[String]]
 
+  def getOutputById(id: String): F[OutputInfo]
+
   def getOutputsByAddress(address: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
   def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
@@ -81,6 +83,9 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
 
   /** Search transaction identifiers by the fragment of the identifier */
   def searchById(substring: String): F[List[String]] = transactionsDao.searchById(substring).transact(xa)
+
+  def getOutputById(id: String): F[OutputInfo] = outputDao.findByBoxId(id).transact(xa)
+    .map(OutputInfo.fromOutputWithSpent)
 
   def getOutputsByAddress(hash: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
     (if (unspentOnly) outputDao.findUnspentByAddress(hash)

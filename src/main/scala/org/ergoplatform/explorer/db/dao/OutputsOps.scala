@@ -35,6 +35,11 @@ object OutputsOps extends JsonMeta {
 
   val insertSql = s"INSERT INTO node_outputs ($fieldsString) VALUES ($holdersString)"
 
+  def findByBoxId(boxId: String): Query0[SpentOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"WHERE o.box_id = $boxId").query[SpentOutput]
+
   def findAllByTxId(txId: String): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE tx_id = $txId").query[Output]
 
