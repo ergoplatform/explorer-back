@@ -38,7 +38,7 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
       val oOpt = outputs.find(_.boxId == i.boxId)
       val v = oOpt.map(_.value)
       val otxid = oOpt.map(_.txId)
-      val hash = oOpt.map(_.hash)
+      val hash = oOpt.map(_.address)
       InputWithOutputInfo(i, v, otxid, hash)
     }
 

@@ -106,9 +106,10 @@ CREATE TABLE node_outputs (
   box_id VARCHAR(64) NOT NULL,
   tx_id VARCHAR(64) NOT NULL,
   value BIGINT NOT NULL,
+  creation_height INTEGER NOT NULL,
   index INTEGER NOT NULL,
-  proposition VARCHAR NOT NULL,
-  hash VARCHAR NOT NULL,
+  ergo_tree VARCHAR NOT NULL,
+  address VARCHAR NOT NULL,
   assets JSON NOT NULL,
   additional_registers JSON NOT NULL,
   timestamp BIGINT NOT NULL
@@ -119,7 +120,7 @@ CREATE TABLE node_outputs (
  */
 CREATE INDEX "node_outputs__box_id" on node_outputs (box_id);
 CREATE INDEX "node_outputs__tx_id" on node_outputs (tx_id);
-CREATE INDEX "node_outputs__hash" on node_outputs (hash);
+CREATE INDEX "node_outputs__address" on node_outputs (address);
 CREATE INDEX "node_outputs__ts" on node_outputs (timestamp);
 
 /*

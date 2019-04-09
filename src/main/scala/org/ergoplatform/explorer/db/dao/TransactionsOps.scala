@@ -36,7 +36,7 @@ object TransactionsOps {
         WHERE EXISTS (
           SELECT 1
           FROM node_outputs os
-          WHERE (os.tx_id = t.id AND os.hash = $addressId)
+          WHERE (os.tx_id = t.id AND os.address = $addressId)
         ) AND h.main_chain = TRUE
         ORDER BY t.timestamp DESC
         OFFSET ${offset.toLong} LIMIT ${limit.toLong}
@@ -49,7 +49,7 @@ object TransactionsOps {
          WHERE EXISTS (
            SELECT 1
            FROM node_outputs os
-           WHERE (os.tx_id = t.id AND os.hash = $addressId)
+           WHERE (os.tx_id = t.id AND os.address = $addressId)
          ) AND h.main_chain = TRUE
          """.query[Long]
   }

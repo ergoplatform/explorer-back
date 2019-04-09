@@ -60,7 +60,7 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
     val inputsWithOutputInfo = inputs
       .map { i =>
         val oOpt = outputs.find(_.boxId == i.boxId)
-        InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.hash))
+        InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
       }
 
     val outputsWithSpentTx = outputs.map { o => SpentOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId)) }

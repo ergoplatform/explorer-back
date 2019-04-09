@@ -12,9 +12,10 @@ object OutputsOps extends JsonMeta {
     "box_id",
     "tx_id",
     "value",
+    "creation_height",
     "index",
-    "proposition",
-    "hash",
+    "ergo_tree",
+    "address",
     "assets",
     "additional_registers",
     "timestamp"
@@ -53,34 +54,34 @@ object OutputsOps extends JsonMeta {
 
   def insert: Update[Output] = Update[Output](insertSql)
 
-  def findByHash(hash: String): Query0[SpentOutput] =
+  def findByAddress(address: String): Query0[SpentOutput] =
     (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE o.hash = $hash").query[SpentOutput]
+      fr"WHERE o.address = $address").query[SpentOutput]
 
-  def findByProposition(proposition: String): Query0[SpentOutput] =
+  def findByErgoTree(ergoTree: String): Query0[SpentOutput] =
     (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE o.proposition = $proposition").query[SpentOutput]
+      fr"WHERE o.ergo_tree = $ergoTree").query[SpentOutput]
 
-  def findUnspentByHash(hash: String): Query0[SpentOutput] =
+  def findUnspentByAddress(address: String): Query0[SpentOutput] =
     (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE i.box_id IS NULL AND o.hash = $hash").query[SpentOutput]
+      fr"WHERE i.box_id IS NULL AND o.address = $address").query[SpentOutput]
 
-  def findUnspentByProposition(proposition: String): Query0[SpentOutput] =
+  def findUnspentByErgoTree(ergoTree: String): Query0[SpentOutput] =
     (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE i.box_id IS NULL AND o.proposition = $proposition").query[SpentOutput]
+      fr"WHERE i.box_id IS NULL AND o.ergo_tree = $ergoTree").query[SpentOutput]
 
-  def findByHashWithSpent(hash: String): Query0[SpentOutput] =
+  def findByAddressWithSpent(address: String): Query0[SpentOutput] =
     (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
-      fr"WHERE o.hash = $hash").query[SpentOutput]
+      fr"WHERE o.address = $address").query[SpentOutput]
 
   /** Search address identifiers by the fragment of the identifier */
-  def searchByHash(substring: String): Query0[String] =
-    fr"SELECT hash FROM node_outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
+  def searchByAddress(substring: String): Query0[String] =
+    fr"SELECT address FROM node_outputs WHERE address LIKE ${"%" + substring +"%"}".query[String]
 
   def sumOfAllUnspentOutputsSince(ts: Long): Query0[Long] =
     (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0)" ++
@@ -93,20 +94,20 @@ object OutputsOps extends JsonMeta {
           SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
           FROM node_outputs o
           LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
-          WHERE o.hash <> '$BYTES' AND o.timestamp >= $ts
+          WHERE o.address <> '$BYTES' AND o.timestamp >= $ts
       """
     ).query[Long]
 
-  def addressStats(hash: String): Query0[AddressSummaryData] =
+  def addressStats(address: String): Query0[AddressSummaryData] =
     fr"""
         SELECT
-        o.hash as hash,
+        o.address as address,
         COUNT(o.tx_id),
         CAST(SUM(CASE WHEN i.box_id IS NOT NULL THEN o.value ELSE 0 END) AS DECIMAL) as spent,
         CAST(SUM(CASE WHEN i.box_id IS NULL THEN o.value ELSE 0 END) AS BIGINT) as unspent
         FROM node_outputs o
         LEFT JOIN node_inputs i ON o.box_id = i.box_id
-        WHERE hash = $hash
+        WHERE address = $address
         AND TRUE = ANY(
           SELECT h.main_chain FROM node_headers h
           WHERE h.id IN (
@@ -114,6 +115,6 @@ object OutputsOps extends JsonMeta {
             WHERE tx.id = o.tx_id
           )
         )
-        GROUP BY (hash)
+        GROUP BY (address)
     """.query[AddressSummaryData]
 }

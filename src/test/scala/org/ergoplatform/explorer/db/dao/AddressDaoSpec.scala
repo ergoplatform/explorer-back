@@ -24,9 +24,9 @@ class AddressDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
 
 
-    val randomHash = Random.shuffle(outputs).head.hash
+    val randomHash = Random.shuffle(outputs).head.address
 
-    val related = outputs.filter(_.hash == randomHash)
+    val related = outputs.filter(_.address == randomHash)
 
     val spent = related.filter{o => inputs.map(_.boxId).contains(o.boxId)}.map(_.value).sum
     val unspent = related.filterNot{o => inputs.map(_.boxId).contains(o.boxId)}.map(_.value).sum

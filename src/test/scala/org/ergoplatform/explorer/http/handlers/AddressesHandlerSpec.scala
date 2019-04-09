@@ -35,9 +35,9 @@ class AddressesHandlerSpec extends HttpSpec {
 
     override def searchById(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
 
-    def getOutputsByHash(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
 
-    def getOutputsByProposition(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
   }
 
   val route = new AddressesHandler(addressServiceStub, txServiceStub).route

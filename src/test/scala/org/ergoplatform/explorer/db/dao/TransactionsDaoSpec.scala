@@ -53,11 +53,11 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
     }
 
     val randomOs = Random.shuffle(outputs).head
-    val txIds: Set[String] = outputs.filter(_.hash == randomOs.hash).map(_.txId).toSet
+    val txIds: Set[String] = outputs.filter(_.address == randomOs.address).map(_.txId).toSet
     val expected = txs.filter(tx => txIds(tx.id))
-    val fromDb = dao.getTxsByAddressId(randomOs.hash, offset = 0, limit = Int.MaxValue).transact(xa).unsafeRunSync()
+    val fromDb = dao.getTxsByAddressId(randomOs.address, offset = 0, limit = Int.MaxValue).transact(xa).unsafeRunSync()
     fromDb should contain theSameElementsAs expected
-    dao.countTxsByAddressId(randomOs.hash).transact(xa).unsafeRunSync() shouldBe expected.length.toLong
+    dao.countTxsByAddressId(randomOs.address).transact(xa).unsafeRunSync() shouldBe expected.length.toLong
 
     dao.countTxsSince(0L).transact(xa).unsafeRunSync() shouldBe txs.length.toLong
   }

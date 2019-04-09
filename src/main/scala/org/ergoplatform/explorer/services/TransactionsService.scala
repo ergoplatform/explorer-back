@@ -24,9 +24,9 @@ trait TransactionsService[F[_]] {
 
   def searchById(query: String): F[List[String]]
 
-  def getOutputsByHash(hash: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
+  def getOutputsByAddress(address: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
-  def getOutputsByProposition(proposition: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
+  def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
 }
 
@@ -82,16 +82,16 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   /** Search transaction identifiers by the fragment of the identifier */
   def searchById(substring: String): F[List[String]] = transactionsDao.searchById(substring).transact(xa)
 
-  def getOutputsByHash(hash: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
-    (if (unspentOnly) outputDao.findUnspentByHash(hash)
-    else outputDao.findAllByHash(hash))
+  def getOutputsByAddress(hash: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
+    (if (unspentOnly) outputDao.findUnspentByAddress(hash)
+    else outputDao.findAllByAddress(hash))
       .transact(xa)
       .map(_.map(OutputInfo.fromOutputWithSpent))
   }
 
-  def getOutputsByProposition(proposition: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
-    (if (unspentOnly) outputDao.findUnspentByProposition(proposition)
-    else outputDao.findAllByProposition(proposition))
+  def getOutputsByErgoTree(proposition: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
+    (if (unspentOnly) outputDao.findUnspentByErgoTree(proposition)
+    else outputDao.findAllByErgoTree(proposition))
       .transact(xa)
       .map(_.map(OutputInfo.fromOutputWithSpent))
   }

@@ -96,9 +96,10 @@ object PreparedData extends App {
       boxId = data(0),
       txId = data(1),
       value = data(2).toLong,
+      creationHeight = data(8).toInt,
       index = data(3).toInt,
-      proposition = data(4),
-      hash = data(5),
+      ergoTree = data(4),
+      address = data(5),
       assets = readJson(data(7)),
       additionalRegisters = readJson(data(6)),
       0L

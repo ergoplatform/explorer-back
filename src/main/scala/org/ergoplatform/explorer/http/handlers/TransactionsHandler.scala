@@ -8,10 +8,10 @@ import org.ergoplatform.explorer.services.TransactionsService
 class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler {
 
   val route: Route = pathPrefix("transactions") {
-    getUnspentOutputsByProposition ~
-      getUnspentOutputsByHash ~
-      getOutputsByProposition ~
-      getOutputsByHash ~
+    getUnspentOutputsByErgoTree ~
+      getUnspentOutputsByAddress ~
+      getOutputsByErgoTree ~
+      getOutputsByAddress ~
       getTxById
   }
 
@@ -19,20 +19,20 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
     service.getTxInfo
   }
 
-  def getOutputsByProposition: Route = (pathPrefix("boxes" / "byErgoTree") & base16Segment) { prop =>
-    service.getOutputsByProposition(prop)
+  def getOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree") & base16Segment) {
+    service.getOutputsByErgoTree(_)
   }
 
-  def getOutputsByHash: Route = (pathPrefix("boxes" / "byAddress") & base58Segment) { hash =>
-    service.getOutputsByHash(hash)
+  def getOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress") & base58Segment) {
+    service.getOutputsByAddress(_)
   }
 
-  def getUnspentOutputsByProposition: Route = (pathPrefix("boxes" / "byErgoTree" / "unspent") & base16Segment) { prop =>
-    service.getOutputsByProposition(prop, unspentOnly = true)
+  def getUnspentOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree" / "unspent") & base16Segment) {
+    service.getOutputsByErgoTree(_, unspentOnly = true)
   }
 
-  def getUnspentOutputsByHash: Route = (pathPrefix("boxes" / "byAddress" / "unspent") & base58Segment) { hash =>
-    service.getOutputsByHash(hash, unspentOnly = true)
+  def getUnspentOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress" / "unspent") & base58Segment) {
+    service.getOutputsByAddress(_, unspentOnly = true)
   }
 
 }

@@ -18,13 +18,13 @@ class OutputsDao extends JsonMeta {
 
   def findAllByTxId(txId: String): ConnectionIO[List[Output]] = OutputsOps.findAllByTxId(txId).to[List]
 
-  def findAllByHash(hash: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByHash(hash).to[List]
+  def findAllByAddress(address: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByAddress(address).to[List]
 
-  def findAllByProposition(proposition: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByProposition(proposition).to[List]
+  def findAllByErgoTree(ergoTree: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByErgoTree(ergoTree).to[List]
 
-  def findUnspentByHash(hash: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByHash(hash).to[List]
+  def findUnspentByAddress(address: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByAddress(address).to[List]
 
-  def findUnspentByProposition(proposition: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByProposition(proposition).to[List]
+  def findUnspentByErgoTree(ergoTree: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByErgoTree(ergoTree).to[List]
 
   def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Output]] = NonEmptyList.fromList(txsId) match {
     case Some(ids) => OutputsOps.findAllByTxsId(ids).to[List]
@@ -41,10 +41,10 @@ class OutputsDao extends JsonMeta {
     }
 
   def findAllByAddressId(address: String)(implicit c: Composite[SpentOutput]): ConnectionIO[List[SpentOutput]] =
-    OutputsOps.findByHashWithSpent(address).to[List]
+    OutputsOps.findByAddressWithSpent(address).to[List]
 
   /** Search address identifiers by the fragment of the identifier */
-  def searchByAddressId(substring: String): ConnectionIO[List[String]] = OutputsOps.searchByHash(substring).to[List]
+  def searchByAddressId(substring: String): ConnectionIO[List[String]] = OutputsOps.searchByAddress(substring).to[List]
 
   def sumOfAllUnspentOutputsSince(ts: Long): ConnectionIO[Long] = OutputsOps.sumOfAllUnspentOutputsSince(ts).unique
 
