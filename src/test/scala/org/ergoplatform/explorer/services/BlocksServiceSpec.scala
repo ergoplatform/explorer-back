@@ -3,7 +3,7 @@ package org.ergoplatform.explorer.services
 import cats.effect.IO
 import doobie.implicits._
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, SpentOutput}
+import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, TransactionInfo}
 import org.ergoplatform.explorer.utils.{Desc, Paging, Sorting}
@@ -63,7 +63,9 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
         InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
       }
 
-    val outputsWithSpentTx = outputs.map { o => SpentOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId)) }
+    val outputsWithSpentTx = outputs.map { o =>
+      ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)
+    }
 
     val service = new BlocksServiceIOImpl[IO](xa, ec)
 

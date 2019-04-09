@@ -2,20 +2,21 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.{Output, SpentOutput}
+import org.ergoplatform.explorer.db.models.{Output, ExtendedOutput}
 
-case class OutputInfo(id: String,
-                      value: Long,
-                      creationHeight: Int,
-                      ergoTree: String,
-                      address: String,
-                      assets: Json,
-                      additionalRegisters: Json,
-                      spentTxIs: Option[String])
+final case class OutputInfo(id: String,
+                            value: Long,
+                            creationHeight: Int,
+                            ergoTree: String,
+                            address: String,
+                            assets: Json,
+                            additionalRegisters: Json,
+                            spentTxIs: Option[String],
+                            mainChain: Boolean)
 
 object OutputInfo {
 
-  def fromOutputWithSpent(o: SpentOutput): OutputInfo = OutputInfo(
+  def fromOutputWithSpent(o: ExtendedOutput): OutputInfo = OutputInfo(
     o.output.boxId,
     o.output.value,
     o.output.creationHeight,
@@ -23,7 +24,8 @@ object OutputInfo {
     o.output.address,
     o.output.assets,
     o.output.additionalRegisters,
-    o.spentTxId
+    o.spentTxId,
+    o.mainChain
   )
 
   def fromOutput(o: Output): OutputInfo = OutputInfo(
@@ -34,14 +36,19 @@ object OutputInfo {
     o.address,
     o.assets,
     o.additionalRegisters,
-    None
+    None,
+    mainChain = true
   )
 
   implicit val encoder: Encoder[OutputInfo] = (o: OutputInfo) => Json.obj(
-    "id" -> Json.fromString(o.id),
-    "value" -> Json.fromLong(o.value),
-    "ergoTree" -> Json.fromString(o.ergoTree),
-    "address" -> Json.fromString(o.address),
-    "spentTransactionId" -> o.spentTxIs.asJson
+    "id" -> o.id.asJson,
+    "value" -> o.value.asJson,
+    "creationHeight" -> o.creationHeight.asJson,
+    "ergoTree" -> o.ergoTree.asJson,
+    "address" -> o.address.asJson,
+    "assets" -> o.assets,
+    "additionalRegisters" -> o.additionalRegisters,
+    "spentTransactionId" -> o.spentTxIs.asJson,
+    "mainChain" -> o.mainChain.asJson
   )
 }

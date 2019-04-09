@@ -24,7 +24,7 @@ object TransactionInfo {
   def extractInfo(txs: List[Transaction],
                   confirmations: List[(String, Long)],
                   inputs: List[InputWithOutputInfo],
-                  outputs: List[SpentOutput]): List[TransactionInfo] =
+                  outputs: List[ExtendedOutput]): List[TransactionInfo] =
     txs.map { tx =>
       val relatedInputs = inputs.filter(_.input.txId == tx.id).map(InputInfo.fromInputWithValue)
       val relatedOutputs = outputs.filter(_.output.txId == tx.id).map(OutputInfo.fromOutputWithSpent)

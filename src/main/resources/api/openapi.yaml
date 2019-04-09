@@ -611,6 +611,7 @@ components:
         - assets
         - additionalRegisters
         - spentTransactionId
+        - mainChain
       properties:
         id:
           $ref: '#/components/schemas/TransactionBoxId'
@@ -637,6 +638,10 @@ components:
           $ref: '#/components/schemas/Registers'
         spentTransactionId:
           $ref: '#/components/schemas/TransactionId'
+        mainChain:
+          description: Flag indication wheather box belongs to main chain
+          type: boolean
+          example: true
 
     Transaction:
       type: object

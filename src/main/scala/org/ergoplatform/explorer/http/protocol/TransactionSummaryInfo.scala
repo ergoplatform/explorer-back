@@ -22,7 +22,7 @@ object TransactionSummaryInfo {
              height: Long,
              confirmationsCount: Long = 0,
              inputs: List[InputWithOutputInfo],
-             outputs: List[SpentOutput]): TransactionSummaryInfo = {
+             outputs: List[ExtendedOutput]): TransactionSummaryInfo = {
     val totalFee = outputs.filter(_.output.ergoTree == "0101").map(_.output.value).sum
     val feePerByte = if (tx.size == 0) { 0L } else { totalFee / tx.size }
 

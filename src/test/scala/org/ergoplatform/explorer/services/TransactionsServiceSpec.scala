@@ -4,7 +4,7 @@ import cats.effect.IO
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
-import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, SpentOutput}
+import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.utils.Paging
@@ -65,7 +65,7 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
       }
 
     val outputsWithSpentTx = outputs
-      .map { o => SpentOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId)) }
+      .map { o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) }
 
     val service = new TransactionsServiceIOImpl[IO](xa, ec)
 
