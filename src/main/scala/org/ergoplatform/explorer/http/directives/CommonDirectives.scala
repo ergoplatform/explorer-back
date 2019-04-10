@@ -44,7 +44,7 @@ trait CommonDirectives {
 
     val defaultSortField = defaultSortBy.getOrElse(fieldMappings.head._1)
 
-    parameters(("sortBy" ? defaultSortField, "sortDirection" ? "asc"))
+    parameters(("sortBy" ? defaultSortField, "sortDirection" ? "desc"))
       .tflatMap { case (field: String, order: String) =>
         (checkSortOrder(order), checkSortBy(field)).parMapN { case (order, field) => field -> order } match {
           case Left(rjs) => reject(rjs.toList: _*)

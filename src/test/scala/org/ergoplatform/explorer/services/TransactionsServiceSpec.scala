@@ -4,7 +4,7 @@ import cats.effect.IO
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
-import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, SpentOutput}
+import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.utils.Paging
@@ -61,11 +61,11 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val inputsWithOutputInfo = inputs
       .map { i =>
         val oOpt = outputs.find(_.boxId == i.boxId)
-        InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.hash))
+        InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
       }
 
     val outputsWithSpentTx = outputs
-      .map { o => SpentOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId)) }
+      .map { o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) }
 
     val service = new TransactionsServiceIOImpl[IO](xa, ec)
 
@@ -80,11 +80,11 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
 
     fromService1 shouldEqual expected1
 
-    val randomHash = Random.shuffle(outputs).head.hash
+    val randomHash = Random.shuffle(outputs).head.address
 
     val length = {
       val txs1 = inputsWithOutputInfo.filter(_.address.contains(randomHash)).map(_.input.txId).toSet
-      val txs2 = outputs.filter(_.hash == randomHash).map(_.txId).toSet
+      val txs2 = outputs.filter(_.address == randomHash).map(_.txId).toSet
       (txs1 ++ txs2).size
     }
 
@@ -93,7 +93,7 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val fromService2 = service.getTxsByAddressId(randomHash, Paging(0, 100)).unsafeRunSync()
 
     val expected2 = {
-      val txIds = outputs.filter(_.hash == randomHash).map(_.txId).toSet
+      val txIds = outputs.filter(_.address == randomHash).map(_.txId).toSet
       val relatedTxs = tx.filter(t => txIds.apply(t.id))
       val height = h.map(_.height).max
       val confirmations = relatedTxs.map { tx => tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L) }

@@ -4,7 +4,7 @@ import cats.data._
 import doobie._
 import doobie.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.{AddressSummaryData, Output, SpentOutput}
+import org.ergoplatform.explorer.db.models.{AddressSummaryData, Output, ExtendedOutput}
 
 object OutputsOps extends JsonMeta {
 
@@ -12,12 +12,16 @@ object OutputsOps extends JsonMeta {
     "box_id",
     "tx_id",
     "value",
+    "creation_height",
     "index",
-    "proposition",
-    "hash",
+    "ergo_tree",
+    "address",
+    "assets",
     "additional_registers",
     "timestamp"
   )
+
+  def allFieldsRefFr(ref: String): Fragment = Fragment.const(fields.map(field => s"$ref.$field").mkString(", "))
 
   private val BYTES = "101004020e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea" +
     "02d192a39a8cc7a7017300730110010204020404040004c0fd4f05808c82f5f6030580b8c9e5ae040580f882ad16040204c0944004c0f407" +
@@ -31,53 +35,69 @@ object OutputsOps extends JsonMeta {
 
   val insertSql = s"INSERT INTO node_outputs ($fieldsString) VALUES ($holdersString)"
 
+  def findByBoxId(boxId: String): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h.main_chain" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE o.box_id = $boxId").query[ExtendedOutput]
+
   def findAllByTxId(txId: String): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE tx_id = $txId").query[Output]
 
-  def findAllByTxIdWithSpent(txId: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+  def findAllByTxIdWithSpent(txId: String): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h.main_chain" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"LEFT JOIN node_transactions t ON i.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
-      fr"WHERE o.tx_id = $txId AND (h.main_chain = TRUE OR i.tx_id IS NULL)").query[SpentOutput]
+      fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE o.tx_id = $txId AND (h.main_chain = TRUE OR i.tx_id IS NULL)").query[ExtendedOutput]
 
   def findAllByTxsId(txsId: NonEmptyList[String]): Query0[Output] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_outputs WHERE" ++ Fragments.in(fr"tx_id", txsId)).query[Output]
 
-  def findAllByTxsIdWithSpent(txsId: NonEmptyList[String]): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+  def findAllByTxsIdWithSpent(txsId: NonEmptyList[String]): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h.main_chain" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
-      fr"WHERE" ++ Fragments.in(fr"o.tx_id", txsId)).query[SpentOutput]
+      fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE" ++ Fragments.in(fr"o.tx_id", txsId)).query[ExtendedOutput]
 
   def insert: Update[Output] = Update[Output](insertSql)
 
-  def findByHash(hash: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+  def findByAddress(address: String): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h.main_chain" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE hash = $hash").query[SpentOutput]
+      fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE o.address = $address").query[ExtendedOutput]
 
-  def findByProposition(proposition: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+  def findByErgoTree(ergoTree: String): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h.main_chain" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE proposition = $proposition").query[SpentOutput]
+      fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE o.ergo_tree = $ergoTree").query[ExtendedOutput]
 
-  def findUnspentByHash(hash: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+  def findUnspentByAddress(address: String): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h_in.main_chain" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE i.box_id IS NULL AND o.hash = $hash").query[SpentOutput]
+      fr"LEFT JOIN node_transactions t_in ON o.tx_id = t_in.id LEFT JOIN node_headers h_in ON h_in.id = t_in.header_id" ++
+      fr"LEFT JOIN node_transactions t ON i.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE (i.box_id IS NULL OR h.main_chain = FALSE) AND o.address = $address")
+      .query[ExtendedOutput]
 
-  def findUnspentByProposition(proposition: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+  def findUnspentByErgoTree(ergoTree: String): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h_in.main_chain" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
-      fr"WHERE i.box_id IS NULL AND o.proposition = $proposition").query[SpentOutput]
+      fr"LEFT JOIN node_transactions t_in ON o.tx_id = t_in.id LEFT JOIN node_headers h_in ON h_in.id = t_in.header_id" ++
+      fr"LEFT JOIN node_transactions t ON i.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE (i.box_id IS NULL OR h.main_chain = FALSE) AND o.ergo_tree = $ergoTree")
+      .query[ExtendedOutput]
 
-  def findByHashWithSpent(hash: String): Query0[SpentOutput] =
-    (fr"SELECT o.box_id, o.tx_id, o.value, o.index, o.proposition, o.hash, o.additional_registers, o.timestamp, i.tx_id" ++
+  def findByAddressWithSpent(address: String): Query0[ExtendedOutput] =
+    (fr"SELECT " ++ allFieldsRefFr("o") ++ fr", i.tx_id, h.main_chain" ++
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id " ++
-      fr"WHERE o.hash = $hash").query[SpentOutput]
+      fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE o.address = $address").query[ExtendedOutput]
 
   /** Search address identifiers by the fragment of the identifier */
-  def searchByHash(substring: String): Query0[String] =
-    fr"SELECT hash FROM node_outputs WHERE hash LIKE ${"%" + substring +"%"}".query[String]
+  def searchByAddress(substring: String): Query0[String] =
+    fr"SELECT address FROM node_outputs WHERE address LIKE ${"%" + substring +"%"}".query[String]
 
   def sumOfAllUnspentOutputsSince(ts: Long): Query0[Long] =
     (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0)" ++
@@ -90,20 +110,20 @@ object OutputsOps extends JsonMeta {
           SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
           FROM node_outputs o
           LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
-          WHERE o.hash <> '$BYTES' AND o.timestamp >= $ts
+          WHERE o.address <> '$BYTES' AND o.timestamp >= $ts
       """
     ).query[Long]
 
-  def addressStats(hash: String): Query0[AddressSummaryData] =
+  def addressStats(address: String): Query0[AddressSummaryData] =
     fr"""
         SELECT
-        o.hash as hash,
+        o.address as address,
         COUNT(o.tx_id),
         CAST(SUM(CASE WHEN i.box_id IS NOT NULL THEN o.value ELSE 0 END) AS DECIMAL) as spent,
         CAST(SUM(CASE WHEN i.box_id IS NULL THEN o.value ELSE 0 END) AS BIGINT) as unspent
         FROM node_outputs o
         LEFT JOIN node_inputs i ON o.box_id = i.box_id
-        WHERE hash = $hash
+        WHERE address = $address
         AND TRUE = ANY(
           SELECT h.main_chain FROM node_headers h
           WHERE h.id IN (
@@ -111,6 +131,6 @@ object OutputsOps extends JsonMeta {
             WHERE tx.id = o.tx_id
           )
         )
-        GROUP BY (hash)
+        GROUP BY (address)
     """.query[AddressSummaryData]
 }

@@ -16,9 +16,9 @@ object InputsOps extends JsonMeta {
     "extension"
   )
 
-  val fieldsString = fields.mkString(", ")
-  val holdersString = fields.map(_ => "?").mkString(", ")
-  val fieldsFr = Fragment.const(fieldsString)
+  val fieldsString: String = fields.mkString(", ")
+  val holdersString: String = fields.map(_ => "?").mkString(", ")
+  val fieldsFr: Fragment = Fragment.const(fieldsString)
 
   val insertSql = s"INSERT INTO node_inputs ($fieldsString) VALUES ($holdersString)"
 
@@ -32,13 +32,13 @@ object InputsOps extends JsonMeta {
   def insert: Update[Input] = Update[Input](insertSql)
 
   def findAllByTxIdWithValue(txId: String): Query0[InputWithOutputInfo] =
-    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value, o.tx_id, o.hash" ++
+    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value, o.tx_id, o.address" ++
       fr"FROM node_inputs i JOIN node_outputs o ON i.box_id = o.box_id" ++
       fr"WHERE i.tx_id = $txId").query[InputWithOutputInfo]
 
 
   def findAllByTxsIdWithValue(txsId: NonEmptyList[String]): Query0[InputWithOutputInfo] =
-    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value, o.tx_id, o.hash" ++
+    (fr"SELECT i.box_id, i.tx_id, i.proof_bytes, i.extension, o.value, o.tx_id, o.address" ++
       fr"FROM node_inputs i LEFT JOIN node_outputs o ON i.box_id = o.box_id" ++
       fr"WHERE" ++ Fragments.in(fr"i.tx_id", txsId)).query[InputWithOutputInfo]
 

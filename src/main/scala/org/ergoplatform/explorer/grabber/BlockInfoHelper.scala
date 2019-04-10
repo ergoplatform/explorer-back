@@ -43,7 +43,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
     val reward = CoinsEmission.emissionAtHeight(nfb.header.height)
     val fee = nfb.transactions.transactions
       .flatMap(_.outputs)
-      .filter(_.proposition == Constants.FeePropositionScriptHex)
+      .filter(_.ergoTree == Constants.FeePropositionScriptHex)
       .map(_.value)
       .sum
     (reward, fee)

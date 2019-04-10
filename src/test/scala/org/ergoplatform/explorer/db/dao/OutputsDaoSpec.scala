@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
-import org.ergoplatform.explorer.db.models.SpentOutput
+import org.ergoplatform.explorer.db.models.ExtendedOutput
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
@@ -38,18 +38,18 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
       expected should contain theSameElementsAs fromDb
     }
 
-    val address = outputs.tail.head.hash
+    val address = outputs.tail.head.address
 
-    val expected = outputs.filter(_.hash == address)
+    val expected = outputs.filter(_.address == address)
     val fromDb = dao.findAllByAddressId(address).transact(xa).unsafeRunSync()
     expected should contain theSameElementsAs fromDb.map(_.output)
 
     val addressPart = address.substring(5, 10)
-    val expectedToFind = outputs.collect { case o if o.hash contains addressPart => o.hash }
+    val expectedToFind = outputs.collect { case o if o.address contains addressPart => o.address }
     val foundAddresses = dao.searchByAddressId(addressPart).transact(xa).unsafeRunSync()
     expectedToFind should contain theSameElementsAs foundAddresses
 
-    val withSpent = outputs.map{ o => SpentOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId))}
+    val withSpent = outputs.map{ o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)}
 
     dao.findAllByTxsId(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs outputs
     dao.findAllByTxsIdWithSpent(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs withSpent

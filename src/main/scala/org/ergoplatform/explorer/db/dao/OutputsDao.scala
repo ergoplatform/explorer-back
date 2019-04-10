@@ -5,7 +5,7 @@ import cats.implicits._
 import doobie._
 import doobie.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.{Output, SpentOutput}
+import org.ergoplatform.explorer.db.models.{Output, ExtendedOutput}
 
 class OutputsDao extends JsonMeta {
 
@@ -16,35 +16,37 @@ class OutputsDao extends JsonMeta {
   def insertMany(list: List[Output]): ConnectionIO[List[Output]] =
     OutputsOps.insert.updateManyWithGeneratedKeys[Output](fields: _*)(list).compile.to[List]
 
+  def findByBoxId(boxId: String): ConnectionIO[ExtendedOutput] = OutputsOps.findByBoxId(boxId).unique
+
   def findAllByTxId(txId: String): ConnectionIO[List[Output]] = OutputsOps.findAllByTxId(txId).to[List]
 
-  def findAllByHash(hash: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByHash(hash).to[List]
+  def findAllByAddress(address: String): ConnectionIO[List[ExtendedOutput]] = OutputsOps.findByAddress(address).to[List]
 
-  def findAllByProposition(proposition: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findByProposition(proposition).to[List]
+  def findAllByErgoTree(ergoTree: String): ConnectionIO[List[ExtendedOutput]] = OutputsOps.findByErgoTree(ergoTree).to[List]
 
-  def findUnspentByHash(hash: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByHash(hash).to[List]
+  def findUnspentByAddress(address: String): ConnectionIO[List[ExtendedOutput]] = OutputsOps.findUnspentByAddress(address).to[List]
 
-  def findUnspentByProposition(proposition: String): ConnectionIO[List[SpentOutput]] = OutputsOps.findUnspentByProposition(proposition).to[List]
+  def findUnspentByErgoTree(ergoTree: String): ConnectionIO[List[ExtendedOutput]] = OutputsOps.findUnspentByErgoTree(ergoTree).to[List]
 
   def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Output]] = NonEmptyList.fromList(txsId) match {
     case Some(ids) => OutputsOps.findAllByTxsId(ids).to[List]
     case None => List.empty[Output].pure[ConnectionIO]
   }
 
-  def findAllByTxIdWithSpent(txId: String): ConnectionIO[List[SpentOutput]] =
+  def findAllByTxIdWithSpent(txId: String): ConnectionIO[List[ExtendedOutput]] =
     OutputsOps.findAllByTxIdWithSpent(txId).to[List]
 
-  def findAllByTxsIdWithSpent(txsId: List[String]): ConnectionIO[List[SpentOutput]] =
+  def findAllByTxsIdWithSpent(txsId: List[String]): ConnectionIO[List[ExtendedOutput]] =
     NonEmptyList.fromList(txsId) match {
       case Some(ids) => OutputsOps.findAllByTxsIdWithSpent(ids).to[List]
-      case None => List.empty[SpentOutput].pure[ConnectionIO]
+      case None => List.empty[ExtendedOutput].pure[ConnectionIO]
     }
 
-  def findAllByAddressId(address: String)(implicit c: Composite[SpentOutput]): ConnectionIO[List[SpentOutput]] =
-    OutputsOps.findByHashWithSpent(address).to[List]
+  def findAllByAddressId(address: String)(implicit c: Composite[ExtendedOutput]): ConnectionIO[List[ExtendedOutput]] =
+    OutputsOps.findByAddressWithSpent(address).to[List]
 
   /** Search address identifiers by the fragment of the identifier */
-  def searchByAddressId(substring: String): ConnectionIO[List[String]] = OutputsOps.searchByHash(substring).to[List]
+  def searchByAddressId(substring: String): ConnectionIO[List[String]] = OutputsOps.searchByAddress(substring).to[List]
 
   def sumOfAllUnspentOutputsSince(ts: Long): ConnectionIO[Long] = OutputsOps.sumOfAllUnspentOutputsSince(ts).unique
 

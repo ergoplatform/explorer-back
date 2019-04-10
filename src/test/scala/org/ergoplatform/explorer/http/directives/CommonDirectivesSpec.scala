@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.http.directives
 
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.data._
 import cats.implicits.catsKernelStdOrderForString
@@ -9,25 +10,25 @@ import scorex.util.encode.Base16
 
 class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTest with CommonDirectives {
 
-  val fieldMappings = NonEmptyMap.of("notid" -> "not_id", "id" -> "id")
+  val fieldMappings: NonEmptyMap[String, String] = NonEmptyMap.of("notid" -> "not_id", "id" -> "id")
 
-  val sortingEchoRoute = (get & sorting(fieldMappings, Some("id"))) { (s, so) => complete(s"$s:$so") }
+  val sortingEchoRoute: Route = (get & sorting(fieldMappings, Some("id"))) { (s, so) => complete(s"$s:$so") }
 
   it should "read sorting parameters correctly" in {
     Get("/") ~> sortingEchoRoute ~> check {
-      responseAs[String] shouldBe ("id:ASC")
+      responseAs[String] shouldBe "id:DESC"
     }
 
     Get("/?sortBy=noTid") ~> sortingEchoRoute ~> check {
-      responseAs[String] shouldBe ("not_id:ASC")
+      responseAs[String] shouldBe "not_id:DESC"
     }
 
     Get("/?sortDirection=dEsC") ~> sortingEchoRoute ~> check {
-      responseAs[String] shouldBe ("id:DESC")
+      responseAs[String] shouldBe "id:DESC"
     }
 
     Get("/?sortBy=notid&sortDirection=Desc") ~> sortingEchoRoute ~> check {
-      responseAs[String] shouldBe ("not_id:DESC")
+      responseAs[String] shouldBe "not_id:DESC"
     }
 
     Get(s"/?sortBy=notrid") ~> sortingEchoRoute ~> check {
@@ -52,19 +53,19 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
 
   it should "read paging parameters correctly" in {
     Get("/") ~> pagingEchoRoute ~> check {
-      responseAs[String] shouldBe ("0:20")
+      responseAs[String] shouldBe "0:20"
     }
 
     Get("/?limit=10") ~> pagingEchoRoute ~> check {
-      responseAs[String] shouldBe ("0:10")
+      responseAs[String] shouldBe "0:10"
     }
 
     Get("/?offset=10") ~> pagingEchoRoute ~> check {
-      responseAs[String] shouldBe ("10:20")
+      responseAs[String] shouldBe "10:20"
     }
 
     Get("/?offset=5&limit=6") ~> pagingEchoRoute ~> check {
-      responseAs[String] shouldBe ("5:6")
+      responseAs[String] shouldBe "5:6"
     }
   }
 
@@ -128,7 +129,7 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
     }
   }
 
-  val startEndEcho = (get & startEndDate) { (s, e) => complete(s"$s:$e") }
+  val startEndEcho: Route = (get & startEndDate) { (s, e) => complete(s"$s:$e") }
 
   it should "read start end date correctly" in {
     Get("/") ~> startEndEcho ~> check {

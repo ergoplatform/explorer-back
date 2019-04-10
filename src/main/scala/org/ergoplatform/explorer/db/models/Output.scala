@@ -6,9 +6,11 @@ case class Output(
                    boxId: String,
                    txId: String,
                    value: Long,
+                   creationHeight: Int,
                    index: Int,
-                   proposition: String,
-                   hash: String,
+                   ergoTree: String,
+                   address: String,
+                   assets: Json = Json.Null,
                    additionalRegisters: Json = Json.Null,
                    timestamp: Long
                  )

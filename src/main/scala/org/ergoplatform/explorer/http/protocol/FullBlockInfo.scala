@@ -15,7 +15,7 @@ object FullBlockInfo {
             txs: List[Transaction],
             confirmations: List[(String, Long)],
             inputs: List[InputWithOutputInfo],
-            outputs: List[SpentOutput],
+            outputs: List[ExtendedOutput],
             adProof: Option[AdProof],
             blockSize: Long): FullBlockInfo = {
 

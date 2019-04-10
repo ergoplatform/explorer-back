@@ -57,14 +57,14 @@ class DBHelper(networkConfig: NetworkConfig) {
   def nodeInputsToDb(txId: String, inputs: List[ApiInput]): List[NodeInputWriter.ToInsert] = inputs
     .map { i => (i.boxId, txId, i.spendingProof.proofBytes, i.spendingProof.extension) }
 
-  def nodeOutputsToDb(txId: String, inputs: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = inputs
+  def nodeOutputsToDb(txId: String, outputs: List[ApiOutput], ts: Long): List[NodeOutputWriter.ToInsert] = outputs
     .zipWithIndex
     .map { case (o, index) =>
-      val address: String = Base16.decode(o.proposition)
+      val address: String = Base16.decode(o.ergoTree)
         .flatMap { bytes => addressEncoder.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition) }
         .map { _.toString }
-        .getOrElse("unable to derive address from proposition")
-      (o.boxId, txId, o.value, index, o.proposition, address, o.additionalRegisters, ts)
+        .getOrElse("unable to derive address from given ErgoTree")
+      (o.boxId, txId, o.value, o.creationHeight, index, o.ergoTree, address, o.assets, o.additionalRegisters, ts)
     }
 
   def btToInputs(bt: ApiBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>

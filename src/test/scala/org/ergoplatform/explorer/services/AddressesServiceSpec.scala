@@ -29,26 +29,26 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
 
     val service = new AddressesServiceIOImpl[IO](xa, ec)
 
-    val random = Random.shuffle(outputs).head.hash
+    val random = Random.shuffle(outputs).head.address
 
 
     val addressInfo = service.getAddressInfo(random).unsafeRunSync()
 
     val expected = {
       val id = random
-      val txsCount = outputs.count(_.hash == random)
-      val totalReceived = outputs.filter(_.hash == random).map(_.value).sum
+      val txsCount = outputs.count(_.address == random)
+      val totalReceived = outputs.filter(_.address == random).map(_.value).sum
       val inputsBoxIds = inputs.map(_.boxId)
-      val balance = outputs.filter{o => o.hash == random && !inputsBoxIds.contains(o.boxId)}.map(_.value).sum
+      val balance = outputs.filter{o => o.address == random && !inputsBoxIds.contains(o.boxId)}.map(_.value).sum
       AddressInfo(id, txsCount, totalReceived, balance)
     }
 
     addressInfo shouldBe expected
 
 
-    val random2 = Random.shuffle(outputs).head.hash.take(6)
+    val random2 = Random.shuffle(outputs).head.address.take(6)
 
-    val expected2 = outputs.filter(_.hash.startsWith(random2)).map(_.hash)
+    val expected2 = outputs.filter(_.address.startsWith(random2)).map(_.address)
     val searchResults = service.searchById(random2).unsafeRunSync()
 
     searchResults should contain theSameElementsAs expected2
