@@ -9,13 +9,13 @@ import io.circe.Json
 import io.circe.parser._
 import org.ergoplatform._
 import org.ergoplatform.explorer.Constants
-import org.ergoplatform.explorer.config.NetworkConfig
+import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.grabber.protocol._
 import org.postgresql.util.PGobject
 import scorex.util.encode.Base16
 import sigmastate.serialization.ErgoTreeSerializer
 
-class DBHelper(networkConfig: NetworkConfig) {
+class DBHelper(networkConfig: ProtocolConfig) {
 
   private val addressEncoder: ErgoAddressEncoder =
     ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)

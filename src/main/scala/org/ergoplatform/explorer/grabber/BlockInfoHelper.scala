@@ -4,7 +4,7 @@ import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import com.typesafe.scalalogging.Logger
 import org.bouncycastle.math.ec.custom.djb.Curve25519Point
 import org.ergoplatform.explorer.Constants
-import org.ergoplatform.explorer.config.NetworkConfig
+import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.grabber.db.BlockInfoWriter
 import org.ergoplatform.explorer.grabber.protocol.ApiFullBlock
@@ -17,7 +17,7 @@ import sigmastate.serialization.{GroupElementSerializer, SigmaSerializer}
 import scala.concurrent.duration._
 import scala.util.Try
 
-class BlockInfoHelper(networkConfig: NetworkConfig) {
+class BlockInfoHelper(protocolConfig: ProtocolConfig) {
 
   val logger = Logger("blocks-info-helper")
 
@@ -28,7 +28,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
     .build[String, BlockInfo]()
 
   private val addressEncoder: ErgoAddressEncoder =
-    ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
+    ErgoAddressEncoder(if (protocolConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
 
   private def minerAddress(nfb: ApiFullBlock): String = {
     Base16.decode(nfb.header.minerPk).flatMap { bytes =>
@@ -40,7 +40,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
   }
 
   private def minerRewardAndFee(nfb: ApiFullBlock): (Long, Long) = {
-    val reward = CoinsEmission.emissionAtHeight(nfb.header.height)
+    val reward = protocolConfig.emission.emissionAtHeight(nfb.header.height)
     val fee = nfb.transactions.transactions
       .flatMap(_.outputs)
       .filter(_.ergoTree == Constants.FeePropositionScriptHex)
@@ -71,7 +71,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
       blockFee = fee,
       blockChainTotalSize = nfb.size,
       totalTxsCount = nfb.transactions.transactions.length.toLong,
-      totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+      totalCoinsIssued = protocolConfig.emission.issuedCoinsAfterHeight(nfb.header.height),
       totalMiningTime = 0L,
       totalFees = fee,
       totalMinersReward = reward,
@@ -102,7 +102,7 @@ class BlockInfoHelper(networkConfig: NetworkConfig) {
       blockFee = fee,
       blockChainTotalSize = parentBlockInfo.blockChainTotalSize + nfb.size,
       totalTxsCount = nfb.transactions.transactions.length.toLong + parentBlockInfo.totalTxsCount,
-      totalCoinsIssued = CoinsEmission.issuedCoinsAfterHeight(nfb.header.height),
+      totalCoinsIssued = protocolConfig.emission.issuedCoinsAfterHeight(nfb.header.height),
       totalMiningTime = parentBlockInfo.totalMiningTime + miningTime,
       totalFees = parentBlockInfo.totalFees + fee,
       totalMinersReward = parentBlockInfo.totalMinersReward + reward,

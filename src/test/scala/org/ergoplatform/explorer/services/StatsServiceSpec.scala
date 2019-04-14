@@ -2,9 +2,11 @@ package org.ergoplatform.explorer.services
 
 import cats.effect.IO
 import doobie.implicits._
+import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{BlockchainInfo, StatsSummary}
+import org.ergoplatform.settings.MonetarySettings
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
@@ -23,13 +25,15 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val now = System.currentTimeMillis()
 
+    val protocolConfig = ProtocolConfig(testnet = true, MonetarySettings())
+
     hDao.insertMany(h.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
     tDao.insertMany(tx.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
     oDao.insertMany(outputs.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
     infoDao.insertMany(info.map(_.copy(timestamp = now))).transact(xa).unsafeRunSync()
 
-    val service = new StatsServiceIOImpl[IO](xa, ec)
+    val service = new StatsServiceIOImpl[IO](protocolConfig)(xa, ec)
 
     val expected1 = StatsSummary(
       blocksCount = 21L,
@@ -51,7 +55,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     fromService1 shouldBe expected1
 
     val fromService2 = service.findBlockchainInfo.unsafeRunSync()
-    val expected2 = BlockchainInfo("1", 1650000000000L, 21L, 1L)
+    val expected2 = BlockchainInfo("1", 1575000000000L, 21L, 1L)
 
     fromService2 shouldBe expected2
   }
