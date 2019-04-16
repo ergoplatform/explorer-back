@@ -22,7 +22,7 @@ object App extends Configuration with DbTransactor with Services with Rest {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val logger = Logger("server")
 
-  override val protocolConfig: ProtocolConfig = cfg.protocol
+  override lazy val protocolConfig: ProtocolConfig = cfg.protocol
 
   def main(args: Array[String]): Unit = {
 
