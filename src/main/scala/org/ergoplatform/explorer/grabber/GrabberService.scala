@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 
 class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, config: ExplorerConfig) {
 
-  private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.network)
+  private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.protocol)
 
   implicit val ec: ExecutionContext = executionContext
 
@@ -29,7 +29,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private val mandatoryAddressService = addressServices.head
   private val requestService = new RequestServiceImpl[IO]
 
-  private val dBHelper = new DBHelper(config.network)
+  private val dBHelper = new DBHelper(config.protocol)
 
   private val headersDao = new HeadersDao
 

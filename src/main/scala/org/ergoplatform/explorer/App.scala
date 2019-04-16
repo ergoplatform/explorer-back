@@ -7,6 +7,7 @@ import akka.stream.ActorMaterializer
 import cats.effect.IO
 import com.typesafe.scalalogging.Logger
 import doobie.hikari.implicits._
+import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.grabber.GrabberService
 import org.flywaydb.core.Flyway
 
@@ -20,6 +21,8 @@ object App extends Configuration with DbTransactor with Services with Rest {
   implicit val mat: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val logger = Logger("server")
+
+  override val protocolConfig: ProtocolConfig = cfg.protocol
 
   def main(args: Array[String]): Unit = {
 
@@ -73,4 +76,5 @@ object App extends Configuration with DbTransactor with Services with Rest {
       ()
     }
   }
+
 }

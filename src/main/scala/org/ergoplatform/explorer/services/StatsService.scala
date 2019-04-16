@@ -5,9 +5,9 @@ import cats.effect._
 import cats.implicits._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
+import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.db.models.{BlockInfo, MinerStats}
-import org.ergoplatform.explorer.grabber.CoinsEmission
 import org.ergoplatform.explorer.http.protocol._
 
 import scala.concurrent.ExecutionContext
@@ -39,8 +39,8 @@ trait StatsService[F[_]] {
 
 }
 
-class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
-                        (implicit F: Monad[F], A: Async[F]) extends StatsService[F] {
+class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(xa: Transactor[F], ec: ExecutionContext)
+                              (implicit F: Monad[F], A: Async[F]) extends StatsService[F] {
 
   val emptyStatsResponse: StatsSummary = StatsSummary.empty
   val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
@@ -120,7 +120,7 @@ class StatsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     hashrate = hashrateForSecs(difficulties, SecondsIn24H)
     txsCount <- tDao.countTxsSince(pastTs)
     info = header.map { h =>
-      val supply = CoinsEmission.issuedCoinsAfterHeight(h.height)
+      val supply = protocolConfig.emission.issuedCoinsAfterHeight(h.height)
       BlockchainInfo(h.version.toString, supply, txsCount, hashrate)}
   } yield info).transact[F](xa)
 
