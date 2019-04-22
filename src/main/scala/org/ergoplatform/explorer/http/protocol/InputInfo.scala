@@ -20,7 +20,7 @@ object InputInfo {
   implicit val encoder: Encoder[InputInfo] = (i: InputInfo) => Json.obj(
     "id" -> Json.fromString(i.id),
     "address" -> i.address.asJson,
-    "proof" -> Json.fromString(i.proof),
+    "spendingProof" -> Json.fromString(i.proof),
     "value" -> i.value.asJson,
     "transactionId" -> Json.fromString(i.txId),
     "outputTransactionId" -> i.outputTransactionId.asJson
