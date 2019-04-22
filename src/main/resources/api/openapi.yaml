@@ -572,11 +572,15 @@ components:
     TransactionInput:
       type: object
       required:
+        - id
         - address
         - value
+        - transactionId
         - outputTransactionId
         - spendingProof
       properties:
+        id:
+          $ref: '#/components/schemas/TransactionBoxId'
         address:
           $ref: '#/components/schemas/AddressId'
         value:
@@ -586,6 +590,8 @@ components:
           minimum: 0
           example: 1230044
         transactionId:
+          $ref: '#/components/schemas/TransactionId'
+        outputTransactionId:
           $ref: '#/components/schemas/TransactionId'
         spendingProof:
           description: Spending proof for transaction input

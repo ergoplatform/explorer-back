@@ -4,13 +4,12 @@ import io.circe.{Encoder, Json}
 import io.circe.syntax._
 import org.ergoplatform.explorer.db.models.InputWithOutputInfo
 
-case class InputInfo(
-                      id: String,
-                      signature: String,
-                      value: Option[Long],
-                      txId: String,
-                      outputTransactionId: Option[String],
-                      address: Option[String])
+case class InputInfo(id: String,
+                     proof: String,
+                     value: Option[Long],
+                     txId: String,
+                     outputTransactionId: Option[String],
+                     address: Option[String])
 
 object InputInfo {
 
@@ -21,7 +20,7 @@ object InputInfo {
   implicit val encoder: Encoder[InputInfo] = (i: InputInfo) => Json.obj(
     "id" -> Json.fromString(i.id),
     "address" -> i.address.asJson,
-    "signature" -> Json.fromString(i.signature),
+    "spendingProof" -> Json.fromString(i.proof),
     "value" -> i.value.asJson,
     "transactionId" -> Json.fromString(i.txId),
     "outputTransactionId" -> i.outputTransactionId.asJson
