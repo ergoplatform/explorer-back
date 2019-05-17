@@ -28,6 +28,8 @@ class TransactionsHandlerSpec extends HttpSpec {
     override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
 
     override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+
+    override def submitTransaction(tx: Json): IO[Json] = ???
   }
 
   val route: Route = new TransactionsHandler(service).route

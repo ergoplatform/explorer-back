@@ -33,6 +33,7 @@ class SearchHandlerSpec extends HttpSpec {
     override def getOutputById(id: String): IO[OutputInfo] = ???
     override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
     override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    override def submitTransaction(tx: Json): IO[Json] = ???
   }
   val addressService = new AddressesService[IO] {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = ???

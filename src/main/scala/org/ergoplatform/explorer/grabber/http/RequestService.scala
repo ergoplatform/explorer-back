@@ -10,12 +10,12 @@ import scalaj.http.{Http, HttpRequest}
 
 import scala.io.Source
 
-
 trait RequestService[F[_]] {
 
   def get[T](uri: String)(implicit d: Decoder[T]): F[T]
 
   def getSafe[T](uri: String)(implicit d: Decoder[T]): F[Either[Throwable, T]]
+
 }
 
 class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F]) extends RequestService[F] {
@@ -23,7 +23,7 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
   type RequestParser[T] = (Int, Map[String, IndexedSeq[String]], InputStream) => T
 
   private def getIO[T](uri: String)(implicit d: Decoder[T]): IO[T] = for {
-    r <- makeGetRequest(uri)
+    r <- makeRequest(uri)
     json <- executeRequest(r)
     entity <- decode(json, d)
   } yield entity
@@ -31,7 +31,7 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
   override def get[T](uri: String)(implicit d: Decoder[T]): F[T] = l.liftIO(getIO[T](uri))
 
   override def getSafe[T](uri: String)(implicit d: Decoder[T]): F[Either[Throwable, T]] =
-    l.liftIO{getIO[T](uri).attempt}
+    l.liftIO(getIO[T](uri).attempt)
 
   private def inputStreamToJson(is: InputStream): IO[Json] = {
     val str = Source.fromInputStream(is, "UTF8").mkString
@@ -57,12 +57,13 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
       case _ =>
         val msg = Source.fromInputStream(is, "UTF8").mkString
         IO.raiseError(
-          new IllegalStateException(s"Request to ${r.url} has been failed with code ${code}, and message $msg")
+          new IllegalStateException(s"Request to ${r.url} has been failed with code $code, and message $msg")
         )
     }
 
     r.exec(requestParser).body
   }
 
-  private def makeGetRequest(uri: String): IO[HttpRequest] = IO.pure(Http(uri))
+  private def makeRequest(uri: String): IO[HttpRequest] = IO.pure(Http(uri))
+
 }

@@ -3,8 +3,9 @@ package org.ergoplatform.explorer.services
 import cats.effect.IO
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
+import org.ergoplatform.explorer.config.GrabberConfig
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
-import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, ExtendedOutput}
+import org.ergoplatform.explorer.db.models.{ExtendedOutput, InputWithOutputInfo}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.utils.Paging
@@ -12,6 +13,7 @@ import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.util.Random
+import scala.concurrent.duration._
 
 class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
 
@@ -67,7 +69,9 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val outputsWithSpentTx = outputs
       .map { o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) }
 
-    val service = new TransactionsServiceIOImpl[IO](xa, ec)
+    val cfg = GrabberConfig(List("http://127.0.0.1"), 10.seconds)
+
+    val service = new TransactionsServiceIOImpl[IO](xa, ec, cfg)
 
     val randomTx1 = Random.shuffle(tx).head
     val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)
