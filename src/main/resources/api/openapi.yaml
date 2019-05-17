@@ -107,6 +107,26 @@ paths:
                       previousId:
                         $ref: '#/components/schemas/ModifierId'
 
+  '/transactions':
+    post:
+      summary: Send an Ergo transaction
+      operationId: sendTransaction
+      tags:
+        - transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FullTransaction'
+      responses:
+        '200':
+          description: JSON with ID of the new transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionIdResponse'
+
   '/transactions/{id}':
     parameters:
       - name: id
@@ -1049,6 +1069,15 @@ components:
       description: Base16-encoded transaction id bytes
       type: string
       example: 9140826f8fdb2f56816936bd6a7a72a71ac2fc5ad00b051a6c400c5cad611694
+
+    TransactionIdResponse:
+      description: Resulted transaction id
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          $ref: '#/components/schemas/TransactionId'
 
     TransactionBoxId:
       description: Base16-encoded transaction box id bytes. Should be 32 bytes long

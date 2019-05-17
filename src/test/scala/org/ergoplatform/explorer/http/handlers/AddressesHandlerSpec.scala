@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
@@ -17,13 +18,13 @@ class AddressesHandlerSpec extends HttpSpec {
     TransactionInfo("test3", 0L, 1L, List.empty, List.empty)
   )
 
-  val addressServiceStub = new AddressesService[IO] {
+  val addressServiceStub: AddressesService[IO] = new AddressesService[IO] {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = IO.pure(addressInfo)
 
     override def searchById(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
   }
 
-  val txServiceStub = new TransactionsService[IO] {
+  val txServiceStub: TransactionsService[IO] = new TransactionsService[IO] {
 
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(
       TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
@@ -37,12 +38,14 @@ class AddressesHandlerSpec extends HttpSpec {
 
     override def getOutputById(id: String): IO[OutputInfo] = ???
 
-    def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    override def submitTransaction(tx: Json): IO[Json] = ???
 
-    def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+
+    override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
   }
 
-  val route = new AddressesHandler(addressServiceStub, txServiceStub).route
+  val route: Route = new AddressesHandler(addressServiceStub, txServiceStub).route
 
   it should "get address by base58 id" in {
     Get("/addresses/tJPvQ5UwUKLtgaB3iCALNcjpUQJLcFJNiudZpiAHNtLVFScyubHkoz") ~> route ~> check {

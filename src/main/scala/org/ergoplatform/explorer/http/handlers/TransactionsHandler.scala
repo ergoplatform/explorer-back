@@ -3,17 +3,23 @@ package org.ergoplatform.explorer.http.handlers
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
+import io.circe.Json
 import org.ergoplatform.explorer.services.TransactionsService
 
 class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler {
 
   val route: Route = pathPrefix("transactions") {
-    getUnspentOutputsByErgoTree ~
+    submitTransaction ~
+      getUnspentOutputsByErgoTree ~
       getUnspentOutputsByAddress ~
       getOutputsByErgoTree ~
       getOutputsByAddress ~
       getOutputsById ~
       getTxById
+  }
+
+  def submitTransaction: Route = (post & entity(as[Json])) {
+    service.submitTransaction
   }
 
   def getTxById: Route = (get & base16Segment) {
