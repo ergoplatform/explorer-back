@@ -18,6 +18,10 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
       getTxById
   }
 
+  def submitTransaction: Route = (post & entity(as[Json])) {
+    service.submitTransaction
+  }
+
   def getTxById: Route = (get & base16Segment) {
     service.getTxInfo
   }
@@ -40,10 +44,6 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
 
   def getUnspentOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress" / "unspent") & base58Segment) {
     service.getOutputsByAddress(_, unspentOnly = true)
-  }
-
-  def submitTransaction: Route = (pathPrefix("submit") & post & entity(as[Json])) {
-    service.submitTransaction
   }
 
 }
