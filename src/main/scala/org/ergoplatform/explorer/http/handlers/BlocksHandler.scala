@@ -17,7 +17,7 @@ class BlocksHandler(bs: BlockService[IO]) extends RouteHandler {
 
   private val oneDayMillis: Long = 24L * 60L * 60L * 1000L
 
-  def route: Route = pathPrefix("blocks") {
+  val route: Route = pathPrefix("blocks") {
     getBlockById ~ getBlocks
   }
 
