@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.Logger
 import doobie.hikari.implicits._
 import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.grabber.GrabberService
+import org.ergoplatform.explorer.http.{ErrorHandler, Rest}
 import org.flywaydb.core.Flyway
 
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}

@@ -1,8 +1,7 @@
-package org.ergoplatform.explorer
+package org.ergoplatform.explorer.http
 
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler, ValidationRejection}
+import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server._
 import com.typesafe.scalalogging.StrictLogging
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
@@ -23,7 +22,7 @@ object ErrorHandler extends FailFastCirceSupport with StrictLogging {
     complete(code -> Json.obj("msg" -> Json.fromString(e.getMessage)))
   }
 
-  implicit val rejectionHandler = RejectionHandler.newBuilder()
+  implicit val rejectionHandler: RejectionHandler = RejectionHandler.newBuilder()
     .handle {
       case ValidationRejection(reason, _) =>
         complete(StatusCodes.BadRequest -> Json.obj("msg" -> Json.fromString(reason)))
