@@ -10,8 +10,8 @@ class AddressDao extends OutputsDao {
       val (spent, unspent) = outputs
         .filter(_.mainChain)
         .partition(_.spentTxId.isDefined)
-      val txsQty = spent
-        .flatMap(_.spentTxId)
+      val txsQty = outputs
+        .map(_.output.txId)
         .distinct
         .size
       val spentBalance = spent

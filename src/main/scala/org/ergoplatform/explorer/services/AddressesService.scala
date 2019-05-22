@@ -62,8 +62,8 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F],
       val unspentOffChainBoxes = offChainTxs
         .flatMap(_.outputs)
         .filter(x => ergoTreeToAddress(x.ergoTree) == addressId)
-      val txsQty = spentOnChainBoxes
-        .flatMap(_.spentTxId)
+      val confirmedTxsQty = outputs
+        .map(_.output.txId)
         .distinct
         .size
       val spentOnChainBalance = spentOnChainBoxes
@@ -107,7 +107,7 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F],
       val onChainAssets = onChainTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
       val totalAssets = totalTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
       AddressInfo(
-        addressId, txsQty, totalReceived, onChainBalance, totalBalance, onChainAssets, totalAssets)
+        addressId, confirmedTxsQty, totalReceived, onChainBalance, totalBalance, onChainAssets, totalAssets)
     }
     .transact(xa)
 

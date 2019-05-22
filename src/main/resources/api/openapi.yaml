@@ -956,12 +956,12 @@ components:
         transactions:
           type: object
           required:
-            - total
+            - confirmed
           properties:
-            total:
+            confirmed:
               type: integer
               format: int32
-              description: Total number of transactions
+              description: Total number of confirmed transactions
               example: 2341
             totalReceived:
               type: integer

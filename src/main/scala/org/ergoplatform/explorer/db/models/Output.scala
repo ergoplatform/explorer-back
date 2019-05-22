@@ -16,7 +16,7 @@ case class Output(boxId: String,
 
   def encodedAssets: Map[String, Long] =
     assets.as[List[ApiAsset]].fold(
-      _ => throw new IllegalStateException("Failed to decode data from db"),
+      _ => Map.empty,
       _.map(x => x.tokenId -> x.amount).toMap
     )
 

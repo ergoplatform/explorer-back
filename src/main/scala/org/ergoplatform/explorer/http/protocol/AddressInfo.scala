@@ -5,7 +5,7 @@ import io.circe.syntax._
 import org.ergoplatform.explorer.grabber.protocol.ApiAsset
 
 case class AddressInfo(id: String,
-                       transactionsCount: Long,
+                       confirmedTxsQty: Long,
                        totalReceived: BigInt,
                        confirmedBalance: Long,
                        totalBalance: Long,
@@ -18,7 +18,7 @@ object AddressInfo {
     Json.obj(
       "summary" -> Json.obj("id" -> a.id.asJson),
       "transactions" -> Json.obj(
-        "total" -> a.transactionsCount.asJson,
+        "confirmed" -> a.confirmedTxsQty.asJson,
         "totalReceived" -> a.totalReceived.asJson,
         "confirmedBalance" ->  a.confirmedBalance.asJson,
         "totalBalance" ->  a.totalBalance.asJson,
