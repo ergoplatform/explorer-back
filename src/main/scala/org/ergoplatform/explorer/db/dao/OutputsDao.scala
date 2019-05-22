@@ -50,6 +50,6 @@ class OutputsDao extends JsonMeta {
 
   def sumOfAllUnspentOutputsSince(ts: Long): ConnectionIO[Long] = OutputsOps.sumOfAllUnspentOutputsSince(ts).unique
 
-  def estimateOutputSince(ts: Long): ConnectionIO[Long] = OutputsOps.estimatedOutputsSince(ts).unique
+  def estimateOutputSince(ts: Long): ConnectionIO[BigDecimal] = OutputsOps.estimatedOutputsSince(ts).unique
 
 }

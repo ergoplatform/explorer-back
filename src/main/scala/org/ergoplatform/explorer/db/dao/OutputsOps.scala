@@ -104,12 +104,14 @@ object OutputsOps extends JsonMeta {
       fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
       fr"WHERE i.box_id IS NULL AND o.timestamp >= $ts").query[Long]
 
-  def estimatedOutputsSince(ts: Long): Query0[Long] =
-    fr"""
-        SELECT COALESCE(CAST(SUM(o.value) as BIGINT),0)
-        FROM node_outputs o
-        LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
-        WHERE o.address <> '$BYTES' AND o.timestamp >= $ts
-    """.query[Long]
+  def estimatedOutputsSince(ts: Long): Query0[BigDecimal] =
+    Fragment.const(
+      s"""
+          SELECT COALESCE(CAST(SUM(o.value) as DECIMAL),0)
+          FROM node_outputs o
+          LEFT JOIN node_inputs i ON (o.box_id = i.box_id AND i.box_id IS NULL)
+          WHERE o.address <> '$BYTES' AND o.timestamp >= $ts
+      """
+    ).query[BigDecimal]
 
 }

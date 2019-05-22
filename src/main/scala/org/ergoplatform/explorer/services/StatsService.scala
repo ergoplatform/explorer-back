@@ -75,7 +75,7 @@ class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(xa: Transactor[F]
     BigDecimal(result * 100).setScale(8, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
-  private def recentToStats(blocks: List[BlockInfo], totalOutputs: Long, estimatedOutputs: Long): StatsSummary =
+  private def recentToStats(blocks: List[BlockInfo], totalOutputs: Long, estimatedOutputs: BigDecimal): StatsSummary =
     blocks.sortBy(info => -info.height) match {
       case Nil =>
         StatsSummary.empty
@@ -96,7 +96,7 @@ class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(xa: Transactor[F]
           totalTransactionsCount = txsCount,
           totalFee = totalFee,
           totalOutput = totalOutputs,
-          estimatedOutput = estimatedOutputs,
+          estimatedOutput = estimatedOutputs.toBigInt(),
           totalMinerRevenue = minersRevenue,
           percentEarnedTransactionsFees = percentOfFee(totalFee, minersReward),
           percentTransactionVolume = percentOfTxVolume(minersReward, coins),
