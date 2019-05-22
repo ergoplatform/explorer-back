@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
-import org.ergoplatform.explorer.db.models.AddressSummaryData
+import org.ergoplatform.explorer.db.models.AddressPortfolio
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
@@ -32,11 +32,11 @@ class AddressDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val unspent = related.filterNot{o => inputs.map(_.boxId).contains(o.boxId)}.map(_.value).sum
     val txsCount = tx.count(tx => related.map(_.txId).contains(tx.id))
 
-    val expected = AddressSummaryData(randomHash, txsCount, spent, unspent)
+    val expected = AddressPortfolio(randomHash, txsCount, spent, unspent, Map.empty)
 
     val dao = new AddressDao
 
-    dao.getAddressData(randomHash).transact(xa).unsafeRunSync() shouldBe expected
+    dao.getAddressPortfolio(randomHash).transact(xa).unsafeRunSync() shouldBe expected
   }
 
 }

@@ -69,7 +69,7 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val outputsWithSpentTx = outputs
       .map { o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) }
 
-    val cfg = GrabberConfig(List("http://127.0.0.1"), 10.seconds)
+    val cfg = GrabberConfig(List("http://127.0.0.1"), 10.seconds, 5.seconds)
 
     val service = new TransactionsServiceIOImpl[IO](xa, ec, cfg)
 

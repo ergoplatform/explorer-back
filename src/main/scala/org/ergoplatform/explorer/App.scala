@@ -7,16 +7,20 @@ import akka.stream.ActorMaterializer
 import cats.effect.IO
 import com.typesafe.scalalogging.Logger
 import doobie.hikari.implicits._
-import org.ergoplatform.explorer.config.ProtocolConfig
-import org.ergoplatform.explorer.grabber.GrabberService
+import org.ergoplatform.explorer.grabber.{OffChainGrabberService, OnChainGrabberService}
 import org.ergoplatform.explorer.http.{ErrorHandler, Rest}
 import org.flywaydb.core.Flyway
 
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 
-object App extends Configuration with DbTransactor with Services with Rest {
+object App
+  extends Configuration
+    with DbTransactor
+    with Services
+    with OffChainMonitoring
+    with Rest {
 
   implicit val system: ActorSystem = ActorSystem("explorer-system")
   implicit val mat: ActorMaterializer = ActorMaterializer()
@@ -59,11 +63,14 @@ object App extends Configuration with DbTransactor with Services with Rest {
 
     val grabberEc = ExecutionContext.fromExecutor(Pools.grabberPool)
 
-    val grabberService = new GrabberService(transactor2, grabberEc, cfg)
-    grabberService.start()
+    val onChainGrabberService = new OnChainGrabberService(transactor2, grabberEc, cfg)
+    onChainGrabberService.start()
+
+    val offChainGrabberService = new OffChainGrabberService(offChainStorage, cfg)
+    offChainGrabberService.start()
 
     sys.addShutdownHook {
-      grabberService.stop()
+      onChainGrabberService.stop()
       val stop = binding.flatMap(_.unbind())
       stop.onComplete { _ =>
         Pools.shutdown()

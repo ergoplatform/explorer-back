@@ -11,7 +11,7 @@ import org.ergoplatform.explorer.utils.Paging
 
 class AddressesHandlerSpec extends HttpSpec {
 
-  val addressInfo = AddressInfo("test", 1L, 2L, 3L)
+  val addressInfo = AddressInfo("test", 1L, 2L, 3L, 4L, List.empty, List.empty)
   val txs = List(
     TransactionInfo("test1", 0L, 1L, List.empty, List.empty),
     TransactionInfo("test2", 0L, 1L, List.empty, List.empty),

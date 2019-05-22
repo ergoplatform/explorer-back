@@ -17,13 +17,13 @@ import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiNodeInfo}
 
 import scala.concurrent.ExecutionContext
 
-class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, config: ExplorerConfig) {
+class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionContext, config: ExplorerConfig) {
 
   private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.protocol)
 
   implicit val ec: ExecutionContext = executionContext
 
-  private val logger = Logger("grabber-service")
+  private val logger = Logger("on-chain-grabber-service")
 
   private val addressServices = config.grabber.nodes.map(NodeAddressService)
   private val mandatoryAddressService = addressServices.head
@@ -34,7 +34,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
   private val headersDao = new HeadersDao
 
   private val active = new AtomicBoolean(false)
-  private val pause = config.grabber.pollDelay
+  private val pause = config.grabber.onChainPollDelay
   private val MaxRetriesNumber = 4
 
   private def idsAtHeight(height: Long): IO[List[String]] =
@@ -117,7 +117,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     }
   } yield blockInfo
 
-  private val sync: IO[Unit] = for {
+  private val syncTask: IO[Unit] = for {
     _ <- IO {
       logger.info("Starting sync task.")
     }
@@ -151,7 +151,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
     if (active.get) {
       run(io)
     } else {
-      IO.raiseError(new InterruptedException("Grabber service has been stopped"))
+      IO.raiseError(new InterruptedException("On-chain grabber service has been stopped"))
     }
   }
 
@@ -162,7 +162,7 @@ class GrabberService(xa: Transactor[IO], executionContext: ExecutionContext, con
 
   def start(): Unit = if (!active.get()) {
     active.set(true)
-    (IO.shift(ec) *> run(sync)).unsafeRunAsync { r =>
+    (IO.shift(ec) *> run(syncTask)).unsafeRunAsync { r =>
       logger.info(s"Grabber stopped. Cause: $r")
     }
   } else {

@@ -964,13 +964,27 @@ components:
               description: Total number of transactions
               example: 2341
             totalReceived:
-              type: number
+              type: integer
               description: Total recieved coins
-              example: 10455323.23
-            balance:
-              type: number
-              description: Final balance
-              example: 1123.42
+              example: 10455323
+            confirmedBalance:
+              type: integer
+              description: Confirmed balance
+              example: 1123
+            totalBalance:
+              type: integer
+              description: Total balance including off-chain transactions
+              example: 1123
+            confirmedTokensBalance:
+              type: array
+              description: Confirmed tokens balance
+              items:
+                $ref: '#/components/schemas/Asset'
+            totalTokensBalance:
+              type: array
+              description: Total tokens balance including off-chain transactions
+              items:
+                $ref: '#/components/schemas/Asset'
 
     BlockchainInfo:
       type: object
