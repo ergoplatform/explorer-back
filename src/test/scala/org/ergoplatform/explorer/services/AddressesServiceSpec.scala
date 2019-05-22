@@ -4,8 +4,9 @@ import cats.effect.IO
 import doobie.implicits._
 import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
-import org.ergoplatform.explorer.db.models.AddressPortfolio
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
+import org.ergoplatform.explorer.grabber.protocol.ApiAsset
+import org.ergoplatform.explorer.http.protocol.AddressInfo
 import org.ergoplatform.explorer.persistence.OffChainPersistence
 import org.ergoplatform.settings.MonetarySettings
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -47,7 +48,15 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
       val totalReceived = outputs.filter(_.address == random).map(_.value).sum
       val inputsBoxIds = inputs.map(_.boxId)
       val balance = outputs.filter{o => o.address == random && !inputsBoxIds.contains(o.boxId)}.map(_.value).sum
-      AddressPortfolio(id, txsCount, totalReceived, balance, Map.empty)
+      val tokensBalance = outputs
+        .filter(o => o.address == random && !inputsBoxIds.contains(o.boxId))
+        .flatMap(_.encodedAssets.toList)
+        .foldLeft(Map.empty[String, Long]) {
+          case (acc, (assetId, assetAmt)) =>
+            acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+        }
+      val assets = tokensBalance.map(x => ApiAsset(x._1, x._2)).toList
+      AddressInfo(id, txsCount, totalReceived, balance, balance, assets, assets)
     }
 
     addressInfo shouldBe expected
