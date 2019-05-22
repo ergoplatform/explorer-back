@@ -146,6 +146,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/FullTransaction'
 
+  '/transactions/unconfirmed':
+    get:
+      summary: Get unconfirmed transactions
+      tags:
+        - transactions
+      responses:
+        '200':
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                description: Unconfirmed transactions
+                type: array
+                items:
+                  $ref: '#/components/schemas/UnconfirmedTransaction'
+
   '/transactions/boxes/{id}':
     parameters:
       - name: id
@@ -859,6 +875,91 @@ components:
         d:
           type: integer
           example: 987654321
+
+    SpendingProof:
+      type: object
+      required:
+        - proofBytes
+        - extension
+      properties:
+        proofBytes:
+          type: string
+          description: Base16-encoded proof bytes
+          example: '2ddaaa576ccff6420b7e0557e3970e6c93fd5004189f11a50f8bb60f7f8d740c3925575e97a183728dde'
+        extension:
+          type: object
+          description: Variables to be put into context
+          additionalProperties:
+            $ref: '#/components/schemas/SValue'
+          example:
+            '1': '0101'
+
+    UnconfirmedTransactionInput:
+      type: object
+      required:
+        - boxId
+        - spendingProof
+      properties:
+        boxId:
+          $ref: '#/components/schemas/TransactionBoxId'
+        spendingProof:
+          $ref: '#/components/schemas/SpendingProof'
+
+    UnconfirmedTransactionOutput:
+      type: object
+      required:
+        - boxId
+        - value
+        - creationHeight
+        - ergoTree
+        - assets
+        - additionalRegisters
+      properties:
+        boxId:
+          $ref: '#/components/schemas/TransactionBoxId'
+        value:
+          description: Amount of Ergo token
+          type: number
+          minimum: 0
+          example: 14.7
+        creationHeight:
+          description: Height the output was created at
+          type: integer
+          format: int32
+          example: 9149
+        ergoTree:
+          $ref: '#/components/schemas/ErgoTree'
+        assets:
+          description: Assets list in the transaction
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+        additionalRegisters:
+          $ref: '#/components/schemas/Registers'
+
+    UnconfirmedTransaction:
+      type: object
+      required:
+        - id
+        - inputs
+        - outputs
+      properties:
+        id:
+          $ref: '#/components/schemas/ModifierId'
+        inputs:
+          description: Transaction inputs
+          type: array
+          items:
+            $ref: '#/components/schemas/UnconfirmedTransactionInput'
+        outputs:
+          description: Transaction outputs
+          type: array
+          items:
+            $ref: '#/components/schemas/UnconfirmedTransactionOutput'
+        size:
+          type: integer
+          description: Transaction size in bytes
+          example: 512
 
     FullTransaction:
       type: object

@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
+import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol._
 import org.ergoplatform.explorer.services.{AddressesService, TransactionsService}
 import org.ergoplatform.explorer.utils.Paging
@@ -39,6 +40,8 @@ class AddressesHandlerSpec extends HttpSpec {
     override def getOutputById(id: String): IO[OutputInfo] = ???
 
     override def submitTransaction(tx: Json): IO[Json] = ???
+
+    override def getUnconfirmed: IO[List[ApiTransaction]] = ???
 
     override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
 

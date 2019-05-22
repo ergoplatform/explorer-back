@@ -10,6 +10,7 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
 
   val route: Route = pathPrefix("transactions") {
     submitTransaction ~
+      getUnconfirmed ~
       getUnspentOutputsByErgoTree ~
       getUnspentOutputsByAddress ~
       getOutputsByErgoTree ~
@@ -24,6 +25,10 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
 
   def getTxById: Route = (get & base16Segment) {
     service.getTxInfo
+  }
+
+  def getUnconfirmed: Route = (pathPrefix("unconfirmed") & get) {
+    service.getUnconfirmed
   }
 
   def getOutputsById: Route = (pathPrefix("boxes") & base16Segment) {

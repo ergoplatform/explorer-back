@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
+import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol.{MiniBlockInfo, OutputInfo, TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.services.TransactionsService
 import org.ergoplatform.explorer.utils.Paging
@@ -30,6 +31,8 @@ class TransactionsHandlerSpec extends HttpSpec {
     override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
 
     override def submitTransaction(tx: Json): IO[Json] = ???
+
+    override def getUnconfirmed: IO[List[ApiTransaction]] = ???
   }
 
   val route: Route = new TransactionsHandler(service).route

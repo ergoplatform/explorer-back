@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.ValidationRejection
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
+import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol._
 import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
@@ -34,6 +35,7 @@ class SearchHandlerSpec extends HttpSpec {
     override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
     override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
     override def submitTransaction(tx: Json): IO[Json] = ???
+    override def getUnconfirmed: IO[List[ApiTransaction]] = ???
   }
   val addressService = new AddressesService[IO] {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = ???

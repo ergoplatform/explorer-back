@@ -13,7 +13,9 @@ import io.circe.syntax._
 import io.circe.{Json, ParsingFailure}
 import org.ergoplatform.explorer.config.GrabberConfig
 import org.ergoplatform.explorer.db.dao._
+import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, TransactionSummaryInfo}
+import org.ergoplatform.explorer.persistence.OffChainPersistence
 import org.ergoplatform.explorer.utils.Paging
 import scalaj.http.Http
 
@@ -23,6 +25,8 @@ import scala.io.Source
 trait TransactionsService[F[_]] {
 
   def getTxInfo(id: String):  F[TransactionSummaryInfo]
+
+  def getUnconfirmed: IO[List[ApiTransaction]]
 
   def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]]
 
@@ -40,7 +44,10 @@ trait TransactionsService[F[_]] {
 
 }
 
-class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext, cfg: GrabberConfig)
+class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
+                                      offChainPersistence: OffChainPersistence,
+                                      ec: ExecutionContext,
+                                      cfg: GrabberConfig)
                                      (implicit F: Monad[F], A: Async[F]) extends TransactionsService[F] {
 
   val headersDao = new HeadersDao
@@ -117,6 +124,8 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext, c
     }
     .headOption
     .getOrElse(IO.never)
+
+  override def getUnconfirmed: IO[List[ApiTransaction]] = IO.pure(offChainPersistence.getAll)
 
   private val requestParser: (Int, Map[String, IndexedSeq[String]], InputStream) => IO[Json] =
     (code, _, is) => code match {
