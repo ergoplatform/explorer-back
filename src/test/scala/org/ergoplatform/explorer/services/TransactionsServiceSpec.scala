@@ -8,6 +8,7 @@ import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, Tran
 import org.ergoplatform.explorer.db.models.{ExtendedOutput, InputWithOutputInfo}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
+import org.ergoplatform.explorer.persistence.OffChainPersistence
 import org.ergoplatform.explorer.utils.Paging
 import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -69,9 +70,11 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val outputsWithSpentTx = outputs
       .map { o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) }
 
-    val cfg = GrabberConfig(List("http://127.0.0.1"), 10.seconds)
+    val cfg = GrabberConfig(List("http://127.0.0.1"), 10.seconds, 5.seconds)
 
-    val service = new TransactionsServiceIOImpl[IO](xa, ec, cfg)
+    val offChainStore = new OffChainPersistence
+
+    val service = new TransactionsServiceIOImpl[IO](xa, offChainStore, ec, cfg)
 
     val randomTx1 = Random.shuffle(tx).head
     val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)

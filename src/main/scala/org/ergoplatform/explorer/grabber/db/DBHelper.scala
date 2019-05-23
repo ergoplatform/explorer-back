@@ -7,6 +7,7 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 import io.circe.Json
 import io.circe.parser._
+import io.circe.syntax._
 import org.ergoplatform._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ProtocolConfig
@@ -64,7 +65,7 @@ class DBHelper(networkConfig: ProtocolConfig) {
         .flatMap { bytes => addressEncoder.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition) }
         .map { _.toString }
         .getOrElse("unable to derive address from given ErgoTree")
-      (o.boxId, txId, o.value, o.creationHeight, index, o.ergoTree, address, o.assets, o.additionalRegisters, ts)
+      (o.boxId, txId, o.value, o.creationHeight, index, o.ergoTree, address, o.assets.asJson, o.additionalRegisters, ts)
     }
 
   def btToInputs(bt: ApiBlockTransactions): List[NodeInputWriter.ToInsert] = bt.transactions.flatMap { tx =>

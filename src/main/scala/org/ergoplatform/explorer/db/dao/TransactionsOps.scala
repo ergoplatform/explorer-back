@@ -8,7 +8,7 @@ import org.ergoplatform.explorer.db.models.Transaction
 
 object TransactionsOps {
 
-  val fields = Seq(
+  val fields: Seq[String] = Seq(
     "id",
     "header_id",
     "coinbase",
@@ -16,9 +16,9 @@ object TransactionsOps {
     "size"
   )
 
-  val fieldsString = fields.mkString(", ")
-  val holdersString = fields.map(_ => "?").mkString(", ")
-  val fieldsFr = Fragment.const(fieldsString)
+  val fieldsString: String = fields.mkString(", ")
+  val holdersString: String = fields.map(_ => "?").mkString(", ")
+  val fieldsFr: Fragment = Fragment.const(fieldsString)
   val insertSql = s"INSERT INTO node_transactions ($fieldsString) VALUES ($holdersString)"
 
   def findAllByBlockId(blockId: String)(implicit c: Composite[Transaction]): Query0[Transaction] =

@@ -11,7 +11,7 @@ case class StatsSummary(blocksCount: Long,
                         totalTransactionsCount: Long,
                         totalFee: Long,
                         totalOutput: Long,
-                        estimatedOutput: Long,
+                        estimatedOutput: BigInt,
                         totalMinerRevenue: Long,
                         percentEarnedTransactionsFees: Double,
                         percentTransactionVolume: Double,
@@ -33,7 +33,7 @@ object StatsSummary {
       "total" -> Json.fromLong(s.totalTransactionsCount),
       "totalFee" -> Json.fromLong(s.totalFee),
       "totalOutput" -> Json.fromLong(s.totalOutput),
-      "estimatedTransactionVolume" -> Json.fromLong(s.estimatedOutput)
+      "estimatedTransactionVolume" -> Json.fromBigInt(s.estimatedOutput)
     ),
     "miningCost" -> Json.obj(
       "totalMinersRevenue" -> Json.fromLong(s.totalMinerRevenue),

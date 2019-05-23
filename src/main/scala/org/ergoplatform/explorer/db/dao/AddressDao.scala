@@ -1,15 +1,32 @@
 package org.ergoplatform.explorer.db.dao
 
-import cats.implicits._
 import doobie.free.connection.ConnectionIO
-import doobie.implicits._
-import org.ergoplatform.explorer.db.models.AddressSummaryData
+import org.ergoplatform.explorer.db.models.AddressPortfolio
 
-class AddressDao {
-  def getAddressData(hash: String): ConnectionIO[AddressSummaryData] = OutputsOps.addressStats(hash).option.flatMap {
-    case Some(a) => a.pure[ConnectionIO]
-    case None => doobie.free.connection.raiseError(
-      new NoSuchElementException(s"Cannot find address = $hash")
-    )
-  }
+class AddressDao extends OutputsDao {
+
+  def getAddressPortfolio(address: String): ConnectionIO[AddressPortfolio] = findAllByAddress(address)
+    .map { outputs =>
+      val (spent, unspent) = outputs
+        .filter(_.mainChain)
+        .partition(_.spentTxId.isDefined)
+      val txsQty = outputs
+        .map(_.output.txId)
+        .distinct
+        .size
+      val spentBalance = spent
+        .map(_.output.value)
+        .sum
+      val balance = unspent
+        .map(_.output.value)
+        .sum
+      val tokensBalance = unspent
+        .flatMap(_.output.encodedAssets.toSeq)
+        .foldLeft(Map.empty[String, Long]) {
+          case (acc, (assetId, assetAmt)) =>
+            acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+        }
+      AddressPortfolio(address, txsQty, spentBalance, balance, tokensBalance)
+    }
+
 }

@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
-import org.ergoplatform.explorer.db.models.AddressSummaryData
+import org.ergoplatform.explorer.db.models.AddressPortfolio
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
@@ -11,7 +11,7 @@ class AddressDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
   it should "get correct address data" in {
 
-    val (h, _, tx, inputs, outputs, _) = PreparedData.data
+    val (h, _, txs, inputs, outputs, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao
@@ -19,10 +19,9 @@ class AddressDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val oDao = new OutputsDao
 
     hDao.insertMany(h).transact(xa).unsafeRunSync()
-    tDao.insertMany(tx).transact(xa).unsafeRunSync()
+    tDao.insertMany(txs).transact(xa).unsafeRunSync()
     oDao.insertMany(outputs).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
-
 
     val randomHash = Random.shuffle(outputs).head.address
 
@@ -30,13 +29,20 @@ class AddressDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
     val spent = related.filter{o => inputs.map(_.boxId).contains(o.boxId)}.map(_.value).sum
     val unspent = related.filterNot{o => inputs.map(_.boxId).contains(o.boxId)}.map(_.value).sum
-    val txsCount = tx.count(tx => related.map(_.txId).contains(tx.id))
+    val txsCount = txs.count(tx => related.map(_.txId).contains(tx.id))
+    val tokensBalance = related
+      .filterNot(o => inputs.map(_.boxId).contains(o.boxId))
+      .flatMap(_.encodedAssets.toList)
+      .foldLeft(Map.empty[String, Long]) {
+        case (acc, (assetId, assetAmt)) =>
+          acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+      }
 
-    val expected = AddressSummaryData(randomHash, txsCount, spent, unspent)
+    val expected = AddressPortfolio(randomHash, txsCount, spent, unspent, tokensBalance)
 
     val dao = new AddressDao
 
-    dao.getAddressData(randomHash).transact(xa).unsafeRunSync() shouldBe expected
+    dao.getAddressPortfolio(randomHash).transact(xa).unsafeRunSync() shouldBe expected
   }
 
 }

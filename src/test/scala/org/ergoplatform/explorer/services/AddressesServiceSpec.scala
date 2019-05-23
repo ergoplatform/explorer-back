@@ -2,9 +2,13 @@ package org.ergoplatform.explorer.services
 
 import cats.effect.IO
 import doobie.implicits._
+import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
+import org.ergoplatform.explorer.grabber.protocol.ApiAsset
 import org.ergoplatform.explorer.http.protocol.AddressInfo
+import org.ergoplatform.explorer.persistence.OffChainPersistence
+import org.ergoplatform.settings.MonetarySettings
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.util.Random
@@ -27,7 +31,11 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
     oDao.insertMany(outputs).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
 
-    val service = new AddressesServiceIOImpl[IO](xa, ec)
+    val offChainStore = new OffChainPersistence
+
+    val cfg = ProtocolConfig(testnet = true, monetary = MonetarySettings())
+
+    val service = new AddressesServiceIOImpl[IO](xa, offChainStore, ec, cfg)
 
     val random = Random.shuffle(outputs).head.address
 
@@ -40,7 +48,15 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
       val totalReceived = outputs.filter(_.address == random).map(_.value).sum
       val inputsBoxIds = inputs.map(_.boxId)
       val balance = outputs.filter{o => o.address == random && !inputsBoxIds.contains(o.boxId)}.map(_.value).sum
-      AddressInfo(id, txsCount, totalReceived, balance)
+      val tokensBalance = outputs
+        .filter(o => o.address == random && !inputsBoxIds.contains(o.boxId))
+        .flatMap(_.encodedAssets.toList)
+        .foldLeft(Map.empty[String, Long]) {
+          case (acc, (assetId, assetAmt)) =>
+            acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+        }
+      val assets = tokensBalance.map(x => ApiAsset(x._1, x._2)).toList
+      AddressInfo(id, txsCount, totalReceived, balance, balance, assets, assets)
     }
 
     addressInfo shouldBe expected
