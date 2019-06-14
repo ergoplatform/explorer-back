@@ -1,10 +1,11 @@
 package org.ergoplatform.explorer.grabber.protocol
 
 import io.circe.{Decoder, HCursor}
+import org.ergoplatform.explorer.db.models.BlockExtension
 
 case class ApiFullBlock(header: ApiHeader,
                         transactions: ApiBlockTransactions,
-                        extension: ApiBlockExtension,
+                        extension: BlockExtension,
                         adProofs: Option[ApiAdProofs],
                         size: Long)
 
@@ -14,7 +15,7 @@ object ApiFullBlock {
     for {
       header <- c.downField("header").as[ApiHeader]
       transactions <- c.downField("blockTransactions").as[ApiBlockTransactions]
-      extension <- c.downField("extension").as[ApiBlockExtension]
+      extension <- c.downField("extension").as[BlockExtension]
       adProofs <- c.downField("adProofs").as[ApiAdProofs] match {
         case Left(_) => Right(None)
         case Right(proofs) => Right(Some(proofs))

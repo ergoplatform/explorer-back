@@ -1,16 +1,11 @@
 package org.ergoplatform.explorer.db.dao
 
-import doobie.Fragment
+import doobie._
 import doobie.implicits._
-import doobie.util.composite.Composite
-import doobie.util.query.Query0
+import org.ergoplatform.explorer.db.mappings.JsonMeta
 import org.ergoplatform.explorer.db.models.BlockExtension
 
-object BlockExtensionOps {
-
-  implicit val c: Composite[BlockExtension] = Composite[BlockExtension]
-
-  val tableName: String = "node_extensions"
+object BlockExtensionOps extends JsonMeta {
 
   val fields: Seq[String] = Seq(
     "header_id",
@@ -20,7 +15,13 @@ object BlockExtensionOps {
 
   val fieldsFr: Fragment = Fragment.const(fields.mkString(", "))
 
-  def select(headerId: String): Query0[BlockExtension] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM $tableName WHERE header_id = $headerId").query[BlockExtension]
+  val fieldsString: String = fields.mkString(", ")
+  val holdersString: String = fields.map(_ => "?").mkString(", ")
+  val insertSql = s"INSERT INTO node_extensions ($fieldsString) VALUES ($holdersString)"
+
+  def select(id: String): Query0[BlockExtension] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_extensions WHERE header_id = $id;").query[BlockExtension]
+
+  def insert: Update[BlockExtension] = Update[BlockExtension](insertSql)
 
 }

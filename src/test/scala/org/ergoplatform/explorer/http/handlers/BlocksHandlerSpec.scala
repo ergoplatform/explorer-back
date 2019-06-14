@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
+import org.ergoplatform.explorer.db.models.BlockExtension
 import org.ergoplatform.explorer.grabber.protocol.ApiPowSolutions
 import org.ergoplatform.explorer.http.protocol._
 import org.ergoplatform.explorer.services.BlockService
@@ -26,10 +27,15 @@ class BlocksHandlerSpec extends HttpSpec {
     TransactionInfo("test3", 0L, 1L, List.empty, List.empty)
   )
 
-  val block = BlockSummaryInfo(
-    info = FullBlockInfo(headerInfo, txs, Some(AdProofInfo("a", "b", "c"))),
-    references = BlockReferencesInfo("a", Some("b"))
+  val extension = BlockExtension(
+    "019bbcdbce2f8859c1930dd2ccf6f887def1b82a67d9b4d09469b6826017126306",
+    "011afcb9cc16fdebf4a211fffb1540153669071b1e6b1e7087afa14dfad896812c",
+    Json.Null
+  )
 
+  val block = BlockSummaryInfo(
+    info = FullBlockInfo(headerInfo, txs, extension, Some(AdProofInfo("a", "b", "c"))),
+    references = BlockReferencesInfo("a", Some("b"))
   )
 
   val minerInfo = MinerInfo("address", "name")

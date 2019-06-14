@@ -2,8 +2,10 @@ package org.ergoplatform.explorer.services
 
 import cats.effect.IO
 import doobie.implicits._
+import io.circe.Json
+import io.circe.syntax._
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.{InputWithOutputInfo, ExtendedOutput}
+import org.ergoplatform.explorer.db.models.{BlockExtension, ExtendedOutput, InputWithOutputInfo}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, TransactionInfo}
 import org.ergoplatform.explorer.utils.{Desc, Paging, Sorting}
@@ -50,12 +52,21 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
     val iDao = new InputsDao
     val oDao = new OutputsDao
     val infoDao = new BlockInfoDao
+    val extDao = new BlockExtensionDao
+
+    val extension = BlockExtension(
+      "26de4a963051ec52d072e02c50f5ac74e956a5a92f7b8d0c992ca0a8b10b3c81",
+      "1afcb9cc16fdebf4a211fffb1540153669071b1e6b1e7087afa14dfad896812c",
+      Json.fromValues(List(("0100", "019bbcdbce2f8859c1930dd2ccf6f887def1b82a67d9b4d09469b6826017126306").asJson))
+    )
+    val extensions = h.map(h => extension.copy(headerId = h.id))
 
     hDao.insertMany(h).transact(xa).unsafeRunSync()
     tDao.insertMany(tx).transact(xa).unsafeRunSync()
     oDao.insertMany(outputs).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
     infoDao.insertMany(info).transact(xa).unsafeRunSync()
+    extDao.insertMany(extensions).transact(xa).unsafeRunSync()
 
     val inputsWithOutputInfo = inputs
       .map { i =>
@@ -78,7 +89,7 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
       val size = info.find(_.headerId == randomBlockId).map(_.blockSize).getOrElse(0L)
       val height = h.map(_.height).max
       val confirmations = txs.map { tx => tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L) }
-      FullBlockInfo(header, txs, confirmations, inputsWithOutputInfo, outputsWithSpentTx, None, size)
+      FullBlockInfo(header, txs, confirmations, inputsWithOutputInfo, outputsWithSpentTx, extension, None, size)
     }
 
     val references = {
