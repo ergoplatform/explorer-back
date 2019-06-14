@@ -2,13 +2,12 @@ package org.ergoplatform.explorer.grabber
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import com.typesafe.scalalogging.Logger
-import org.bouncycastle.math.ec.custom.djb.Curve25519Point
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.models.BlockInfo
 import org.ergoplatform.explorer.grabber.db.BlockInfoWriter
 import org.ergoplatform.explorer.grabber.protocol.ApiFullBlock
-import org.ergoplatform.{ErgoAddressEncoder, P2PKAddress}
+import org.ergoplatform.{ErgoAddressEncoder, ErgoScriptPredef, Pay2SAddress}
 import scorex.util.encode.Base16
 import sigmastate.basics.DLogProtocol.ProveDlog
 import sigmastate.interpreter.CryptoConstants
@@ -30,11 +29,14 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
   private val addressEncoder: ErgoAddressEncoder =
     ErgoAddressEncoder(if (protocolConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
 
-  private def minerAddress(nfb: ApiFullBlock): String = {
+  private def minerRewardAddress(nfb: ApiFullBlock): String = {
     Base16.decode(nfb.header.minerPk).flatMap { bytes =>
       Try(GroupElementSerializer.parse(SigmaSerializer.startReader(bytes)))
     } match {
-      case scala.util.Success(x: CryptoConstants.EcPointType) => P2PKAddress(ProveDlog(x))(addressEncoder).toString
+      case scala.util.Success(x: CryptoConstants.EcPointType) =>
+        val minerPk = ProveDlog(x)
+        val rewardScript = ErgoScriptPredef.rewardOutputScript(protocolConfig.monetary.minerRewardDelay, minerPk)
+        Pay2SAddress(rewardScript)(addressEncoder).toString
       case _ => throw new Exception("Failed to decode miner pk")
     }
   }
@@ -53,7 +55,7 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee
     val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
-    val mAddress = minerAddress(nfb)
+    val mAddress = minerRewardAddress(nfb)
 
     BlockInfo(
       headerId = nfb.header.id,
@@ -83,7 +85,7 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee
     val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
-    val mAddress = minerAddress(nfb)
+    val mAddress = minerRewardAddress(nfb)
     val miningTime = nfb.header.timestamp - parentBlockInfo.timestamp
 
     BlockInfo(
