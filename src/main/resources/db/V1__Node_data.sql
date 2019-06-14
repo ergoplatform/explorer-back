@@ -31,6 +31,12 @@ CREATE INDEX "node_headers__height" ON node_headers (height);
 CREATE INDEX "node_headers__ts" ON node_headers (timestamp);
 CREATE INDEX "node_headers__main_chain" ON node_headers (main_chain);
 
+CREATE TABLE node_extensions (
+  header_id VARCHAR(64) NOT NULL PRIMARY KEY,
+  digest VARCHAR(64) NOT NULL,
+  fields JSON NOT NULL
+);
+
 /*
     Main table that being used for storing stats.
  */

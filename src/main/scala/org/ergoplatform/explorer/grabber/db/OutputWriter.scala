@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.grabber.db
 
 import io.circe.Json
 
-object NodeOutputWriter extends BasicWriter {
+object OutputWriter extends BasicWriter {
 
   type ToInsert = (String, String, Long, Int, Int, String, String, Json, Json, Long)
 
