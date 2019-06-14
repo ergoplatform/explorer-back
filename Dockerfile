@@ -16,5 +16,5 @@ FROM openjdk:8-jre-slim
 MAINTAINER Aleksei Terekhin <daron666@yandex.ru>
 COPY --from=builder /ergo-explorer.jar /ergo-explorer.jar
 EXPOSE 8080
-ENTRYPOINT ["/usr/bin/java", "-jar", "/ergo-explorer.jar"]
+ENTRYPOINT ["java", "-jar", "/ergo-explorer.jar"]
 CMD [""]
