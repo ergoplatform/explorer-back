@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.grabber.db
 
-object NodeTxWriter  extends BasicWriter {
+object TransactionWriter  extends BasicWriter {
 
   type ToInsert = (String, String, Boolean, Long, Long)
 

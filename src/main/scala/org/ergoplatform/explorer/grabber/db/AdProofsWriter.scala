@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.grabber.db
 
-object NodeAdProofsWriter extends BasicWriter {
+object AdProofsWriter extends BasicWriter {
 
   type ToInsert = (String, String, String)
 

@@ -49,6 +49,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
   val outputDao = new OutputsDao
   val adProofDao = new AdProofsDao
   val blockInfoDao = new BlockInfoDao
+  val extensionDao = new BlockExtensionDao
 
   override def getBlock(id: String): F[BlockSummaryInfo] = for {
     _ <- Async.shift[F](ec)
@@ -72,7 +73,9 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     is <- inputDao.findAllByTxsIdWithValue(txsIds)
     os <- outputDao.findAllByTxsIdWithSpent(txsIds)
     ad <- adProofDao.find(h.id)
-  } yield BlockSummaryInfo(FullBlockInfo(h, txs, confirmations, is, os, ad, blockSize), references)).transact[F](xa)
+    ext <- extensionDao.getByHeaderId(h.id)
+  } yield BlockSummaryInfo(FullBlockInfo(h, txs, confirmations, is, os, ext, ad, blockSize), references))
+    .transact[F](xa)
 
   override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlockInfo]] = for {
     _ <- Async.shift[F](ec)
