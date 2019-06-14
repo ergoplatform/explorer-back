@@ -51,4 +51,5 @@ object BlocksHandler {
     "difficulty" -> "difficulty",
     "minerreward" -> "miner_reward"
   )
+
 }
