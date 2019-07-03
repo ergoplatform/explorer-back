@@ -17,6 +17,8 @@ object Constants {
 
   val MinerRewardDelta = 720
 
+  val TeamTreasuryThreshold = 67500000000L
+
   val group: BcDlogGroup[EcPointType] = CryptoConstants.dlogGroup
 
   val FeePropositionScriptHex: String= {

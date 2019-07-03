@@ -42,7 +42,8 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
   }
 
   private def minerRewardAndFee(nfb: ApiFullBlock): (Long, Long) = {
-    val reward = protocolConfig.emission.emissionAtHeight(nfb.header.height)
+    val emission = protocolConfig.emission.emissionAtHeight(nfb.header.height)
+    val reward = math.min(Constants.TeamTreasuryThreshold, emission)
     val fee = nfb.transactions.transactions
       .flatMap(_.outputs)
       .filter(_.ergoTree == Constants.FeePropositionScriptHex)
