@@ -47,8 +47,8 @@ class HeadersDao {
     )
   }
 
-  def getAtTimeRange(minTs: Long, maxTs: Long): ConnectionIO[List[Header]] =
-    HeadersOps.selectByTimeRange(minTs, maxTs).to[List]
+  def getAtHeightRange(minH: Long, maxH: Long): ConnectionIO[List[Header]] =
+    HeadersOps.selectByHeightRange(minH, maxH).to[List]
 
   def getLast(limit: Int = 20): ConnectionIO[List[Header]] = HeadersOps.selectLast(limit).to[List]
 

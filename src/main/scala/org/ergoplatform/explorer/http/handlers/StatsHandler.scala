@@ -9,10 +9,18 @@ import scala.concurrent.duration._
 
 class StatsHandler(ss: StatsService[IO]) extends RouteHandler {
 
-  val route: Route = (pathPrefix("stats") & get) {
+  val route: Route = pathPrefix("stats") {
     withRequestTimeout(180.seconds) {
-      ss.findLastStats
+      forksR ~ statsR
     }
+  }
+
+  def statsR: Route = (pathEndOrSingleSlash & get) {
+    ss.findLastStats
+  }
+
+  def forksR: Route = (path("forks") & get & parameters("fromHeight".as[Long] ? -1L)) {
+    ss.forksInfo
   }
 
 }

@@ -15,7 +15,9 @@ object Constants {
 
   val PublicKeyLength = 33
 
-  val MinerRewardDelta = 720
+  val AverageBlocksPerDay = 720
+
+  val MinerRewardDelta: Int = AverageBlocksPerDay
 
   val TeamTreasuryThreshold = 67500000000L
 
