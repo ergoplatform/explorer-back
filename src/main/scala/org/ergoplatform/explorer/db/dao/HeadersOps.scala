@@ -38,6 +38,9 @@ object HeadersOps {
   def selectByHeight(height: Long): Query0[Header] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE height = $height").query
 
+  def selectByTimeRange(minTs: Long, maxTs: Long): Query0[Header] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE timestamp >= $minTs AND timestamp <= $maxTs").query
+
   def selectByParentId(parentId: String): Query0[Header] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE parent_id = $parentId AND main_chain = TRUE").query[Header]
 

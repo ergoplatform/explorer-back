@@ -6,7 +6,7 @@ import org.ergoplatform.explorer.db.models.Header
 
 class HeadersDao {
 
-  val fields = HeadersOps.fields
+  val fields: Seq[String] = HeadersOps.fields
 
   def insert(h: Header): ConnectionIO[Header] = {
     HeadersOps
@@ -46,6 +46,9 @@ class HeadersDao {
       new NoSuchElementException(s"Cannot find header with id = $id")
     )
   }
+
+  def getAtTimeRange(minTs: Long, maxTs: Long): ConnectionIO[List[Header]] =
+    HeadersOps.selectByTimeRange(minTs, maxTs).to[List]
 
   def getLast(limit: Int = 20): ConnectionIO[List[Header]] = HeadersOps.selectLast(limit).to[List]
 
