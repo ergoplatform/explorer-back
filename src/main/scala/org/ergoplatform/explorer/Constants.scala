@@ -15,6 +15,8 @@ object Constants {
 
   val PublicKeyLength = 33
 
+  val EpochLength = 1024
+
   val MinerRewardDelta = 720
 
   val TeamTreasuryThreshold = 67500000000L

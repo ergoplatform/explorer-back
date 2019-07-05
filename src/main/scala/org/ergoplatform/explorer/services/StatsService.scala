@@ -5,9 +5,10 @@ import cats.effect._
 import cats.implicits._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
+import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.{BlockInfo, MinerStats}
+import org.ergoplatform.explorer.db.models.{BlockInfo, Header, MinerStats}
 import org.ergoplatform.explorer.http.protocol._
 
 import scala.concurrent.ExecutionContext
@@ -37,21 +38,62 @@ trait StatsService[F[_]] {
 
   def sharesAcrossMinersFor24H: F[List[MinerStatSingleInfo]]
 
+  def forksInfo(fromH: Long): F[ForksSummary]
+
 }
 
 class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(xa: Transactor[F], ec: ExecutionContext)
                               (implicit F: Monad[F], A: Async[F]) extends StatsService[F] {
 
-  val emptyStatsResponse: StatsSummary = StatsSummary.empty
-  val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
+  private val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
   private val SecondsIn24H: Long = (24 * 60 * 60).toLong
   private val MillisIn24H: Long = SecondsIn24H * 1000L
 
   val infoDao = new BlockInfoDao
-  val hDao = new HeadersDao
+  val headersDao = new HeadersDao
   val outputsDao = new OutputsDao
   val tDao = new TransactionsDao
   val minerStatsDao = new MinerStatsDao
+
+  override def forksInfo(fromH: Long): F[ForksSummary] = {
+    def traceForks(heightSlices: List[List[Header]], acc: List[List[Header]]): List[List[Header]] =
+      heightSlices match {
+        case headSlice :: leftSlices =>
+          val forkChains = headSlice.map { header =>
+            leftSlices.foldLeft(Some(header): Option[Header], List(header)) {
+              case ((Some(nextHeader), chainAcc), nextSlice) =>
+                val parentOpt = nextSlice.find(_.id == nextHeader.parentId)
+                parentOpt -> (chainAcc ++ parentOpt.toList)
+              case ((_, chainAcc), _) =>
+                None -> chainAcc
+            }._2
+          }
+          traceForks(leftSlices, acc ++ forkChains)
+        case Nil =>
+          acc
+      }
+
+    infoDao.findLast
+      .flatMap { bestBlockInfo =>
+        val bestHeight = bestBlockInfo.map(_.height).getOrElse(0L)
+        val minHeight = if (fromH < 0) bestHeight - Constants.EpochLength else fromH
+        headersDao.getAtHeightRange(minHeight, bestHeight)
+      }
+      .transact[F](xa)
+      .map { headers =>
+        val (mainChain, nonMainChain) = headers.partition(_.mainChain)
+        val slicedNonMainChain = nonMainChain.groupBy(_.height).values.toList.sortBy(-_.head.height)
+        val forks = traceForks(slicedNonMainChain, List.empty).map { fork =>
+          val branchPointOpt = mainChain
+            .find { mainChainHeader =>
+              fork.lastOption.exists(_.parentId == mainChainHeader.id)
+            }
+            .map(_.height)
+          ForkInfo(fork.size, branchPointOpt, fork.reverse.map(h => h.height -> h.id))
+        }
+        ForksSummary(forks.size, forks)
+      }
+    }
 
   override def findLastStats: F[StatsSummary] = for {
     _ <- Async.shift[F](ec)
@@ -114,7 +156,7 @@ class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(xa: Transactor[F]
   }
 
   private def blockchainInfoResult: F[Option[BlockchainInfo]] = (for {
-    header <- hDao.getLast(1).map(_.headOption)
+    header <- headersDao.getLast(1).map(_.headOption)
     pastTs = System.currentTimeMillis() - MillisIn24H
     difficulties <- infoDao.difficultiesSumSince(pastTs)
     hashrate = hashrateForSecs(difficulties, SecondsIn24H)
