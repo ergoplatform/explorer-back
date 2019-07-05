@@ -373,23 +373,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/BlockchainStats'
 
-    '/stats/forks':
-      get:
-        summary: Forks info summary
-        tags:
-          - statistics
-        parameters:
-          - name: fromHeight
-            in: query
-            description: Height to display forks from
-            type: integer
-        responses:
-          '200':
-            description: Ok
-            content:
-              'application/json':
-                schema:
-                  $ref: '#/components/schemas/ForksInfo'
+  '/stats/forks':
+    get:
+      summary: Forks info summary
+      tags:
+        - statistics
+      parameters:
+        - name: fromHeight
+          in: query
+          required: false
+          description: Height to display forks from. Forks from last epoch are displayed by default.
+      responses:
+        '200':
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ForksInfo'
 
   '/charts/total':
     get:

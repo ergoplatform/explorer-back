@@ -76,7 +76,7 @@ class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(xa: Transactor[F]
     infoDao.findLast
       .flatMap { bestBlockInfo =>
         val bestHeight = bestBlockInfo.map(_.height).getOrElse(0L)
-        val minHeight = if (fromH < 0) bestHeight - Constants.AverageBlocksPerDay else fromH
+        val minHeight = if (fromH < 0) bestHeight - Constants.EpochLength else fromH
         headersDao.getAtHeightRange(minHeight, bestHeight)
       }
       .transact[F](xa)
