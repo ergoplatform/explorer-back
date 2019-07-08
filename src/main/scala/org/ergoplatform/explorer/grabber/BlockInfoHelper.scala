@@ -27,7 +27,7 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
     .build[String, BlockInfo]()
 
   private val addressEncoder: ErgoAddressEncoder =
-    ErgoAddressEncoder(if (protocolConfig.testnet) Constants.TestnetPrefix else Constants.TestnetPrefix)
+    ErgoAddressEncoder(if (protocolConfig.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)
 
   private def minerRewardAddress(nfb: ApiFullBlock): String = {
     Base16.decode(nfb.header.minerPk).flatMap { bytes =>
