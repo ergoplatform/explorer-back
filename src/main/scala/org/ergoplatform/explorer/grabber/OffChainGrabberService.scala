@@ -31,7 +31,10 @@ class OffChainGrabberService(persistence: OffChainPersistence, config: ExplorerC
       logger.info("Starting off-chain monitoring task.")
     }
     txs <- requestService.get[List[ApiTransaction]](addressServices.memPoolUri)
-  } yield persistence.put(txs)
+  } yield {
+    persistence.clear()
+    persistence.put(txs)
+  }
 
   private def run(io: IO[Unit]): IO[Unit] = io.attempt.flatMap {
     case Right(_) => IO {

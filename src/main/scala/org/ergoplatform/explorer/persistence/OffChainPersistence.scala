@@ -13,6 +13,8 @@ class OffChainPersistence {
 
   def put(txs: List[ApiTransaction]): Unit = store.putAll(txs.map(x => x.id -> x).toMap.asJava)
 
+  def clear(): Unit = store.clear()
+
   def getAll: List[ApiTransaction] = store.values().asScala.toList
 
 }
