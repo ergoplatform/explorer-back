@@ -26,6 +26,8 @@ trait TransactionsService[F[_]] {
 
   def getTxInfo(id: String):  F[TransactionSummaryInfo]
 
+  def getUnconfirmedTxInfo(id: String): F[ApiTransaction]
+
   def getUnconfirmed: F[List[ApiTransaction]]
 
   def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]]
@@ -57,6 +59,11 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
+
+  override def getUnconfirmedTxInfo(id: String): F[ApiTransaction] =
+    offChainPersistence.getTx(id)
+      .fold[F[ApiTransaction]](
+        M.raiseError(new NoSuchElementException(s"Cannot find unconfirmed transaction with id = $id")))(F.pure)
 
   override def getTxInfo(id: String): F[TransactionSummaryInfo] = for {
     _ <- Async.shift[F](ec)
@@ -122,8 +129,8 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
 
   override def submitTransaction(tx: Json): F[Json] = cfg.nodes
     .map { url =>
-      val requestIO = F.pure(Http(s"$url/transactions").postData(tx.noSpaces).header("content-type", "application/json"))
-      requestIO.flatMap(_.exec(requestParser).body)
+      F.pure(Http(s"$url/transactions").postData(tx.noSpaces).header("content-type", "application/json"))
+        .flatMap(_.exec(requestParser).body)
     }
     .headOption
     .getOrElse(M.raiseError(new Exception("No known nodes responded")))

@@ -146,6 +146,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/FullTransaction'
 
+  '/transactions/unconfirmed/{id}':
+    parameters:
+      - name: id
+        required: true
+        in: path
+        schema:
+          $ref: '#/components/schemas/ModifierId'
+    get:
+      summary: Get unconfirmed transaction by id
+      tags:
+        - transactions
+      responses:
+        '200':
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UnconfirmedTransaction'
+
   '/transactions/unconfirmed':
     get:
       summary: Get unconfirmed transactions
