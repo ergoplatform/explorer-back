@@ -26,7 +26,7 @@ trait TransactionsService[F[_]] {
 
   def getTxInfo(id: String):  F[TransactionSummaryInfo]
 
-  def getUnconfirmed: IO[List[ApiTransaction]]
+  def getUnconfirmed: F[List[ApiTransaction]]
 
   def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]]
 
@@ -40,7 +40,7 @@ trait TransactionsService[F[_]] {
 
   def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
 
-  def submitTransaction(tx: Json): IO[Json]
+  def submitTransaction(tx: Json): F[Json]
 
 }
 
@@ -48,7 +48,10 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
                                       offChainPersistence: OffChainPersistence,
                                       ec: ExecutionContext,
                                       cfg: GrabberConfig)
-                                     (implicit F: Monad[F], A: Async[F]) extends TransactionsService[F] {
+                                     (implicit F: Monad[F],
+                                      A: Async[F],
+                                      M: MonadError[F, Throwable])
+  extends TransactionsService[F] {
 
   val headersDao = new HeadersDao
   val transactionsDao = new TransactionsDao
@@ -117,30 +120,30 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
       .map(_.map(OutputInfo.fromOutputWithSpent))
   }
 
-  override def submitTransaction(tx: Json): IO[Json] = cfg.nodes
+  override def submitTransaction(tx: Json): F[Json] = cfg.nodes
     .map { url =>
-      val requestIO = IO.pure(Http(s"$url/transactions").postData(tx.noSpaces).header("content-type", "application/json"))
+      val requestIO = F.pure(Http(s"$url/transactions").postData(tx.noSpaces).header("content-type", "application/json"))
       requestIO.flatMap(_.exec(requestParser).body)
     }
     .headOption
-    .getOrElse(IO.never)
+    .getOrElse(M.raiseError(new Exception("No known nodes responded")))
 
-  override def getUnconfirmed: IO[List[ApiTransaction]] = IO.pure(offChainPersistence.getAll)
+  override def getUnconfirmed: F[List[ApiTransaction]] = F.pure(offChainPersistence.getAll)
 
-  private val requestParser: (Int, Map[String, IndexedSeq[String]], InputStream) => IO[Json] =
+  private val requestParser: (Int, Map[String, IndexedSeq[String]], InputStream) => F[Json] =
     (code, _, is) => code match {
       case 200 =>
         val txId = Source.fromInputStream(is, "UTF8").mkString
-        IO.pure(Json.obj("id" -> txId.asJson))
+        F.pure(Json.obj("id" -> txId.asJson))
       case 400 =>
         val str = Source.fromInputStream(is, "UTF8").mkString
         io.circe.parser.parse(str) match {
-          case Right(json) => IO.pure(json)
-          case Left(pf: ParsingFailure) => IO.raiseError[Json](pf.underlying)
+          case Right(json) => F.pure(json)
+          case Left(pf: ParsingFailure) => M.raiseError(pf.underlying)
         }
       case _ =>
         val msg = Source.fromInputStream(is, "UTF8").mkString
-        IO.raiseError(
+        M.raiseError(
           new IllegalStateException(s"Request has been failed with code $code, and message $msg")
         )
     }
