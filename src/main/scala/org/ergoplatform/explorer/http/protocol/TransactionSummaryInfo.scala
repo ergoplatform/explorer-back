@@ -13,8 +13,7 @@ case class TransactionSummaryInfo(id: String,
                                   outputs: List[OutputInfo],
                                   totalCoins: Long = 0L,
                                   totalFee: Long = 0L,
-                                  feePerByte: Long = 0L
-                                  )
+                                  feePerByte: Long = 0L)
 
 object TransactionSummaryInfo {
 

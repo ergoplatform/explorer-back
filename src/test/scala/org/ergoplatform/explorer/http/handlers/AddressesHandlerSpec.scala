@@ -26,11 +26,10 @@ class AddressesHandlerSpec extends HttpSpec {
   }
 
   val txServiceStub: TransactionsService[IO] = new TransactionsService[IO] {
-
+    override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(
       TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
     )
-
     override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = IO.pure(txs)
 
     override def countTxsByAddressId(addressId: String): IO[Long] = IO.pure(3L)

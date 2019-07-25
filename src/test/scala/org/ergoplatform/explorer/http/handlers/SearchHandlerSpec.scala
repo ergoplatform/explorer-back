@@ -27,6 +27,7 @@ class SearchHandlerSpec extends HttpSpec {
   }
 
   val transactionService = new TransactionsService[IO] {
+    override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = ???
     override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = ???
     override def countTxsByAddressId(addressId: String): IO[Long] = ???

@@ -15,6 +15,8 @@ class OffChainPersistence {
 
   def clear(): Unit = store.clear()
 
+  def getTx(id: String): Option[ApiTransaction] = Option(store.get(id))
+
   def getAll: List[ApiTransaction] = store.values().asScala.toList
 
 }

@@ -16,6 +16,8 @@ class TransactionsHandlerSpec extends HttpSpec {
 
   private val service = new TransactionsService[IO] {
 
+    override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
+
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(infoResp)
 
     override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = ???
