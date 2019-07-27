@@ -30,6 +30,7 @@ CREATE INDEX "node_headers__parent_id" ON node_headers (parent_id);
 CREATE INDEX "node_headers__height" ON node_headers (height);
 CREATE INDEX "node_headers__ts" ON node_headers (timestamp);
 CREATE INDEX "node_headers__main_chain" ON node_headers (main_chain);
+CREATE INDEX "node_headers__d" ON node_headers (d);
 
 CREATE TABLE node_extensions (
   header_id VARCHAR(64) NOT NULL PRIMARY KEY,

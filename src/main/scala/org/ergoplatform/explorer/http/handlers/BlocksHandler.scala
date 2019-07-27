@@ -26,6 +26,11 @@ class BlocksHandler(bs: BlockService[IO]) extends RouteHandler {
     onSuccess(f) { info => complete(info) }
   }
 
+  def getBlockByD: Route = (pathPrefix("byD") & bigIntSegment & get) { bigInt =>
+    val f = bs.getBlockByD(bigInt.toString()).unsafeToFuture()
+    onSuccess(f) { info => complete(info) }
+  }
+
   def getBlocks: Route = (get & paging & sorting(sortByFieldMappings, Some("height")) & startEndDate) {
     (o, l, field, so, start, end) =>
       val sTs = start.getOrElse(0L)

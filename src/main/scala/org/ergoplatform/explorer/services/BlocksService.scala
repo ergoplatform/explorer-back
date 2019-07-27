@@ -25,6 +25,12 @@ trait BlockService[F[_]] {
   def getBlock(id: String): F[BlockSummaryInfo]
 
   /**
+    * @param d base58 representation of id byte array
+    * @return fullBlockInfo
+    */
+  def getBlockByD(d: String): F[BlockSummaryInfo]
+
+  /**
     * Getting list of blocks
     *
     * @param p paging
@@ -56,8 +62,17 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     result <- getBlockResult(id)
   } yield result
 
+  override def getBlockByD(d: String): F[BlockSummaryInfo] = (for {
+    h <- headersDao.getByD(d)
+    sum <- blockSummaryByHeader(h)
+  } yield sum).transact[F](xa)
+
   private def getBlockResult(id: String): F[BlockSummaryInfo] = (for {
     h <- headersDao.get(id)
+    sum <- blockSummaryByHeader(h)
+  } yield sum).transact[F](xa)
+
+  private def blockSummaryByHeader(h: Header): ConnectionIO[BlockSummaryInfo] = for {
     nextIdOpt <- headersDao.findByParentId(h.id)
     references = BlockReferencesInfo(h.parentId, nextIdOpt.map(_.id))
     txs <- transactionsDao.findAllByBlockId(h.id)
@@ -74,8 +89,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
     os <- outputDao.findAllByTxsIdWithSpent(txsIds)
     ad <- adProofDao.find(h.id)
     ext <- extensionDao.getByHeaderId(h.id)
-  } yield BlockSummaryInfo(FullBlockInfo(h, txs, confirmations, is, os, ext, ad, blockSize), references))
-    .transact[F](xa)
+  } yield BlockSummaryInfo(FullBlockInfo(h, txs, confirmations, is, os, ext, ad, blockSize), references)
 
   override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): F[List[SearchBlockInfo]] = for {
     _ <- Async.shift[F](ec)
