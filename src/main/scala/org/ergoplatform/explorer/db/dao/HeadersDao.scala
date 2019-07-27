@@ -52,7 +52,7 @@ class HeadersDao {
   def getByD(d: String): ConnectionIO[Header] = findByD(d).flatMap {
     case Some(h) => h.pure[ConnectionIO]
     case None => doobie.free.connection.raiseError(
-      new NoSuchElementException(s"Cannot find header with d = $d")
+      new NoSuchElementException(s"Cannot find header with d = ${BigInt(d)}")
     )
   }
 
