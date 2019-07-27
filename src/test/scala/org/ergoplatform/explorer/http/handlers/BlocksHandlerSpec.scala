@@ -48,6 +48,8 @@ class BlocksHandlerSpec extends HttpSpec {
 
 
   val blockServiceStub = new BlockService[IO] {
+    override def getBlockByD(d: String): IO[BlockSummaryInfo] = ???
+
     override def getBlock(id: String): IO[BlockSummaryInfo] = IO.pure(block)
 
     override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): IO[List[SearchBlockInfo]] = IO.pure(blocks)

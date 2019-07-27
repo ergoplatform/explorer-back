@@ -110,6 +110,7 @@ paths:
   '/blocks/byD/{d}':
     parameters:
       - name: d
+        description: big integer in decimal representation
         required: true
         in: path
         schema:
