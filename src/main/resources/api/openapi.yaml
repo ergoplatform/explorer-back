@@ -107,6 +107,36 @@ paths:
                       previousId:
                         $ref: '#/components/schemas/ModifierId'
 
+  '/blocks/byD/{d}':
+    parameters:
+      - name: d
+        description: big integer in decimal representation
+        required: true
+        in: path
+        schema:
+          type: integer
+    get:
+      summary: Get block by d
+      tags:
+        - blocks
+      responses:
+        '200':
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  block:
+                    $ref: '#/components/schemas/FullBlock'
+                  references:
+                    type: object
+                    properties:
+                      nextId:
+                        $ref: '#/components/schemas/ModifierId'
+                      previousId:
+                        $ref: '#/components/schemas/ModifierId'
+
   '/transactions':
     post:
       summary: Send an Ergo transaction

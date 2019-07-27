@@ -20,6 +20,7 @@ class SearchHandlerSpec extends HttpSpec {
   val searchInfo = SearchInfo(block, transaction, address)
 
   val blockService = new BlockService[IO] {
+    override def getBlockByD(d: String): IO[BlockSummaryInfo] = ???
     override def getBlock(id: String): IO[BlockSummaryInfo] = ???
     override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): IO[List[SearchBlockInfo]] = ???
     override def count(startTs: Long, endTs: Long): IO[Long] = ???

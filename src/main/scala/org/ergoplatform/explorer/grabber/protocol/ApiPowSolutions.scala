@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.grabber.protocol
 
-import io.circe.{Decoder, Encoder, HCursor}
 import io.circe.syntax._
+import io.circe.{Decoder, Encoder, HCursor}
 
 case class ApiPowSolutions(pk: String, w: String, n: String, d: String)
 

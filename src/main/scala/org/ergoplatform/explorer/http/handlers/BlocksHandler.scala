@@ -18,11 +18,16 @@ class BlocksHandler(bs: BlockService[IO]) extends RouteHandler {
   private val oneDayMillis: Long = 24L * 60L * 60L * 1000L
 
   val route: Route = pathPrefix("blocks") {
-    getBlockById ~ getBlocks
+    getBlockByD ~ getBlockById ~ getBlocks
   }
 
-  def getBlockById: Route = (get & base16Segment) { base58String =>
-    val f = bs.getBlock(base58String).unsafeToFuture()
+  def getBlockById: Route = (get & base16Segment) { id =>
+    val f = bs.getBlock(id).unsafeToFuture()
+    onSuccess(f) { info => complete(info) }
+  }
+
+  def getBlockByD: Route = (pathPrefix("byD") & bigIntSegment & get) { d =>
+    val f = bs.getBlockByD(d.toString()).unsafeToFuture()
     onSuccess(f) { info => complete(info) }
   }
 

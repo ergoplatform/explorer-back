@@ -8,6 +8,8 @@ import cats.syntax.parallel._
 import org.ergoplatform.explorer.utils.SortOrder
 import scorex.util.encode.{Base16, Base58}
 
+import scala.util.{Success, Try}
+
 trait CommonDirectives {
 
   import CommonDirectives._
@@ -15,6 +17,13 @@ trait CommonDirectives {
   val base16Segment: Directive1[String] = pathPrefix(Segment).flatMap(f = v =>
     if (Base16.decode(v).isSuccess) provide(v)
     else reject(base16ValidationError)
+  )
+
+  val bigIntSegment: Directive1[BigInt] = pathPrefix(Segment).flatMap(f = v =>
+    Try(BigInt(v)) match {
+      case Success(value) => provide(value)
+      case _ => reject(base16ValidationError)
+    }
   )
 
   val base58Segment: Directive1[String] = pathPrefix(Segment).flatMap(v =>
@@ -90,6 +99,8 @@ object CommonDirectives {
     s"Start Date can't be greater than End Date",
     None
   )
+
+  val bigIntValidationError = ValidationRejection("Wrong BigInt representation")
 
   val base16ValidationError = ValidationRejection("String isn't a Base16 representation")
 

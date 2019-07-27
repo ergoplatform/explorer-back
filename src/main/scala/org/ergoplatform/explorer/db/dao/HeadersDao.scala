@@ -38,12 +38,21 @@ class HeadersDao {
 
   def find(id: String): ConnectionIO[Option[Header]] = HeadersOps.select(id).option
 
+  def findByD(d: String): ConnectionIO[Option[Header]] = HeadersOps.selectByD(d).option
+
   def findByParentId(parentId: String): ConnectionIO[Option[Header]] = HeadersOps.selectByParentId(parentId).option
 
   def get(id: String): ConnectionIO[Header] = find(id).flatMap {
     case Some(h) => h.pure[ConnectionIO]
     case None => doobie.free.connection.raiseError(
       new NoSuchElementException(s"Cannot find header with id = $id")
+    )
+  }
+
+  def getByD(d: String): ConnectionIO[Header] = findByD(d).flatMap {
+    case Some(h) => h.pure[ConnectionIO]
+    case None => doobie.free.connection.raiseError(
+      new NoSuchElementException(s"Cannot find header with d = ${BigInt(d)}")
     )
   }
 
