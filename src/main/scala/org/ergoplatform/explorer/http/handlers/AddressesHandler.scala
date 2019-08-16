@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import cats.syntax.all._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import org.ergoplatform.explorer.http.directives.CommonDirectives
@@ -10,8 +10,14 @@ import org.ergoplatform.explorer.http.protocol.{ItemsResponse, TransactionInfo}
 import org.ergoplatform.explorer.services.{AddressesService, TransactionsService}
 import org.ergoplatform.explorer.utils.Paging
 
-class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO]) extends FailFastCirceSupport
-  with CommonDirectives {
+import scala.concurrent.ExecutionContext
+
+class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO])
+                      (implicit ec: ExecutionContext)
+  extends FailFastCirceSupport
+    with CommonDirectives {
+
+  implicit val contextShift: ContextShift[IO] = IO.contextShift(ec)
 
   val route: Route = pathPrefix("addresses") {
     getTxsByAddressId ~ getAddressById

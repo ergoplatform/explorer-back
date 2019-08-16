@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.grabber
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import cats.effect.IO
+import cats.effect.{IO, Timer}
 import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import org.ergoplatform.explorer.config.ExplorerConfig
@@ -15,6 +15,8 @@ import scala.concurrent.ExecutionContext
 /** Performs off-chain monitoring */
 class OffChainGrabberService(persistence: OffChainPersistence, config: ExplorerConfig)
                             (implicit ec: ExecutionContext) {
+
+  private implicit val timer: Timer[IO] = IO.timer(ec)
 
   private val logger = Logger("off-chain-grabber-service")
 

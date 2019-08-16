@@ -12,7 +12,7 @@ resolvers ++= Seq("Sonatype Snapshots" at "https://oss.sonatype.org/content/repo
 lazy val doobieVersion = "0.5.3"
 lazy val akkaHttpVersion = "10.1.1"
 lazy val akkaVersion = "2.5.12"
-lazy val catsVersion = "1.1.0"
+lazy val catsVersion = "1.3.1"
 lazy val circeVersion = "0.9.3"
 
 lazy val doobieDeps = Seq(
@@ -23,6 +23,7 @@ lazy val doobieDeps = Seq(
 )
 
 lazy val catsDeps = Seq(
+  "org.typelevel" %% "cats-effect" % catsVersion,
   "org.typelevel" %% "cats-core" % catsVersion
 )
 

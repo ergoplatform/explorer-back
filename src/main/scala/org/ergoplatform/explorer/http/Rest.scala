@@ -4,7 +4,11 @@ import akka.http.scaladsl.server.Route
 import org.ergoplatform.explorer.Services
 import org.ergoplatform.explorer.http.handlers._
 
+import scala.concurrent.ExecutionContext
+
 trait Rest extends CorsHandler { self: Services =>
+
+  implicit val ec: ExecutionContext
 
   val routes: Route = corsHandler(handlers.reduce(_ ~ _))
 

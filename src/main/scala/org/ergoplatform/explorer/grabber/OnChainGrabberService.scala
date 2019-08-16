@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.grabber
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import cats.effect.IO
+import cats.effect.{IO, Timer}
 import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import doobie.implicits._
@@ -22,6 +22,8 @@ class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionConte
   private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.protocol)
 
   implicit val ec: ExecutionContext = executionContext
+
+  private implicit val timer: Timer[IO] = IO.timer(ec)
 
   private val logger = Logger("on-chain-grabber-service")
 
@@ -60,7 +62,7 @@ class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionConte
 
   //Looking for a block. In case of error just move forward.
   private def fullBlocksForIds(ids: List[String]): IO[List[ApiFullBlock]] = ids
-    .parTraverse(fullBlocksSafe)
+    .traverse(fullBlocksSafe)
     .map(_.flatten.toList)
 
   def writeBlocksFromHeight(height: Long,
@@ -77,7 +79,7 @@ class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionConte
       }
       blockInfos <- blocks.map { block =>
         writeBlock(updatedBlock(block, ids.headOption.contains(block.header.id)))
-      }.parSequence
+      }.sequence
       retryNeeded <- IO(blocks.isEmpty && retries < MaxRetriesNumber && ids.size > existingHeadersAtHeight.size)
       _ <- IO {
         val retryInfo = if (retryNeeded) "Retrying.." else ""
