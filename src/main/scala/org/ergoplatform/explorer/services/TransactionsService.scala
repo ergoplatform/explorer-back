@@ -5,6 +5,7 @@ import java.io.InputStream
 import cats._
 import cats.data.NonEmptyList
 import cats.effect._
+import cats.effect.concurrent.Ref
 import cats.implicits._
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
@@ -15,7 +16,7 @@ import org.ergoplatform.explorer.config.GrabberConfig
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, TransactionSummaryInfo}
-import org.ergoplatform.explorer.persistence.OffChainPersistence
+import org.ergoplatform.explorer.persistence.TransactionsPool
 import org.ergoplatform.explorer.utils.Paging
 import scalaj.http.Http
 
@@ -47,7 +48,7 @@ trait TransactionsService[F[_]] {
 }
 
 class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
-                                      offChainPersistence: OffChainPersistence,
+                                      txPoolRef: Ref[F, TransactionsPool],
                                       ec: ExecutionContext,
                                       cfg: GrabberConfig)
                                      (implicit F: Monad[F],
@@ -56,14 +57,17 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
   extends TransactionsService[F] {
 
   val headersDao = new HeadersDao
+
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
 
   override def getUnconfirmedTxInfo(id: String): F[ApiTransaction] =
-    offChainPersistence.getTx(id)
+    txPoolRef.get.flatMap { _
+      .get(id)
       .fold[F[ApiTransaction]](
         M.raiseError(new NoSuchElementException(s"Cannot find unconfirmed transaction with id = $id")))(F.pure)
+    }
 
   override def getTxInfo(id: String): F[TransactionSummaryInfo] = for {
     _ <- Async.shift[F](ec)
@@ -106,7 +110,8 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
   private def getTxsCountByAddressIdResult(addressId: String): F[Long] =
     transactionsDao.countTxsByAddressId(addressId).transact(xa)
 
-  /** Search transaction identifiers by the fragment of the identifier */
+  /** Search transaction identifiers by the fragment of the identifier
+    */
   override def searchById(substring: String): F[List[String]] =
     transactionsDao.searchById(substring).transact(xa)
 
@@ -135,7 +140,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
     .headOption
     .getOrElse(M.raiseError(new Exception("No known nodes responded")))
 
-  override def getUnconfirmed: F[List[ApiTransaction]] = F.pure(offChainPersistence.getAll)
+  override def getUnconfirmed: F[List[ApiTransaction]] = txPoolRef.get.map(_.getAll)
 
   private val requestParser: (Int, Map[String, IndexedSeq[String]], InputStream) => F[Json] =
     (code, _, is) => code match {

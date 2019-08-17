@@ -6,10 +6,8 @@ object Pools {
 
   val dbCallsFixedThreadPool: ExecutorService = java.util.concurrent.Executors.newFixedThreadPool(15)
 
-  val grabberPool: ExecutorService = java.util.concurrent.Executors.newFixedThreadPool(5)
+  val onChainMonitoringPool: ExecutorService = java.util.concurrent.Executors.newFixedThreadPool(5)
 
-  def shutdown(): Unit = {
-    dbCallsFixedThreadPool.shutdown()
-    grabberPool.shutdown()
-  }
+  val offChainMonitoringPool: ExecutorService = java.util.concurrent.Executors.newFixedThreadPool(3)
+
 }

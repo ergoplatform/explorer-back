@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.services
 
 import cats.effect.IO
+import cats.effect.concurrent.Ref
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.GrabberConfig
@@ -8,7 +9,7 @@ import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, Tran
 import org.ergoplatform.explorer.db.models.{ExtendedOutput, InputWithOutputInfo}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
-import org.ergoplatform.explorer.persistence.OffChainPersistence
+import org.ergoplatform.explorer.persistence.TransactionsPool
 import org.ergoplatform.explorer.utils.Paging
 import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -72,7 +73,7 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
 
     val cfg = GrabberConfig(List("http://127.0.0.1"), 10.seconds, 5.seconds)
 
-    val offChainStore = new OffChainPersistence
+    val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
     val service = new TransactionsServiceIOImpl[IO](xa, offChainStore, ec, cfg)
 
