@@ -1,8 +1,6 @@
 package org.ergoplatform.explorer.grabber
 
-import java.util.concurrent.atomic.AtomicBoolean
-
-import cats.effect.{IO, Timer}
+import cats.effect.{ContextShift, IO, Timer}
 import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import doobie.implicits._
@@ -23,6 +21,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
   private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.protocol)
 
   private implicit val timer: Timer[IO] = IO.timer(ec)
+  private implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
   private val logger = Logger("on-chain-grabber-service")
 
@@ -60,7 +59,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
 
   //Looking for a block. In case of error just move forward.
   private def fullBlocksForIds(ids: List[String]): IO[List[ApiFullBlock]] = ids
-    .traverse(readFullBlock)
+    .parTraverse(readFullBlock)
     .map(_.flatten.toList)
 
   private def writeBlocksFromHeight(height: Long,
@@ -77,7 +76,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
       }
       blockInfos <- blocks.map { block =>
         writeBlock(updatedBlock(block, ids.headOption.contains(block.header.id)))
-      }.sequence
+      }.parSequence
       retryNeeded <- IO(blocks.isEmpty && attemptsDone < MaxRetriesNumber && ids.size > existingHeadersAtHeight.size)
       _ <- IO {
         val retryInfo = if (retryNeeded) "Retrying.." else ""
@@ -137,18 +136,22 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
         Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
       }
     }
-    _ <- heightsRange.map(writeBlocksFromHeight(_).map(_ => ())).sequence[IO, Unit]
+    _ <- heightsRange.foldLeft(IO.unit) { case (acc, h) =>
+      acc.flatMap(_ => writeBlocksFromHeight(h).map(_ => ()))
+    }
     _ <- IO {
       logger.info(s"Sync task has been finished. Current height now is ${info.fullHeight}.")
     }
   } yield ()
 
-  private def run(io: IO[Unit]): IO[Unit] =
-    io.attempt.flatMap {
+  private def loopIO(io: IO[Unit]): IO[Unit] = io.attempt
+    .flatMap {
       case Right(_) => IO.unit
       case Left(f) => IO(logger.error("An error has occurred: ", f))
-    } *> IO.sleep(pause) *> IO.suspend(run(io))
+    }
+    .flatMap(_ => IO.sleep(pause))
+    .flatMap(_ => IO.suspend(loopIO(io)))
 
-  def start: IO[Unit] = IO.shift(ec) *> run(syncTask)
+  def start: IO[Unit] = loopIO(syncTask)
 
 }

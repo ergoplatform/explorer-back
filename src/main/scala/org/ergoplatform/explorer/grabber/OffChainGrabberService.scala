@@ -1,8 +1,7 @@
 package org.ergoplatform.explorer.grabber
 
 import cats.effect.concurrent.Ref
-import cats.effect.{IO, Timer}
-import cats.implicits._
+import cats.effect.{ContextShift, IO, Timer}
 import com.typesafe.scalalogging.Logger
 import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServiceImpl}
@@ -17,6 +16,7 @@ class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: Explo
                             (implicit ec: ExecutionContext) {
 
   private implicit val timer: Timer[IO] = IO.timer(ec)
+  private implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
   private val logger = Logger("off-chain-grabber-service")
 
@@ -31,12 +31,14 @@ class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: Explo
     txs <- requestService.get[List[ApiTransaction]](addressServices.memPoolUri)
   } yield txPoolRef.update(_ => TransactionsPool.empty.put(txs))
 
-  private def run(io: IO[Unit]): IO[Unit] =
-    io.attempt.flatMap {
+  private def run(io: IO[Unit]): IO[Unit] = io.attempt
+    .flatMap {
       case Right(_) => IO.unit
       case Left(f) => IO(logger.error("An error has occurred: ", f))
-    } *> IO.sleep(pause) *> IO.suspend(run(io))
+    }
+    .flatMap(_ => IO.sleep(pause))
+    .flatMap(_ => IO.suspend(run(io)))
 
-  def start: IO[Unit] = IO.shift(ec) *> run(syncTask)
+  def start: IO[Unit] = run(syncTask)
 
 }

@@ -23,7 +23,6 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 object ExplorerApp extends IOApp with CorsHandler {
 
-
   implicit val system: ActorSystem = ActorSystem("explorer-system")
   implicit val mat: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -37,10 +36,8 @@ object ExplorerApp extends IOApp with CorsHandler {
     grabberXa <- createTransactor("Grabber-Hikari-Pool", maxPoolSize = 5, maxIdle = 3)(cfg.db)
     _ <- startApi(txPoolRef, servicesXa)(cfg)
 
-    onChainEc = ExecutionContext.fromExecutor(Pools.offChainMonitoringPool)
-    offChainEc = ExecutionContext.fromExecutor(Pools.offChainMonitoringPool)
-    onChainGrabberService = new OnChainGrabberService(grabberXa, cfg)(onChainEc)
-    offChainGrabberService = new OffChainGrabberService(txPoolRef, cfg)(offChainEc)
+    onChainGrabberService = new OnChainGrabberService(grabberXa, cfg)(ec)
+    offChainGrabberService = new OffChainGrabberService(txPoolRef, cfg)(ec)
 
     _ <- List(onChainGrabberService.start, offChainGrabberService.start).parSequence.void
   } yield ()
