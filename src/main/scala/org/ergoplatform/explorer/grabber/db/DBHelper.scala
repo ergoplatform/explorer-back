@@ -1,43 +1,18 @@
 package org.ergoplatform.explorer.grabber.db
 
-import cats.implicits._
-import doobie._
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
-import doobie.postgres.implicits._
-import io.circe.Json
-import io.circe.parser._
 import io.circe.syntax._
 import org.ergoplatform._
-import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ProtocolConfig
+import org.ergoplatform.explorer.db.mappings.JsonMeta
 import org.ergoplatform.explorer.grabber.protocol._
-import org.postgresql.util.PGobject
-import scorex.util.encode.Base16
-import sigmastate.serialization.ErgoTreeSerializer
+import org.ergoplatform.explorer.{Constants, Utils}
 
-class DBHelper(networkConfig: ProtocolConfig) {
+class DBHelper(networkConfig: ProtocolConfig) extends JsonMeta {
 
-  private val addressEncoder: ErgoAddressEncoder =
+  implicit val addressEncoder: ErgoAddressEncoder =
     ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)
-
-  private val treeSerializer: ErgoTreeSerializer = new ErgoTreeSerializer
-
-  implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
-    x => ApiDifficulty(x.toBigInt()),
-    x => BigDecimal.apply(x.value)
-  )
-
-  implicit val JsonMeta: Meta[Json] =
-    Meta.other[PGobject]("json").xmap[Json](
-      a => parse(a.getValue).leftMap[Json](e => throw e).merge,
-      a => {
-        val o = new PGobject
-        o.setType("json")
-        o.setValue(a.noSpaces)
-        o
-      }
-    )
 
   def writeOne(fullBlock: ApiFullBlock): ConnectionIO[Int] = for {
     hInt <- HeaderWriter.insert(fullBlock.header)
@@ -62,8 +37,7 @@ class DBHelper(networkConfig: ProtocolConfig) {
   def nodeOutputsToDb(txId: String, outputs: List[ApiOutput], ts: Long): List[OutputWriter.ToInsert] = outputs
     .zipWithIndex
     .map { case (o, index) =>
-      val address: String = Base16.decode(o.ergoTree)
-        .flatMap { bytes => addressEncoder.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition) }
+      val address: String = Utils.ergoTreeToAddress(o.ergoTree)
         .map { _.toString }
         .getOrElse("unable to derive address from given ErgoTree")
       (o.boxId, txId, o.value, o.creationHeight, index, o.ergoTree, address, o.assets.asJson, o.additionalRegisters, ts)

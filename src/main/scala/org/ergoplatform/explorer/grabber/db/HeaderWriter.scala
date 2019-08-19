@@ -1,19 +1,14 @@
 package org.ergoplatform.explorer.grabber.db
 
-import doobie._
 import doobie.util.composite.Composite
-import org.ergoplatform.explorer.grabber.protocol.{ApiDifficulty, ApiHeader}
+import org.ergoplatform.explorer.db.mappings.JsonMeta
+import org.ergoplatform.explorer.grabber.protocol.ApiHeader
 
-object HeaderWriter extends BasicWriter {
+object HeaderWriter extends BasicWriter with JsonMeta {
 
   import org.ergoplatform.explorer.db.dao.HeadersOps.fields
 
   type ToInsert = ApiHeader
-
-  implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
-    x => ApiDifficulty(x.toBigInt()),
-    x => BigDecimal.apply(x.value)
-  )
 
   implicit val c: Composite[ApiHeader] = Composite[ApiHeader]
 
