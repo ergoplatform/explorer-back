@@ -33,7 +33,7 @@ trait RestApi extends CorsHandler with ErrorHandler {
     val servicesEc: ExecutionContextExecutor = ExecutionContext.fromExecutor(Pools.dbCallsFixedThreadPool)
 
     val blocksService = new BlocksServiceIOImpl[IO](xa, servicesEc)
-    val txService = new TransactionsServiceIOImpl[IO](xa, txPoolRef, servicesEc, cfg.grabber)
+    val txService = new TransactionsServiceIOImpl[IO](xa, txPoolRef, servicesEc, cfg)
     val addressesService = new AddressesServiceIOImpl[IO](xa, txPoolRef, servicesEc, cfg.protocol)
     val statsService = new StatsServiceIOImpl[IO](cfg.protocol)(xa, servicesEc)
     val minerService = new MinerServiceIOImpl[IO](xa, servicesEc)

@@ -35,6 +35,8 @@ class TransactionsHandlerSpec extends HttpSpec {
     override def submitTransaction(tx: Json): IO[Json] = ???
 
     override def getUnconfirmed: IO[List[ApiTransaction]] = ???
+
+    override def getUnconfirmedByAddress(address: String): IO[List[ApiTransaction]] = ???
   }
 
   val route: Route = new TransactionsHandler(service).route

@@ -10,6 +10,7 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
 
   val route: Route = pathPrefix("transactions") {
     submitTransaction ~
+      getOutputsByAddress ~
       getUnconfirmed ~
       getUnconfirmedTxById ~
       getUnspentOutputsByErgoTree ~
@@ -36,23 +37,27 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
     service.getUnconfirmed
   }
 
-  def getOutputsById: Route = (pathPrefix("boxes") & base16Segment) {
+  def getUnconfirmedByAddress: Route = (pathPrefix("unconfirmed" / "byAddress") & get & base58Segment) {
+    service.getUnconfirmedByAddress
+  }
+
+  def getOutputsById: Route = (pathPrefix("boxes") & get & base16Segment) {
     service.getOutputById
   }
 
-  def getOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree") & base16Segment) {
+  def getOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree") & get & base16Segment) {
     service.getOutputsByErgoTree(_)
   }
 
-  def getOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress") & base58Segment) {
+  def getOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress") & get & base58Segment) {
     service.getOutputsByAddress(_)
   }
 
-  def getUnspentOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree" / "unspent") & base16Segment) {
+  def getUnspentOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree" / "unspent") & get & base16Segment) {
     service.getOutputsByErgoTree(_, unspentOnly = true)
   }
 
-  def getUnspentOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress" / "unspent") & base58Segment) {
+  def getUnspentOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress" / "unspent") & get & base58Segment) {
     service.getOutputsByAddress(_, unspentOnly = true)
   }
 

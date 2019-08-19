@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.effect.concurrent.Ref
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
-import org.ergoplatform.explorer.config.GrabberConfig
+import org.ergoplatform.explorer.config.Config
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
 import org.ergoplatform.explorer.db.models.{ExtendedOutput, InputWithOutputInfo}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
@@ -15,9 +15,13 @@ import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.util.Random
-import scala.concurrent.duration._
 
-class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
+class TransactionsServiceSpec
+  extends FlatSpec
+    with Matchers
+    with BeforeAndAfterAll
+    with PreparedDB
+    with Config {
 
   implicit object TxInfoEquals extends Equality[TransactionInfo] {
     override def areEqual(a: TransactionInfo, b: Any): Boolean = b match {
@@ -71,8 +75,6 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
     val outputsWithSpentTx = outputs
       .map { o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) }
 
-    val cfg = GrabberConfig(List("http://127.0.0.1"), 10.seconds, 5.seconds)
-
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
     val service = new TransactionsServiceIOImpl[IO](xa, offChainStore, ec, cfg)
@@ -118,4 +120,5 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
 
     fromService3 should contain theSameElementsAs expected3
   }
+
 }

@@ -38,6 +38,7 @@ class SearchHandlerSpec extends HttpSpec {
     override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
     override def submitTransaction(tx: Json): IO[Json] = ???
     override def getUnconfirmed: IO[List[ApiTransaction]] = ???
+    override def getUnconfirmedByAddress(address: String): IO[List[ApiTransaction]] = ???
   }
   val addressService = new AddressesService[IO] {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = ???
