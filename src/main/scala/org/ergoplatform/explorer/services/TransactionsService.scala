@@ -12,13 +12,16 @@ import doobie.implicits._
 import doobie.util.transactor.Transactor
 import io.circe.syntax._
 import io.circe.{Json, ParsingFailure}
-import org.ergoplatform.explorer.config.GrabberConfig
+import org.ergoplatform.ErgoAddressEncoder
+import org.ergoplatform.explorer.Utils
+import org.ergoplatform.explorer.config.{ExplorerConfig, GrabberConfig}
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.persistence.TransactionsPool
 import org.ergoplatform.explorer.utils.Paging
 import scalaj.http.Http
+import sigmastate.Values.ErgoTree
 
 import scala.concurrent.ExecutionContext
 import scala.io.Source
@@ -31,11 +34,13 @@ trait TransactionsService[F[_]] {
 
   def getUnconfirmed: F[List[ApiTransaction]]
 
+  def getUnconfirmedByAddress(address: String): F[List[ApiTransaction]]
+
   def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]]
 
   def countTxsByAddressId(addressId: String): F[Long]
 
-  def searchById(query: String): F[List[String]]
+  def searchByIdSubstr(substring: String): F[List[String]]
 
   def getOutputById(id: String): F[OutputInfo]
 
@@ -50,11 +55,13 @@ trait TransactionsService[F[_]] {
 class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
                                       txPoolRef: Ref[F, TransactionsPool],
                                       ec: ExecutionContext,
-                                      cfg: GrabberConfig)
+                                      cfg: ExplorerConfig)
                                      (implicit F: Monad[F],
                                       A: Async[F],
                                       M: MonadError[F, Throwable])
   extends TransactionsService[F] {
+
+  implicit val addressEncoder: ErgoAddressEncoder = cfg.protocol.addressEncoder
 
   val headersDao = new HeadersDao
 
@@ -74,45 +81,17 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
     result <- getTxInfoResult(id)
   } yield result
 
-  private def getTxInfoResult(id: String): F[TransactionSummaryInfo] = (for {
-    tx <- transactionsDao.get(id)
-    is <- inputDao.findAllByTxIdWithValue(tx.id)
-    os <- outputDao.findAllByTxIdWithSpent(tx.id)
-    h <- headersDao.getHeightById(tx.headerId)
-    currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
-    info = TransactionSummaryInfo.fromDb(tx, h, currentHeight - h, is, os)
-  } yield info).transact(xa)
-
   override def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]] = for {
     _ <- Async.shift[F](ec)
     result <- getTxsByAddressIdResult(addressId, p)
   } yield result
-
-  private def getTxsByAddressIdResult(addressId: String, p: Paging): F[List[TransactionInfo]] = (for {
-    txs <- transactionsDao.getTxsByAddressId(addressId, p.offset, p.limit)
-    ids = txs.map(_.id)
-    currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
-    confirmations <- if (ids.isEmpty) {
-      List.empty[(String, Long)].pure[ConnectionIO]
-    } else {
-      transactionsDao.txsHeights(NonEmptyList.fromListUnsafe(ids))
-        .map { list => list.map(v => v._1 -> (currentHeight - v._2 + 1L)) }
-    }
-    is <- inputDao.findAllByTxsIdWithValue(ids)
-    os <- outputDao.findAllByTxsIdWithSpent(ids)
-  } yield TransactionInfo.extractInfo(txs, confirmations, is, os)).transact(xa)
 
   override def countTxsByAddressId(addressId: String): F[Long] = for {
     _ <- Async.shift[F](ec)
     result <- getTxsCountByAddressIdResult(addressId)
   } yield result
 
-  private def getTxsCountByAddressIdResult(addressId: String): F[Long] =
-    transactionsDao.countTxsByAddressId(addressId).transact(xa)
-
-  /** Search transaction identifiers by the fragment of the identifier
-    */
-  override def searchById(substring: String): F[List[String]] =
+  override def searchByIdSubstr(substring: String): F[List[String]] =
     transactionsDao.searchById(substring).transact(xa)
 
   override def getOutputById(id: String): F[OutputInfo] = outputDao.findByBoxId(id).transact(xa)
@@ -132,7 +111,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
       .map(_.map(OutputInfo.fromOutputWithSpent))
   }
 
-  override def submitTransaction(tx: Json): F[Json] = cfg.nodes
+  override def submitTransaction(tx: Json): F[Json] = cfg.grabber.nodes
     .map { url =>
       F.pure(Http(s"$url/transactions").postData(tx.noSpaces).header("content-type", "application/json"))
         .flatMap(_.exec(requestParser).body)
@@ -141,6 +120,39 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
     .getOrElse(M.raiseError(new Exception("No known nodes responded")))
 
   override def getUnconfirmed: F[List[ApiTransaction]] = txPoolRef.get.map(_.getAll)
+
+  override def getUnconfirmedByAddress(address: String): F[List[ApiTransaction]] =
+    Utils.addressToErgoTree(address)
+      .fold[F[ErgoTree]](M.raiseError, F.pure)
+      .flatMap { tree =>
+        txPoolRef.get.map(_.getByErgoTree(tree.toString))
+      }
+
+  private def getTxInfoResult(id: String): F[TransactionSummaryInfo] = (for {
+    tx <- transactionsDao.get(id)
+    is <- inputDao.findAllByTxIdWithValue(tx.id)
+    os <- outputDao.findAllByTxIdWithSpent(tx.id)
+    h <- headersDao.getHeightById(tx.headerId)
+    currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
+    info = TransactionSummaryInfo.fromDb(tx, h, currentHeight - h, is, os)
+  } yield info).transact(xa)
+
+  private def getTxsByAddressIdResult(addressId: String, p: Paging): F[List[TransactionInfo]] = (for {
+    txs <- transactionsDao.getTxsByAddressId(addressId, p.offset, p.limit)
+    ids = txs.map(_.id)
+    currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
+    confirmations <- if (ids.isEmpty) {
+      List.empty[(String, Long)].pure[ConnectionIO]
+    } else {
+      transactionsDao.txsHeights(NonEmptyList.fromListUnsafe(ids))
+        .map { list => list.map(v => v._1 -> (currentHeight - v._2 + 1L)) }
+    }
+    is <- inputDao.findAllByTxsIdWithValue(ids)
+    os <- outputDao.findAllByTxsIdWithSpent(ids)
+  } yield TransactionInfo.extractInfo(txs, confirmations, is, os)).transact(xa)
+
+  private def getTxsCountByAddressIdResult(addressId: String): F[Long] =
+    transactionsDao.countTxsByAddressId(addressId).transact(xa)
 
   private val requestParser: (Int, Map[String, IndexedSeq[String]], InputStream) => F[Json] =
     (code, _, is) => code match {

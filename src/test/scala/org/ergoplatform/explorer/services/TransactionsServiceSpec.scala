@@ -113,7 +113,7 @@ class TransactionsServiceSpec extends FlatSpec with Matchers with BeforeAndAfter
 
     val randomTxId2 = Random.shuffle(tx).head.id.take(5)
 
-    val fromService3 = service.searchById(randomTxId2).unsafeRunSync()
+    val fromService3 = service.searchByIdSubstr(randomTxId2).unsafeRunSync()
     val expected3 = tx.map(_.id).filter(_.contains(randomTxId2))
 
     fromService3 should contain theSameElementsAs expected3

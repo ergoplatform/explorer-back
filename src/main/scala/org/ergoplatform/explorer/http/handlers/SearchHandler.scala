@@ -14,7 +14,7 @@ class SearchHandler(blockService: BlockService[IO],
     validate(query.length >= 5, "'query' param should be at least 5 characters long") {
       for {
         blocks <- blockService.searchById(query)
-        transactions <- transactionService.searchById(query)
+        transactions <- transactionService.searchByIdSubstr(query)
         addresses <- addressService.searchById(query)
         minerAddresses <- minerService.searchAddress(query)
       } yield SearchInfo(blocks, transactions, (addresses ++ minerAddresses).distinct)

@@ -24,7 +24,7 @@ class TransactionsHandlerSpec extends HttpSpec {
 
     override def countTxsByAddressId(addressId: String): IO[Long] = ???
 
-    override def searchById(query: String): IO[List[String]] = ???
+    override def searchByIdSubstr(query: String): IO[List[String]] = ???
 
     override def getOutputById(id: String): IO[OutputInfo] = ???
 

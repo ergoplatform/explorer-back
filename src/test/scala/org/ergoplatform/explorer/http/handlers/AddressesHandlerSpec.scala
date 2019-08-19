@@ -34,7 +34,7 @@ class AddressesHandlerSpec extends HttpSpec {
 
     override def countTxsByAddressId(addressId: String): IO[Long] = IO.pure(3L)
 
-    override def searchById(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
+    override def searchByIdSubstr(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
 
     override def getOutputById(id: String): IO[OutputInfo] = ???
 

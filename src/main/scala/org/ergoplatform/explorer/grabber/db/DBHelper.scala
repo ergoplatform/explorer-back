@@ -11,8 +11,7 @@ import org.ergoplatform.explorer.{Constants, Utils}
 
 class DBHelper(networkConfig: ProtocolConfig) extends JsonMeta {
 
-  implicit val addressEncoder: ErgoAddressEncoder =
-    ErgoAddressEncoder(if (networkConfig.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)
+  implicit val addressEncoder: ErgoAddressEncoder = networkConfig.addressEncoder
 
   def writeOne(fullBlock: ApiFullBlock): ConnectionIO[Int] = for {
     hInt <- HeaderWriter.insert(fullBlock.header)

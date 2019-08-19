@@ -1,6 +1,5 @@
 package org.ergoplatform.explorer
 
-import akka.http.scaladsl.model.headers.ContentDispositionTypes.inline
 import org.ergoplatform.{ErgoAddress, ErgoAddressEncoder}
 import scorex.util.encode.Base16
 import sigmastate.Values.ErgoTree
@@ -17,4 +16,9 @@ object Utils {
     Base16.decode(ergoTree).flatMap { bytes =>
       enc.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition)
     }
+
+  @inline def addressToErgoTree(address: String)
+                               (implicit enc: ErgoAddressEncoder): Try[ErgoTree] =
+    enc.fromString(address).map(_.script)
+
 }
