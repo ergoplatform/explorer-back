@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.grabber
 
-import cats.effect.IO
+import cats.effect.{ContextShift, IO, Timer}
 import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import doobie.implicits._
@@ -131,9 +131,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
       if (currentHeight == info.fullHeight) List.empty[Long]
       else Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
     }
-    _ <- heightsRange.foldLeft(IO.unit) { case (acc, h) =>
-      acc.flatMap(_ => writeBlocksFromHeight(h).map(_ => ()))
-    }
+    _ <- heightsRange.traverse(writeBlocksFromHeight(_))
     _ <- IO {
       logger.info(s"Sync task has been finished. Current height now is ${info.fullHeight}.")
     }
