@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.grabber
 
-import cats.effect.{ContextShift, IO, Timer}
+import cats.effect.IO
 import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import doobie.implicits._
@@ -14,26 +14,24 @@ import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServic
 import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiNodeInfo}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
 class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
-                           (implicit ec: ExecutionContext) {
+                           (implicit protected val ec: ExecutionContext)
+  extends LoopedIO {
 
   private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.protocol)
 
-  private implicit val timer: Timer[IO] = IO.timer(ec)
-  private implicit val cs: ContextShift[IO] = IO.contextShift(ec)
-
-  private val logger = Logger("on-chain-grabber-service")
+  protected val logger = Logger("on-chain-grabber-service")
+  protected val pause: FiniteDuration = config.grabber.onChainPollDelay
 
   private val addressServices = config.grabber.nodes.map(NodeAddressService)
   private val mandatoryAddressService = addressServices.head
   private val requestService = new RequestServiceImpl[IO]
 
   private val dBHelper = new DBHelper(config.protocol)
-
   private val headersDao = new HeadersDao
 
-  private val pause = config.grabber.onChainPollDelay
   private val MaxRetriesNumber = 4
 
   private def idsAtHeight(height: Long): IO[List[String]] =
@@ -119,7 +117,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
     }
   } yield blockInfo
 
-  private val syncTask: IO[Unit] = for {
+  protected val task: IO[Unit] = for {
     _ <- IO {
       logger.info("Starting sync task.")
     }
@@ -130,11 +128,8 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
       logger.info(s"Current full height on node ${info.fullHeight}")
     }
     heightsRange <- IO {
-      if (currentHeight == info.fullHeight) {
-        List.empty[Long]
-      } else {
-        Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
-      }
+      if (currentHeight == info.fullHeight) List.empty[Long]
+      else Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
     }
     _ <- heightsRange.foldLeft(IO.unit) { case (acc, h) =>
       acc.flatMap(_ => writeBlocksFromHeight(h).map(_ => ()))
@@ -143,15 +138,5 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
       logger.info(s"Sync task has been finished. Current height now is ${info.fullHeight}.")
     }
   } yield ()
-
-  private def loopIO(io: IO[Unit]): IO[Unit] = io.attempt
-    .flatMap {
-      case Right(_) => IO.unit
-      case Left(f) => IO(logger.error("An error has occurred: ", f))
-    }
-    .flatMap(_ => IO.sleep(pause))
-    .flatMap(_ => IO.suspend(loopIO(io)))
-
-  def start: IO[Unit] = loopIO(syncTask)
 
 }
