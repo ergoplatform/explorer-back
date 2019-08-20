@@ -3,11 +3,12 @@ package org.ergoplatform.explorer
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cats.effect.concurrent.Ref
-import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect.{ExitCode, IO, IOApp, Resource}
 import cats.implicits._
+import doobie.util.ExecutionContexts
 import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.db.DB
-import org.ergoplatform.explorer.grabber.{OffChainGrabberService, OnChainGrabberService}
+import org.ergoplatform.explorer.grabber.{LoopedIO, OffChainGrabberService, OnChainGrabberService}
 import org.ergoplatform.explorer.http.RestApi
 import org.ergoplatform.explorer.persistence.TransactionsPool
 import pureconfig.loadConfigOrThrow
@@ -20,21 +21,27 @@ object ExplorerApp extends IOApp with DB with RestApi {
   implicit val mat: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  private def program: IO[Unit] = for {
-    cfg <- IO(loadConfigOrThrow[ExplorerConfig])
-    _ <- if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit
-    txPoolRef <- Ref.of[IO, TransactionsPool](TransactionsPool.empty)
-    servicesXa <- createTransactor("Explorer-Hikari-Pool", maxPoolSize = 20, maxIdle = 5)(cfg.db)
-    grabberXa <- createTransactor("Grabber-Hikari-Pool", maxPoolSize = 5, maxIdle = 3)(cfg.db)
-    _ <- startApi(txPoolRef, servicesXa)(cfg)
+  private def program: Resource[IO, List[LoopedIO]] = for {
+    cfg <- Resource.liftF(IO(loadConfigOrThrow[ExplorerConfig]))
+    servicesFp  <- ExecutionContexts.fixedThreadPool[IO](cfg.db.servicesConnPoolSize)
+    servicesCp <- ExecutionContexts.cachedThreadPool[IO]
+    grabberFp  <- ExecutionContexts.fixedThreadPool[IO](cfg.db.grabberConnPoolSize)
+    grabberCp <- ExecutionContexts.cachedThreadPool[IO]
+    _ <-  Resource.liftF(if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit)
+    txPoolRef <- Resource.liftF(Ref.of[IO, TransactionsPool](TransactionsPool.empty))
+    servicesXa <- createTransactor(cfg.db, servicesFp, servicesCp)
+    grabberXa <- createTransactor(cfg.db, grabberFp, grabberCp)
+    _ <- Resource.liftF(configure(servicesXa, "ServicesPool"))
+    _ <- Resource.liftF(configure(grabberXa, "GrabberPool"))
+    _ <- Resource.liftF(startApi(txPoolRef, servicesXa)(cfg))
 
     onChainGrabberService = new OnChainGrabberService(grabberXa, cfg)(ec)
     offChainGrabberService = new OffChainGrabberService(txPoolRef, cfg)(ec)
-
-    _ <- List(onChainGrabberService.start, offChainGrabberService.start).parSequence.void
-  } yield ()
+  } yield List(onChainGrabberService, offChainGrabberService)
 
   override def run(args: List[String]): IO[ExitCode] =
-    program.as(ExitCode.Success)
+    program.use {
+      _.parTraverse(_.start).void
+    }.as(ExitCode.Success)
 
 }

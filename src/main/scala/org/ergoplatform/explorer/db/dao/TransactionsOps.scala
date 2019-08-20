@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import cats.data.NonEmptyList
-import doobie.{Fragments, _}
+import doobie.{Fragments, Read, _}
 import doobie.implicits._
 import doobie.postgres.implicits._
 import org.ergoplatform.explorer.db.models.Transaction
@@ -21,7 +21,7 @@ object TransactionsOps {
   val fieldsFr: Fragment = Fragment.const(fieldsString)
   val insertSql = s"INSERT INTO node_transactions ($fieldsString) VALUES ($holdersString)"
 
-  def findAllByBlockId(blockId: String)(implicit c: Composite[Transaction]): Query0[Transaction] =
+  def findAllByBlockId(blockId: String)(implicit r: Read[Transaction]): Query0[Transaction] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_transactions WHERE header_id = $blockId").query[Transaction]
 
   def countTxsNumbersByBlocksIds(blockIds: NonEmptyList[String]): Query0[(String, Long)] =
@@ -29,7 +29,7 @@ object TransactionsOps {
       Fragments.in(fr"header_id", blockIds) ++ fr"GROUP BY header_id").query[(String, Long)]
 
   def getTxsByAddressId(addressId: String, offset: Int, limit: Int)
-                       (implicit c: Composite[Transaction]): Query0[Transaction] =
+                       (implicit r: Read[Transaction]): Query0[Transaction] =
     fr"""
         SELECT t.id, t.header_id, t.coinbase, t.timestamp, t.size
         FROM node_transactions t LEFT JOIN node_headers h ON h.id  = t.header_id

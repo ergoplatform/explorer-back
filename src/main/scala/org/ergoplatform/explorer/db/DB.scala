@@ -1,11 +1,20 @@
 package org.ergoplatform.explorer.db
 
-import cats.effect.IO
+import cats.effect.{ContextShift, IO, Resource}
 import doobie.hikari.HikariTransactor
 import org.ergoplatform.explorer.config.{DbConfig, ExplorerConfig}
 import org.flywaydb.core.Flyway
 
+import scala.concurrent.ExecutionContext
+
 trait DB {
+
+  def configure(xa: HikariTransactor[IO], name: String): IO[Unit] =
+    xa.configure(c => IO {
+      c.setAutoCommit(false)
+      c.setPoolName(name)
+      c.setMaxLifetime(1200000L)
+    })
 
   def migrate(cfg: ExplorerConfig): IO[Unit] = for {
     flyway <- IO {
@@ -19,22 +28,18 @@ trait DB {
     _ <- IO(flyway.migrate())
   } yield ()
 
-  def createTransactor(name: String, maxPoolSize: Int, maxIdle: Int)
-                      (cfg: DbConfig): IO[HikariTransactor[IO]] =
-    for {
-      xa <- HikariTransactor.newHikariTransactor[IO](
-        driverClassName = cfg.driverClassName,
-        url = cfg.url,
-        user = cfg.user,
-        pass = cfg.pass
-      )
-      _ <- xa.configure(c => IO {
-        c.setPoolName(name)
-        c.setAutoCommit(false)
-        c.setMaximumPoolSize(maxPoolSize)
-        c.setMinimumIdle(maxIdle)
-        c.setMaxLifetime(1200000L)
-      })
-    } yield xa
+  def createTransactor(
+    cfg: DbConfig,
+    fixedThreadPool: ExecutionContext,
+    cachedThreadPool: ExecutionContext
+  )(implicit S: ContextShift[IO]): Resource[IO, HikariTransactor[IO]] =
+    HikariTransactor.newHikariTransactor[IO](
+      driverClassName = cfg.driverClassName,
+      url = cfg.url,
+      user = cfg.user,
+      pass = cfg.pass,
+      connectEC = fixedThreadPool,
+      transactEC = cachedThreadPool
+    )
 
 }
