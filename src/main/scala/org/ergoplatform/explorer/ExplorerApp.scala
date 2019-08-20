@@ -23,9 +23,9 @@ object ExplorerApp extends IOApp with DB with RestApi {
 
   private def program: Resource[IO, List[LoopedIO]] = for {
     cfg <- Resource.liftF(IO(loadConfigOrThrow[ExplorerConfig]))
-    servicesFp  <- ExecutionContexts.fixedThreadPool[IO](cfg.db.servicesConnPoolSize)
+    servicesFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.servicesConnPoolSize)
     servicesCp <- ExecutionContexts.cachedThreadPool[IO]
-    grabberFp  <- ExecutionContexts.fixedThreadPool[IO](cfg.db.grabberConnPoolSize)
+    grabberFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.grabberConnPoolSize)
     grabberCp <- ExecutionContexts.cachedThreadPool[IO]
     _ <-  Resource.liftF(if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit)
     txPoolRef <- Resource.liftF(Ref.of[IO, TransactionsPool](TransactionsPool.empty))

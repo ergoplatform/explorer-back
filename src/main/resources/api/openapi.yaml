@@ -211,6 +211,29 @@ paths:
                 items:
                   $ref: '#/components/schemas/UnconfirmedTransaction'
 
+  '/transactions/unconfirmed/byAddress/{id}':
+    parameters:
+      - name: id
+        description: Address ID
+        required: true
+        in: path
+        schema:
+          $ref: '#/components/schemas/AddressId'
+    get:
+      summary: Get unconfirmed transactions containing outputs to a specified address
+      tags:
+        - transactions
+      responses:
+        '200':
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                description: Unconfirmed transactions containing outputs to a specified address
+                type: array
+                items:
+                  $ref: '#/components/schemas/UnconfirmedTransaction'
+
   '/transactions/boxes/{id}':
     parameters:
       - name: id
