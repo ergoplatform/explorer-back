@@ -10,7 +10,7 @@ object ForksSummary {
   implicit val encoder: Encoder[ForksSummary] = { obj =>
     Json.obj(
       "quantity" -> obj.qty.asJson,
-      "forks" -> obj.forks.asJson
+      "forks"    -> obj.forks.asJson
     )
   }
 

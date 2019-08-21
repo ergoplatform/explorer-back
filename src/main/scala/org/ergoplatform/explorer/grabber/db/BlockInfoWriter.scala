@@ -10,8 +10,8 @@ object BlockInfoWriter extends BasicWriter {
 
   type ToInsert = BlockInfo
 
-  val selectFR = Fragment.const(BlockInfoOps.fields.mkString(", "))
-  val insertSql = BlockInfoOps.insertSql
+  val selectFR: Fragment = Fragment.const(BlockInfoOps.fields.mkString(", "))
+  val insertSql: String = BlockInfoOps.insertSql
 
   def selectById(id: String): Query0[BlockInfo] =
     (fr"SELECT" ++ selectFR ++ fr"FROM blocks_info WHERE header_id = $id").query[BlockInfo]

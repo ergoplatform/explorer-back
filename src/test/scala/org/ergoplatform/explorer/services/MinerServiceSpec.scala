@@ -22,10 +22,15 @@ class MinerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val service = new MinerServiceIOImpl[IO](xa, ec)
 
-    service.searchAddress("01111").unsafeRunSync() should contain theSameElementsAs List(miner1, miner2).map(_.address)
+    service.searchAddress("01111").unsafeRunSync() should contain theSameElementsAs List(
+      miner1,
+      miner2
+    ).map(_.address)
     service.searchAddress("00000000000000000000").unsafeRunSync() shouldBe empty
-    service.searchAddress("011111").unsafeRunSync() should contain theSameElementsAs List(miner1).map(_.address)
-    service.searchAddress("011112").unsafeRunSync() should contain theSameElementsAs List(miner2).map(_.address)
+    service.searchAddress("011111").unsafeRunSync() should contain theSameElementsAs List(miner1)
+      .map(_.address)
+    service.searchAddress("011112").unsafeRunSync() should contain theSameElementsAs List(miner2)
+      .map(_.address)
     service.searchAddress("0111110").unsafeRunSync() shouldBe empty
   }
 

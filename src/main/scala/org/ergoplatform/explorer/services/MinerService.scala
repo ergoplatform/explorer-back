@@ -16,15 +16,17 @@ trait MinerService[F[_]] {
 
 }
 
-class MinerServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)
-                              (implicit F: Monad[F], A: Async[F]) extends MinerService[F] {
+class MinerServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)(
+  implicit F: Monad[F],
+  A: Async[F]
+) extends MinerService[F] {
 
   val minerDao = new MinerDao
 
   /** Search address by the fragment of the address */
   def searchAddress(substring: String): F[List[String]] = {
     for {
-      _ <- Async.shift[F](ec)
+      _         <- Async.shift[F](ec)
       addresses <- minerDao.searchAddress(substring).transact(xa)
     } yield addresses
   }

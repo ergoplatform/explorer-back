@@ -27,19 +27,21 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
     .build[String, BlockInfo]()
 
   private val addressEncoder: ErgoAddressEncoder =
-    ErgoAddressEncoder(if (protocolConfig.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)
+    ErgoAddressEncoder(
+      if (protocolConfig.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix
+    )
 
-  private def minerRewardAddress(nfb: ApiFullBlock): String = {
+  private def minerRewardAddress(nfb: ApiFullBlock): String =
     Base16.decode(nfb.header.minerPk).flatMap { bytes =>
       Try(GroupElementSerializer.parse(SigmaSerializer.startReader(bytes)))
     } match {
       case scala.util.Success(x: CryptoConstants.EcPointType) =>
         val minerPk = ProveDlog(x)
-        val rewardScript = ErgoScriptPredef.rewardOutputScript(protocolConfig.monetary.minerRewardDelay, minerPk)
+        val rewardScript =
+          ErgoScriptPredef.rewardOutputScript(protocolConfig.monetary.minerRewardDelay, minerPk)
         Pay2SAddress(rewardScript)(addressEncoder).toString
       case _ => throw new Exception("Failed to decode miner pk")
     }
-  }
 
   private def minerRewardAndFee(nfb: ApiFullBlock): (Long, Long) = {
     val emission = protocolConfig.emission.emissionAtHeight(nfb.header.height)
@@ -55,7 +57,10 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
   def assembleGenesisInfo(nfb: ApiFullBlock): BlockInfoWriter.ToInsert = {
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee
-    val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
+    val blockCoins = nfb.transactions.transactions
+      .flatMap(_.outputs)
+      .map(_.value)
+      .sum - coinBaseValue
     val mAddress = minerRewardAddress(nfb)
 
     BlockInfo(
@@ -82,10 +87,16 @@ class BlockInfoHelper(protocolConfig: ProtocolConfig) {
     )
   }
 
-  def assembleNonGenesisInfo(nfb: ApiFullBlock, parentBlockInfo: BlockInfo): BlockInfoWriter.ToInsert = {
+  def assembleNonGenesisInfo(
+    nfb: ApiFullBlock,
+    parentBlockInfo: BlockInfo
+  ): BlockInfoWriter.ToInsert = {
     val (reward, fee) = minerRewardAndFee(nfb)
     val coinBaseValue = reward + fee
-    val blockCoins = nfb.transactions.transactions.flatMap(_.outputs).map(_.value).sum - coinBaseValue
+    val blockCoins = nfb.transactions.transactions
+      .flatMap(_.outputs)
+      .map(_.value)
+      .sum - coinBaseValue
     val mAddress = minerRewardAddress(nfb)
     val miningTime = nfb.header.timestamp - parentBlockInfo.timestamp
 

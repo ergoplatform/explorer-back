@@ -27,11 +27,14 @@ trait AddressesService[F[_]] {
 
 }
 
-class AddressesServiceIOImpl[F[_]](xa: Transactor[F],
-                                   txPoolRef: Ref[F, TransactionsPool],
-                                   ec: ExecutionContext,
-                                   cfg: ProtocolConfig)
-                                  (implicit F: Monad[F], A: Async[F]) extends AddressesService[F] with JsonMeta {
+class AddressesServiceIOImpl[F[_]](
+  xa: Transactor[F],
+  txPoolRef: Ref[F, TransactionsPool],
+  ec: ExecutionContext,
+  cfg: ProtocolConfig
+)(implicit F: Monad[F], A: Async[F])
+    extends AddressesService[F]
+    with JsonMeta {
   val outputsDao = new OutputsDao
   val addressDao = new AddressDao
 
@@ -40,15 +43,20 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F],
 
   private val treeSerializer: ErgoTreeSerializer = new ErgoTreeSerializer
 
-  override def getAddressInfo(addressId: String): F[AddressInfo] = for {
-    _ <- Async.shift[F](ec)
-    info <- getAddressInfoResult(addressId)
-  } yield info
+  override def getAddressInfo(addressId: String): F[AddressInfo] =
+    for {
+      _    <- Async.shift[F](ec)
+      info <- getAddressInfoResult(addressId)
+    } yield info
 
-  private def ergoTreeToAddress(ergoTree: String) = Base16.decode(ergoTree)
-    .flatMap { bytes => addressEncoder.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition) }
-    .map { _.toString }
-    .getOrElse("unable to derive address from given ErgoTree")
+  private def ergoTreeToAddress(ergoTree: String) =
+    Base16
+      .decode(ergoTree)
+      .flatMap { bytes =>
+        addressEncoder.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition)
+      }
+      .map { _.toString }
+      .getOrElse("unable to derive address from given ErgoTree")
 
   private def getAddressInfoResult(addressId: String): F[AddressInfo] =
     (outputsDao.findAllByAddress(addressId).transact(xa), txPoolRef.get)
@@ -107,8 +115,7 @@ class AddressesServiceIOImpl[F[_]](xa: Transactor[F],
         val totalReceived = spentOnChainBalance + onChainBalance
         val onChainAssets = onChainTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
         val totalAssets = totalTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
-        AddressInfo(
-          addressId, confirmedTxsQty, totalReceived, onChainBalance, totalBalance, onChainAssets, totalAssets)
+        AddressInfo(addressId, confirmedTxsQty, totalReceived, onChainBalance, totalBalance, onChainAssets, totalAssets)
       }
 
   def searchById(substring: String): F[List[String]] = {

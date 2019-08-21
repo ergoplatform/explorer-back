@@ -12,9 +12,7 @@ import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 import scala.concurrent.ExecutionContext
 
-
-class BlocksHandler(bs: BlockService[IO])(implicit ec: ExecutionContext)
-  extends RouteHandler {
+class BlocksHandler(bs: BlockService[IO])(implicit ec: ExecutionContext) extends RouteHandler {
 
   import BlocksHandler._
 
@@ -28,12 +26,16 @@ class BlocksHandler(bs: BlockService[IO])(implicit ec: ExecutionContext)
 
   def getBlockById: Route = (get & base16Segment) { id =>
     val f = bs.getBlock(id).unsafeToFuture()
-    onSuccess(f) { info => complete(info) }
+    onSuccess(f) { info =>
+      complete(info)
+    }
   }
 
   def getBlockByD: Route = (pathPrefix("byD") & bigIntSegment & get) { d =>
     val f = bs.getBlockByD(d.toString()).unsafeToFuture()
-    onSuccess(f) { info => complete(info) }
+    onSuccess(f) { info =>
+      complete(info)
+    }
   }
 
   def getBlocks: Route = (get & paging & sorting(sortByFieldMappings, Some("height")) & startEndDate) {
@@ -53,13 +55,13 @@ class BlocksHandler(bs: BlockService[IO])(implicit ec: ExecutionContext)
 object BlocksHandler {
 
   val sortByFieldMappings: NonEmptyMap[String, String] = NonEmptyMap.of(
-    "height" -> "height",
-    "timestamp" -> "timestamp",
+    "height"            -> "height",
+    "timestamp"         -> "timestamp",
     "transactionscount" -> "txs_count",
-    "size" -> "block_size",
-    "miner" -> "miner_name",
-    "difficulty" -> "difficulty",
-    "minerreward" -> "miner_reward"
+    "size"              -> "block_size",
+    "miner"             -> "miner_name",
+    "difficulty"        -> "difficulty",
+    "minerreward"       -> "miner_reward"
   )
 
 }

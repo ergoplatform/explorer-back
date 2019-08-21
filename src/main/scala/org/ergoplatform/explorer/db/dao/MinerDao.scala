@@ -7,19 +7,24 @@ import org.ergoplatform.explorer.db.models.Miner
 
 class MinerDao {
 
-  val fields = MinerOps.fields
+  val fields: Seq[String] = MinerOps.fields
 
-  def insert(m: Miner): ConnectionIO[Miner] = MinerOps.insert.withUniqueGeneratedKeys[Miner](fields: _*)(m)
+  def insert(m: Miner): ConnectionIO[Miner] =
+    MinerOps.insert.withUniqueGeneratedKeys[Miner](fields: _*)(m)
 
   def insertMany(list: List[Miner]): ConnectionIO[List[Miner]] =
     MinerOps.insert.updateManyWithGeneratedKeys[Miner](fields: _*)(list).compile.to[List]
 
-  def update(m: Miner): ConnectionIO[Miner] = MinerOps.update.withUniqueGeneratedKeys[Miner](fields: _*)((m, m.address))
+  def update(m: Miner): ConnectionIO[Miner] =
+    MinerOps.update.withUniqueGeneratedKeys[Miner](fields: _*)((m, m.address))
 
-  def delete(minerAddress: String): ConnectionIO[Unit] = MinerOps.delete(minerAddress).run(minerAddress).map(_ => Unit)
+  def delete(minerAddress: String): ConnectionIO[Unit] =
+    MinerOps.delete(minerAddress).run(minerAddress).map(_ => Unit)
 
-  def find(minerAddress: String): ConnectionIO[Option[Miner]] = MinerOps.find(minerAddress).option
+  def find(minerAddress: String): ConnectionIO[Option[Miner]] =
+    MinerOps.find(minerAddress).option
 
   /** Search address by the fragment of the address */
-  def searchAddress(substring: String): ConnectionIO[List[String]] = MinerOps.searchAddress(substring).to[List]
+  def searchAddress(substring: String): ConnectionIO[List[String]] =
+    MinerOps.searchAddress(substring).to[List]
 }

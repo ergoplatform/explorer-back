@@ -3,7 +3,6 @@ package org.ergoplatform.explorer.db.dao
 import cats.data.NonEmptyList
 import doobie._
 import doobie.implicits._
-import doobie.postgres.implicits._
 import doobie.util.fragment.Fragment
 import doobie.util.query.Query0
 import org.ergoplatform.explorer.db.models.BlockInfo
@@ -12,7 +11,7 @@ object BlockInfoOps {
 
   type SingleDataType = (Long, Long, String)
 
-  val fields = Seq(
+  val fields: Seq[String] = Seq(
     "header_id",
     "timestamp",
     "height",
@@ -35,36 +34,37 @@ object BlockInfoOps {
     "total_coins_in_txs"
   )
 
-  val fieldsString = fields.mkString(", ")
-  val holdersString = fields.map(_ => "?").mkString(", ")
+  val fieldsString: String = fields.mkString(", ")
+  val holdersString: String = fields.map(_ => "?").mkString(", ")
   val insertSql = s"INSERT INTO blocks_info ($fieldsString) VALUES ($holdersString)"
 
-  val fieldsFr = Fragment.const(fieldsString)
+  val fieldsFr: Fragment = Fragment.const(fieldsString)
 
   def insert: Update[BlockInfo] = Update[BlockInfo](insertSql)
-
-  def deleteAll: Update[Unit] = Update[Unit]("DELETE FROM blocks_info")
 
   def select(headerId: String): Query0[BlockInfo] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE header_id = $headerId").query[BlockInfo]
 
   def select(headerIds: List[String]): Query0[BlockInfo] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE" ++
-      Fragments.in(fr"header_id", NonEmptyList.fromListUnsafe(headerIds))).query[BlockInfo]
+    Fragments.in(fr"header_id", NonEmptyList.fromListUnsafe(headerIds))).query[BlockInfo]
 
   def findLast(cnt: Int = 10): Query0[BlockInfo] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info ORDER BY height DESC LIMIT ${cnt.toLong}").query[BlockInfo]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info ORDER BY height DESC LIMIT ${cnt.toLong}")
+      .query[BlockInfo]
 
   def findSince(ts: Long): Query0[BlockInfo] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE timestamp >= $ts").query[BlockInfo]
 
   def difficultiesSumSince(ts: Long): Query0[Long] = {
-    fr"SELECT COALESCE(CAST(SUM(difficulty) as BIGINT), 0) FROM blocks_info WHERE timestamp >= $ts".query[Long]
+    fr"SELECT COALESCE(CAST(SUM(difficulty) as BIGINT), 0) FROM blocks_info WHERE timestamp >= $ts"
+      .query[Long]
   }
 
   def circulatingSupplySince(ts: Long): Query0[Long] = {
     (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0) " ++
-      fr"FROM node_transactions t RIGHT JOIN node_outputs o ON t.id = o.tx_id WHERE t.timestamp >= $ts").query[Long]
+    fr"FROM node_transactions t RIGHT JOIN node_outputs o ON t.id = o.tx_id WHERE t.timestamp >= $ts")
+      .query[Long]
   }
 
   def totalCoinsGroupedByDay(lastDays: Int): Query0[SingleDataType] = {
@@ -115,16 +115,19 @@ object BlockInfoOps {
   def selectByDay(limitDaysBack: Int, selectStr: String): Fragment = {
     import scala.concurrent.duration._
 
-    val whereFragment = if (limitDaysBack <=0 ) {
+    val whereFragment = if (limitDaysBack <= 0) {
       Fragment.empty
     } else {
       val ms = System.currentTimeMillis - limitDaysBack.days.toMillis
-      Fragment.const(s"WHERE (timestamp >= $ms AND EXISTS(SELECT 1 FROM node_headers h WHERE h.main_chain = TRUE))")
+      Fragment.const(
+        s"WHERE (timestamp >= $ms AND EXISTS(SELECT 1 FROM node_headers h WHERE h.main_chain = TRUE))"
+      )
     }
 
     Fragment.const(
       s"SELECT $selectStr, TO_CHAR(TO_TIMESTAMP(timestamp / 1000), 'DD/MM/YYYY') as date " +
-        s"FROM blocks_info") ++whereFragment ++ Fragment.const("GROUP BY date ORDER BY t ASC")
+      s"FROM blocks_info"
+    ) ++ whereFragment ++ Fragment.const("GROUP BY date ORDER BY t ASC")
   }
 
 }

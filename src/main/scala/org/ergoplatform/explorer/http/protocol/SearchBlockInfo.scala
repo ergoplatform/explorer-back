@@ -2,16 +2,18 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.{BlockInfo, Header, RawSearchBlock}
+import org.ergoplatform.explorer.db.models.RawSearchBlock
 
-case class SearchBlockInfo(id: String,
-                           height: Long,
-                           timestamp: Long,
-                           transactionsCount: Long,
-                           miner: MinerInfo,
-                           size: Long,
-                           difficulty: Long,
-                           minerReward: Long)
+final case class SearchBlockInfo(
+  id: String,
+  height: Long,
+  timestamp: Long,
+  transactionsCount: Long,
+  miner: MinerInfo,
+  size: Long,
+  difficulty: Long,
+  minerReward: Long
+)
 
 object SearchBlockInfo {
 
@@ -29,14 +31,17 @@ object SearchBlockInfo {
     )
   }
 
-  implicit val encoderSearchBlock: Encoder[SearchBlockInfo] = (b: SearchBlockInfo) => Json.obj(
-    "id" -> Json.fromString(b.id),
-    "height" -> Json.fromLong(b.height),
-    "timestamp" -> Json.fromLong(b.timestamp),
-    "transactionsCount" -> Json.fromLong(b.transactionsCount),
-    "miner" -> b.miner.asJson,
-    "size" -> Json.fromLong(b.size),
-    "difficulty" -> Json.fromLong(b.difficulty),
-    "minerReward" -> Json.fromLong(b.minerReward)
-  )
+  implicit val encoderSearchBlock: Encoder[SearchBlockInfo] = { bi =>
+    Json.obj(
+      "id"                -> Json.fromString(bi.id),
+      "height"            -> Json.fromLong(bi.height),
+      "timestamp"         -> Json.fromLong(bi.timestamp),
+      "transactionsCount" -> Json.fromLong(bi.transactionsCount),
+      "miner"             -> bi.miner.asJson,
+      "size"              -> Json.fromLong(bi.size),
+      "difficulty"        -> Json.fromLong(bi.difficulty),
+      "minerReward"       -> Json.fromLong(bi.minerReward)
+    )
+  }
+
 }

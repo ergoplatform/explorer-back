@@ -49,7 +49,9 @@ class CommonDirectivesSpec extends FlatSpec with Matchers with ScalatestRouteTes
     }
   }
 
-  val pagingEchoRoute = (get & paging) { (o, l) => complete(s"$o:$l") }
+  val pagingEchoRoute: Route = (get & paging) { (o, l) =>
+    complete(s"$o:$l")
+  }
 
   it should "read paging parameters correctly" in {
     Get("/") ~> pagingEchoRoute ~> check {

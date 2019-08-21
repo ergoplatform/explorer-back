@@ -11,10 +11,10 @@ import org.ergoplatform.explorer.http.protocol.ApiError
 trait ErrorHandler extends FailFastCirceSupport with StrictLogging {
 
   implicit val exceptionHandler: ExceptionHandler = ExceptionHandler {
-    case e: ApiError => error(e, StatusCodes.custom(e.statusCode, e.msg))
-    case e: NoSuchElementException => error(e, StatusCodes.NotFound)
+    case e: ApiError                 => error(e, StatusCodes.custom(e.statusCode, e.msg))
+    case e: NoSuchElementException   => error(e, StatusCodes.NotFound)
     case e: IllegalArgumentException => error(e, StatusCodes.BadRequest)
-    case e: Throwable => error(e, StatusCodes.InternalServerError)
+    case e: Throwable                => error(e, StatusCodes.InternalServerError)
   }
 
   private def error(e: Throwable, code: StatusCode): Route = {
@@ -22,7 +22,8 @@ trait ErrorHandler extends FailFastCirceSupport with StrictLogging {
     complete(code -> Json.obj("msg" -> Json.fromString(e.getMessage)))
   }
 
-  implicit val rejectionHandler: RejectionHandler = RejectionHandler.newBuilder()
+  implicit val rejectionHandler: RejectionHandler = RejectionHandler
+    .newBuilder()
     .handle {
       case ValidationRejection(reason, _) =>
         complete(StatusCodes.BadRequest -> Json.obj("msg" -> Json.fromString(reason)))
@@ -34,10 +35,9 @@ trait ErrorHandler extends FailFastCirceSupport with StrictLogging {
     }
     .result()
 
-
   def queryParamError(paramName: String, error: String): Json = Json.obj(
-    "msg" -> Json.fromString("Param is malformed"),
-    "param" -> Json.fromString(paramName),
+    "msg"    -> Json.fromString("Param is malformed"),
+    "param"  -> Json.fromString(paramName),
     "reason" -> Json.fromString(error)
   )
 }

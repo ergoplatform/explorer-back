@@ -19,7 +19,9 @@ class BlocksHandlerSpec extends HttpSpec {
     "00000000000083ae",
     "549147274744846704056800281002663775202262031175081146646290287367723"
   )
-  val headerInfo = HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, "0000")
+
+  val headerInfo =
+    HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, "0000")
 
   val txs = List(
     TransactionInfo("test1", 0L, 1L, List.empty, List.empty),
@@ -46,13 +48,17 @@ class BlocksHandlerSpec extends HttpSpec {
     SearchBlockInfo("3", 1L, 2L, 3L, minerInfo, 4L, 5L, 6L)
   )
 
-
-  val blockServiceStub = new BlockService[IO] {
+  val blockServiceStub: BlockService[IO] = new BlockService[IO] {
     override def getBlockByD(d: String): IO[BlockSummaryInfo] = ???
 
     override def getBlock(id: String): IO[BlockSummaryInfo] = IO.pure(block)
 
-    override def getBlocks(p: Paging, s: Sorting, start: Long, end: Long): IO[List[SearchBlockInfo]] = IO.pure(blocks)
+    override def getBlocks(
+      p: Paging,
+      s: Sorting,
+      start: Long,
+      end: Long
+    ): IO[List[SearchBlockInfo]] = IO.pure(blocks)
 
     override def count(startTs: Long, endTs: Long): IO[Long] = IO.pure(3L)
 

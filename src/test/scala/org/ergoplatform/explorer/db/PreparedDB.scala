@@ -13,7 +13,7 @@ trait PreparedDB extends JsonMeta { self: TestSuite with BeforeAndAfterAll =>
 
   implicit val cs: ContextShift[IO] = IO.contextShift(Implicits.global)
 
-  val container = {
+  val container: PostgreSQLContainer = {
     val c = PostgreSQLContainer("postgres:latest")
     c.container.withUsername("ergo").withDatabaseName("explorer")
     c

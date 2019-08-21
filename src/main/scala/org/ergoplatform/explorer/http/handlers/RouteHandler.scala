@@ -13,10 +13,10 @@ trait RouteHandler extends FailFastCirceSupport with CommonDirectives {
 
   def route: Route
 
-  implicit def OK[R](result: IO[R])(implicit encoder: Encoder[R]): Route = {
+  implicit def OK[R](result: IO[R])(implicit encoder: Encoder[R]): Route =
     onSuccess(result.unsafeToFuture())(result => complete(encoder(result)))
-  }
 
-  implicit def Empty(result: IO[_]): Route = { onSuccess(result.unsafeToFuture())( _ => complete(Json.Null)) }
+  implicit def Empty(result: IO[_]): Route =
+    onSuccess(result.unsafeToFuture())(_ => complete(Json.Null))
 
 }

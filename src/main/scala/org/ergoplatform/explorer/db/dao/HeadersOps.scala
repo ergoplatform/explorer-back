@@ -1,6 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
-import doobie._, doobie.implicits._, doobie.postgres.implicits._
+import doobie._
+import doobie.implicits._
 import org.ergoplatform.explorer.db.models.Header
 
 object HeadersOps {
@@ -33,9 +34,11 @@ object HeadersOps {
   val insertSql = s"INSERT INTO node_headers($fieldsString) VALUES ($holdersString)"
   val updateByIdSql = s"UPDATE node_headers SET $updateString WHERE id = ?"
 
-  def select(id: String): Query0[Header] = (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE id = $id;").query[Header]
+  def select(id: String): Query0[Header] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE id = $id;").query[Header]
 
-  def selectByD(d: String): Query0[Header] = (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE d = $d;").query[Header]
+  def selectByD(d: String): Query0[Header] =
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE d = $d;").query[Header]
 
   def selectByHeight(height: Long): Query0[Header] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE height = $height").query
@@ -44,12 +47,14 @@ object HeadersOps {
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE height >= $minH AND height <= $maxH").query
 
   def selectByParentId(parentId: String): Query0[Header] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE parent_id = $parentId AND main_chain = TRUE").query[Header]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE parent_id = $parentId AND main_chain = TRUE")
+      .query[Header]
 
   def selectLast(limit: Int = 20): Query0[Header] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE main_chain = TRUE ORDER BY height DESC LIMIT ${limit.toLong}").query
 
-  def selectHeight(id: String): Query0[Long] = fr"SELECT height FROM node_headers WHERE id = $id".query[Long]
+  def selectHeight(id: String): Query0[Long] =
+    fr"SELECT height FROM node_headers WHERE id = $id".query[Long]
 
   def insert: Update[Header] = Update[Header](insertSql)
 
@@ -59,21 +64,25 @@ object HeadersOps {
     fr"SELECT count(id) FROM node_headers WHERE (timestamp >= $sTs) AND (timestamp <= $eTs) AND main_chain = TRUE"
       .query[Long]
 
-  def list(offset: Int = 0,
-           limit: Int = 20,
-           sortBy: String,
-           sortOrder: String,
-           startTs: Long,
-           endTs: Long): Query0[Header] = (
-    fr"SELECT" ++ fieldsFr ++
+  def list(
+    offset: Int = 0,
+    limit: Int = 20,
+    sortBy: String,
+    sortOrder: String,
+    startTs: Long,
+    endTs: Long
+  ): Query0[Header] =
+    (
+      fr"SELECT" ++ fieldsFr ++
       fr"FROM node_headers WHERE ((timestamp >= $startTs) AND (timestamp <= $endTs) AND main_chain = TRUE)" ++
       Fragment.const("ORDER BY " + sortBy + " " + sortOrder) ++
       fr"LIMIT ${limit.toLong} OFFSET ${offset.toLong};"
     ).query[Header]
 
-  def searchById(substring: String): Query0[Header] = (
-    fr"SELECT" ++ fieldsFr ++
-    fr"FROM node_headers WHERE id LIKE ${"%" + substring + "%"}"
-  ).query[Header]
+  def searchById(substring: String): Query0[Header] =
+    (
+      fr"SELECT" ++ fieldsFr ++
+      fr"FROM node_headers WHERE id LIKE ${"%" + substring + "%"}"
+    ).query[Header]
 
 }

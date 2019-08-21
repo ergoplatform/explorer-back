@@ -27,8 +27,18 @@ class AddressDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
     val related = outputs.filter(_.address == randomHash)
 
-    val spent = related.filter{o => inputs.map(_.boxId).contains(o.boxId)}.map(_.value).sum
-    val unspent = related.filterNot{o => inputs.map(_.boxId).contains(o.boxId)}.map(_.value).sum
+    val spent = related
+      .filter { o =>
+        inputs.map(_.boxId).contains(o.boxId)
+      }
+      .map(_.value)
+      .sum
+    val unspent = related
+      .filterNot { o =>
+        inputs.map(_.boxId).contains(o.boxId)
+      }
+      .map(_.value)
+      .sum
     val txsCount = txs.count(tx => related.map(_.txId).contains(tx.id))
     val tokensBalance = related
       .filterNot(o => inputs.map(_.boxId).contains(o.boxId))

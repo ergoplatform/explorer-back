@@ -13,6 +13,7 @@ import org.ergoplatform.explorer.utils.Paging
 class AddressesHandlerSpec extends HttpSpec {
 
   val addressInfo = AddressInfo("test", 1L, 2L, 3L, 4L, List.empty, List.empty)
+
   val txs = List(
     TransactionInfo("test1", 0L, 1L, List.empty, List.empty),
     TransactionInfo("test2", 0L, 1L, List.empty, List.empty),
@@ -30,7 +31,8 @@ class AddressesHandlerSpec extends HttpSpec {
       TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
     )
 
-    override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = IO.pure(txs)
+    override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] =
+      IO.pure(txs)
 
     override def countTxsByAddressId(addressId: String): IO[Long] = IO.pure(3L)
 
@@ -42,9 +44,15 @@ class AddressesHandlerSpec extends HttpSpec {
 
     override def getUnconfirmed: IO[List[ApiTransaction]] = ???
 
-    override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    override def getOutputsByAddress(
+      hash: String,
+      unspentOnly: Boolean = false
+    ): IO[List[OutputInfo]] = ???
 
-    override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    override def getOutputsByErgoTree(
+      ergoTree: String,
+      unspentOnly: Boolean = false
+    ): IO[List[OutputInfo]] = ???
 
     override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
 

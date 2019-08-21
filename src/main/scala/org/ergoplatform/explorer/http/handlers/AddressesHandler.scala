@@ -12,9 +12,9 @@ import org.ergoplatform.explorer.utils.Paging
 
 import scala.concurrent.ExecutionContext
 
-class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO])
-                      (implicit ec: ExecutionContext)
-  extends FailFastCirceSupport
+class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO])(
+  implicit ec: ExecutionContext
+) extends FailFastCirceSupport
     with CommonDirectives {
 
   implicit val contextShift: ContextShift[IO] = IO.contextShift(ec)
@@ -27,10 +27,14 @@ class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO])
     onSuccess(as.getAddressInfo(id).unsafeToFuture()) { complete(_) }
   }
 
-  def getTxsByAddressId: Route = (get & path(Segment / "transactions" ) & paging) { (addressId, o, l) =>
-    val items: IO[List[TransactionInfo]] = ts.getTxsByAddressId(addressId, Paging(offset = o, limit = l))
-    val count: IO[Long] = ts.countTxsByAddressId(addressId)
-    onSuccess((items, count).parMapN((i, c) => ItemsResponse(i, c)).unsafeToFuture()) { complete(_) }
+  def getTxsByAddressId: Route = (get & path(Segment / "transactions") & paging) {
+    (addressId, o, l) =>
+      val items: IO[List[TransactionInfo]] =
+        ts.getTxsByAddressId(addressId, Paging(offset = o, limit = l))
+      val count: IO[Long] = ts.countTxsByAddressId(addressId)
+      onSuccess((items, count).parMapN((i, c) => ItemsResponse(i, c)).unsafeToFuture()) {
+        complete(_)
+      }
   }
 
 }

@@ -4,13 +4,19 @@ import akka.http.scaladsl.model.StatusCodes
 import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
-import org.ergoplatform.explorer.http.protocol.{BlockchainInfo, ChartSingleData, ForksSummary, MinerStatSingleInfo, StatsSummary}
+import org.ergoplatform.explorer.http.protocol.{
+  BlockchainInfo,
+  ChartSingleData,
+  ForksSummary,
+  MinerStatSingleInfo,
+  StatsSummary
+}
 import org.ergoplatform.explorer.services.StatsService
 
 class InfoAndStatAndChartsHandlerSpec extends HttpSpec {
 
   val infoResp = BlockchainInfo("test", 0L, 2L, 4L)
-  val statsResp = StatsSummary(0L, 1L, 2L, 3L, 4L, 5L, 6L ,7L, 2.0, 1.0, 8L, 9L ,10L)
+  val statsResp = StatsSummary(0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 2.0, 1.0, 8L, 9L, 10L)
   val forksSummaryResp = ForksSummary(0, List.empty)
 
   val chartsData = List(
@@ -25,34 +31,41 @@ class InfoAndStatAndChartsHandlerSpec extends HttpSpec {
     ChartSingleData(3L, 303L),
   )
 
-
   val minersData = List(
     MinerStatSingleInfo("test1", 20L),
     MinerStatSingleInfo("test2", 30L)
   )
 
-  val service = new StatsService[IO] {
+  val service: StatsService[IO] = new StatsService[IO] {
     override def forksInfo(fromH: Long): IO[ForksSummary] = IO.pure(forksSummaryResp)
 
     override def findLastStats: IO[StatsSummary] = IO.pure(statsResp)
 
     override def findBlockchainInfo: IO[BlockchainInfo] = IO.pure(infoResp)
 
-    override def totalCoinsForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+    override def totalCoinsForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsData)
 
-    override def avgBlockSizeForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+    override def avgBlockSizeForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsData)
 
-    override def totalBlockChainSizeForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsDataOther)
+    override def totalBlockChainSizeForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsDataOther)
 
-    override def avgDifficultyForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+    override def avgDifficultyForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsData)
 
-    override def avgTxsPerBlockForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+    override def avgTxsPerBlockForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsData)
 
-    override def sumTxsGroupByDayForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsDataOther)
+    override def sumTxsGroupByDayForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsDataOther)
 
-    override def minerRevenueForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+    override def minerRevenueForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsData)
 
-    override def hashrateForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] = IO.pure(chartsData)
+    override def hashrateForDuration(daysBack: Int): IO[List[ChartSingleData[Long]]] =
+      IO.pure(chartsData)
 
     override def sharesAcrossMinersFor24H: IO[List[MinerStatSingleInfo]] = IO.pure(minersData)
   }

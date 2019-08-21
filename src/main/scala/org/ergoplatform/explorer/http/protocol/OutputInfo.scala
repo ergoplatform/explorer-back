@@ -2,17 +2,19 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.{Output, ExtendedOutput}
+import org.ergoplatform.explorer.db.models.{ExtendedOutput, Output}
 
-final case class OutputInfo(id: String,
-                            value: Long,
-                            creationHeight: Int,
-                            ergoTree: String,
-                            address: String,
-                            assets: Json,
-                            additionalRegisters: Json,
-                            spentTxIs: Option[String],
-                            mainChain: Boolean)
+final case class OutputInfo(
+  id: String,
+  value: Long,
+  creationHeight: Int,
+  ergoTree: String,
+  address: String,
+  assets: Json,
+  additionalRegisters: Json,
+  spentTxIs: Option[String],
+  mainChain: Boolean
+)
 
 object OutputInfo {
 
@@ -40,15 +42,18 @@ object OutputInfo {
     mainChain = true
   )
 
-  implicit val encoder: Encoder[OutputInfo] = (o: OutputInfo) => Json.obj(
-    "id" -> o.id.asJson,
-    "value" -> o.value.asJson,
-    "creationHeight" -> o.creationHeight.asJson,
-    "ergoTree" -> o.ergoTree.asJson,
-    "address" -> o.address.asJson,
-    "assets" -> o.assets,
-    "additionalRegisters" -> o.additionalRegisters,
-    "spentTransactionId" -> o.spentTxIs.asJson,
-    "mainChain" -> o.mainChain.asJson
-  )
+  implicit val encoder: Encoder[OutputInfo] = { oi =>
+    Json.obj(
+      "id"                  -> oi.id.asJson,
+      "value"               -> oi.value.asJson,
+      "creationHeight"      -> oi.creationHeight.asJson,
+      "ergoTree"            -> oi.ergoTree.asJson,
+      "address"             -> oi.address.asJson,
+      "assets"              -> oi.assets,
+      "additionalRegisters" -> oi.additionalRegisters,
+      "spentTransactionId"  -> oi.spentTxIs.asJson,
+      "mainChain"           -> oi.mainChain.asJson
+    )
+  }
+
 }
