@@ -27,7 +27,7 @@ object App extends IOApp with DB with RestApi {
     servicesCp <- ExecutionContexts.cachedThreadPool[IO]
     grabberFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.grabberConnPoolSize)
     grabberCp <- ExecutionContexts.cachedThreadPool[IO]
-    _ <-  Resource.liftF(if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit)
+    _ <- Resource.liftF(if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit)
     txPoolRef <- Resource.liftF(Ref.of[IO, TransactionsPool](TransactionsPool.empty))
     servicesXa <- createTransactor(cfg.db, servicesFp, servicesCp)
     grabberXa <- createTransactor(cfg.db, grabberFp, grabberCp)

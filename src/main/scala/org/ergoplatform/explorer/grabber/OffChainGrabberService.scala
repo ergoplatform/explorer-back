@@ -28,6 +28,8 @@ class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: Explo
   protected val task: IO[Unit] = for {
     _ <- IO(logger.info("Starting off-chain monitoring task."))
     txs <- requestService.get[List[ApiTransaction]](addressServices.memPoolUri)
-  } yield txPoolRef.update(_ => TransactionsPool.empty.put(txs))
+    _ <- txPoolRef.update(_ => TransactionsPool.empty.put(txs))
+    _ <- IO(logger.info(s"Got ${txs.size} unconfirmed transactions."))
+  } yield ()
 
 }
