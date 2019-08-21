@@ -15,7 +15,7 @@ import pureconfig.loadConfigOrThrow
 
 import scala.concurrent.ExecutionContextExecutor
 
-object ExplorerApp extends IOApp with DB with RestApi {
+object App extends IOApp with DB with RestApi {
 
   implicit val system: ActorSystem = ActorSystem("explorer-system")
   implicit val mat: ActorMaterializer = ActorMaterializer()
