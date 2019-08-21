@@ -21,6 +21,7 @@ import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, Tra
 import org.ergoplatform.explorer.persistence.TransactionsPool
 import org.ergoplatform.explorer.utils.Paging
 import scalaj.http.Http
+import scorex.util.encode.Base16
 import sigmastate.Values.ErgoTree
 
 import scala.concurrent.ExecutionContext
@@ -125,7 +126,7 @@ class TransactionsServiceIOImpl[F[_]](xa: Transactor[F],
     Utils.addressToErgoTree(address)
       .fold[F[ErgoTree]](M.raiseError, F.pure)
       .flatMap { tree =>
-        txPoolRef.get.map(_.getByErgoTree(tree.toString))
+        txPoolRef.get.map(_.getByErgoTree(Base16.encode(tree.bytes)))
       }
 
   private def getTxInfoResult(id: String): F[TransactionSummaryInfo] = (for {

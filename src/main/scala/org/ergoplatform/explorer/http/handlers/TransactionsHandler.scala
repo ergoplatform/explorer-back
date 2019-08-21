@@ -11,8 +11,9 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
   val route: Route = pathPrefix("transactions") {
     submitTransaction ~
       getOutputsByAddress ~
-      getUnconfirmed ~
+      getUnconfirmedByAddress ~
       getUnconfirmedTxById ~
+      getUnconfirmed ~
       getUnspentOutputsByErgoTree ~
       getUnspentOutputsByAddress ~
       getOutputsByErgoTree ~
