@@ -4,11 +4,11 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import cats.effect.IO
 import cats.effect.concurrent.Ref
+import cats.effect.{IO, Resource}
+import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import doobie.util.transactor.Transactor
-import org.ergoplatform.explorer.Pools
 import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.http.handlers._
 import org.ergoplatform.explorer.persistence.TransactionsPool
@@ -18,19 +18,20 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 trait RestApi extends CorsHandler with ErrorHandler {
 
-  implicit val system: ActorSystem
-  implicit val mat: ActorMaterializer
-  implicit val ec: ExecutionContextExecutor
+  def startApi(
+    txPoolRef: Ref[IO, TransactionsPool],
+    xa: Transactor[IO],
+    servicesEc: ExecutionContext,
+    cfg: ExplorerConfig
+  )(implicit system: ActorSystem): Resource[IO, Http.ServerBinding] = {
 
-  def startApi(txPoolRef: Ref[IO, TransactionsPool], xa: Transactor[IO])
-              (cfg: ExplorerConfig): IO[Http.ServerBinding] = {
+    implicit val mat: ActorMaterializer = ActorMaterializer()
+    implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     val logger = Logger("server")
 
     val host = cfg.http.host
     val port = cfg.http.port
-
-    val servicesEc: ExecutionContextExecutor = ExecutionContext.fromExecutor(Pools.dbCallsFixedThreadPool)
 
     val blocksService = new BlocksServiceIOImpl[IO](xa, servicesEc)
     val txService = new TransactionsServiceIOImpl[IO](xa, txPoolRef, servicesEc, cfg)
@@ -50,13 +51,15 @@ trait RestApi extends CorsHandler with ErrorHandler {
 
     val routes: Route = corsHandler(handlers.reduce(_ ~ _))
 
-    IO.fromFuture(IO(Http().bindAndHandle(routes, host, port)))
-      .flatMap { b =>
-        IO {
-          logger.info(s"HTTP server started at ${b.localAddress}")
-          b
+    Resource.make(
+      IO.fromFuture(IO(Http().bindAndHandle(routes, host, port)))
+        .flatMap { b =>
+          IO {
+            logger.info(s"HTTP server started at ${b.localAddress}")
+            b
+          }
         }
-      }
+    )(x => IO.fromFuture(IO(x.unbind())).as(()))
   }
 
 }
