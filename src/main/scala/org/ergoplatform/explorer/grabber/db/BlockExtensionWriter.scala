@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.grabber.db
 
-import doobie.util.composite.Composite
+import doobie.util.Write
 import org.ergoplatform.explorer.db.models.BlockExtension
 
 object BlockExtensionWriter extends BasicWriter {
@@ -9,7 +9,7 @@ object BlockExtensionWriter extends BasicWriter {
 
   override type ToInsert = BlockExtension
 
-  implicit val c: Composite[BlockExtension] = Composite[BlockExtension]
+  implicit val w: Write[BlockExtension] = Write[BlockExtension]
 
   val insertSql: String = s"INSERT INTO node_extensions ${fields.mkString("(", ", ", ")")} " +
     s"VALUES ${fields.map(_ => "?").mkString("(", ", ", ")")}"

@@ -4,6 +4,7 @@ import cats.syntax.either._
 import doobie.Meta
 import io.circe.Json
 import io.circe.parser.parse
+import org.ergoplatform.explorer.grabber.protocol.ApiDifficulty
 import org.postgresql.util.PGobject
 
 trait JsonMeta {
@@ -18,4 +19,10 @@ trait JsonMeta {
         o
       }
     )
+
+  implicit val MetaDifficulty: Meta[ApiDifficulty] = Meta[BigDecimal].xmap(
+    x => ApiDifficulty(x.toBigInt()),
+    x => BigDecimal.apply(x.value)
+  )
+
 }

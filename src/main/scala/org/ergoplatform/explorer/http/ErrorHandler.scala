@@ -8,7 +8,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import org.ergoplatform.explorer.http.protocol.ApiError
 
-object ErrorHandler extends FailFastCirceSupport with StrictLogging {
+trait ErrorHandler extends FailFastCirceSupport with StrictLogging {
 
   implicit val exceptionHandler: ExceptionHandler = ExceptionHandler {
     case e: ApiError => error(e, StatusCodes.custom(e.statusCode, e.msg))

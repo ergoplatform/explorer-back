@@ -1,13 +1,14 @@
 package org.ergoplatform.explorer.services
 
 import cats.effect.IO
+import cats.effect.concurrent.Ref
 import doobie.implicits._
 import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.grabber.protocol.ApiAsset
 import org.ergoplatform.explorer.http.protocol.AddressInfo
-import org.ergoplatform.explorer.persistence.OffChainPersistence
+import org.ergoplatform.explorer.persistence.TransactionsPool
 import org.ergoplatform.settings.MonetarySettings
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
@@ -31,7 +32,7 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
     oDao.insertMany(outputs).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
 
-    val offChainStore = new OffChainPersistence
+    val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
     val cfg = ProtocolConfig(testnet = true, monetary = MonetarySettings())
 

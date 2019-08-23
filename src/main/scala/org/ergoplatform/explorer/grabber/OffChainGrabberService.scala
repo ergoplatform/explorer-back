@@ -1,68 +1,35 @@
 package org.ergoplatform.explorer.grabber
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import cats.effect.IO
-import cats.implicits._
+import cats.effect.concurrent.Ref
 import com.typesafe.scalalogging.Logger
 import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServiceImpl}
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
-import org.ergoplatform.explorer.persistence.OffChainPersistence
+import org.ergoplatform.explorer.persistence.TransactionsPool
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
-/** Performs off-chain monitoring */
-class OffChainGrabberService(persistence: OffChainPersistence, config: ExplorerConfig)
-                            (implicit ec: ExecutionContext) {
+/** Unconfirmed transactions pool monitoring service.
+  */
+class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: ExplorerConfig)
+                            (implicit protected val ec: ExecutionContext)
+  extends LoopedIO {
 
-  private val logger = Logger("off-chain-grabber-service")
+  protected val logger = Logger("off-chain-grabber-service")
 
-  private val active = new AtomicBoolean(false)
-
-  private val pause = config.grabber.offChainPollDelay
+  protected val pause: FiniteDuration = config.grabber.offChainPollDelay
 
   private val requestService = new RequestServiceImpl[IO]
 
   private val addressServices = NodeAddressService(config.grabber.nodes.head)
 
-  private val syncTask: IO[Unit] = for {
-    _ <- IO {
-      logger.info("Starting off-chain monitoring task.")
-    }
+  protected val task: IO[Unit] = for {
+    _ <- IO(logger.info("Starting off-chain monitoring task."))
     txs <- requestService.get[List[ApiTransaction]](addressServices.memPoolUri)
-  } yield {
-    persistence.clear()
-    persistence.put(txs)
-  }
-
-  private def run(io: IO[Unit]): IO[Unit] = io.attempt.flatMap {
-    case Right(_) => IO {
-      ()
-    }
-    case Left(f) => IO {
-      logger.error("An error has occurred: ", f)
-    }
-  } *> IO.sleep(pause) *> IO.suspend {
-    if (active.get) {
-      run(io)
-    } else {
-      IO.raiseError(new InterruptedException("Grabber service has been stopped"))
-    }
-  }
-
-  def stop(): Unit = {
-    logger.info("Stopping service.")
-    active.set(false)
-  }
-
-  def start(): Unit = if (!active.get()) {
-    active.set(true)
-    (IO.shift(ec) *> run(syncTask)).unsafeRunAsync { r =>
-      logger.info(s"Off-chain grabber stopped. Cause: $r")
-    }
-  } else {
-    logger.warn("Trying to start service that already has been started.")
-  }
+    _ <- txPoolRef.update(_ => TransactionsPool.empty.put(txs))
+    _ <- IO(logger.info(s"Got ${txs.size} unconfirmed transactions."))
+  } yield ()
 
 }

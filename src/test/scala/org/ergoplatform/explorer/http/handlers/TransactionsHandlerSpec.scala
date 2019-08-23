@@ -24,7 +24,7 @@ class TransactionsHandlerSpec extends HttpSpec {
 
     override def countTxsByAddressId(addressId: String): IO[Long] = ???
 
-    override def searchById(query: String): IO[List[String]] = ???
+    override def searchByIdSubstr(query: String): IO[List[String]] = ???
 
     override def getOutputById(id: String): IO[OutputInfo] = ???
 
@@ -35,6 +35,8 @@ class TransactionsHandlerSpec extends HttpSpec {
     override def submitTransaction(tx: Json): IO[Json] = ???
 
     override def getUnconfirmed: IO[List[ApiTransaction]] = ???
+
+    override def getUnconfirmedByAddress(address: String): IO[List[ApiTransaction]] = ???
   }
 
   val route: Route = new TransactionsHandler(service).route

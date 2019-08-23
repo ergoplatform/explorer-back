@@ -32,12 +32,13 @@ class SearchHandlerSpec extends HttpSpec {
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = ???
     override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = ???
     override def countTxsByAddressId(addressId: String): IO[Long] = ???
-    override def searchById(query: String): IO[List[String]] = IO.pure(transaction)
+    override def searchByIdSubstr(query: String): IO[List[String]] = IO.pure(transaction)
     override def getOutputById(id: String): IO[OutputInfo] = ???
     override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
     override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
     override def submitTransaction(tx: Json): IO[Json] = ???
     override def getUnconfirmed: IO[List[ApiTransaction]] = ???
+    override def getUnconfirmedByAddress(address: String): IO[List[ApiTransaction]] = ???
   }
   val addressService = new AddressesService[IO] {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = ???

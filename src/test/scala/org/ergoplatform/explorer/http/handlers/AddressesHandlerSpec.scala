@@ -26,15 +26,15 @@ class AddressesHandlerSpec extends HttpSpec {
   }
 
   val txServiceStub: TransactionsService[IO] = new TransactionsService[IO] {
-    override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(
       TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
     )
+
     override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = IO.pure(txs)
 
     override def countTxsByAddressId(addressId: String): IO[Long] = IO.pure(3L)
 
-    override def searchById(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
+    override def searchByIdSubstr(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
 
     override def getOutputById(id: String): IO[OutputInfo] = ???
 
@@ -45,6 +45,10 @@ class AddressesHandlerSpec extends HttpSpec {
     override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
 
     override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+
+    override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
+
+    override def getUnconfirmedByAddress(address: String): IO[List[ApiTransaction]] = ???
   }
 
   val route: Route = new AddressesHandler(addressServiceStub, txServiceStub).route

@@ -1,86 +1,41 @@
 package org.ergoplatform.explorer
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
-import akka.stream.ActorMaterializer
-import cats.effect.IO
-import com.typesafe.scalalogging.Logger
-import doobie.hikari.implicits._
-import org.ergoplatform.explorer.grabber.{OffChainGrabberService, OnChainGrabberService}
-import org.ergoplatform.explorer.http.{ErrorHandler, Rest}
-import org.flywaydb.core.Flyway
+import cats.effect.concurrent.Ref
+import cats.effect.{ExitCode, IO, IOApp, Resource}
+import cats.implicits._
+import doobie.util.ExecutionContexts
+import org.ergoplatform.explorer.config.ExplorerConfig
+import org.ergoplatform.explorer.db.DB
+import org.ergoplatform.explorer.grabber.{LoopedIO, OffChainGrabberService, OnChainGrabberService}
+import org.ergoplatform.explorer.http.RestApi
+import org.ergoplatform.explorer.persistence.TransactionsPool
+import pureconfig.loadConfigOrThrow
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
-import scala.util.{Failure, Success}
+object App extends IOApp with DB with RestApi {
 
-object App
-  extends Configuration
-    with DbTransactor
-    with Services
-    with OffChainMonitoring
-    with Rest {
+  private def program: Resource[IO, List[LoopedIO]] = for {
+    cfg <- Resource.liftF(IO(loadConfigOrThrow[ExplorerConfig]))
+    servicesFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.servicesConnPoolSize)
+    servicesCp <- ExecutionContexts.cachedThreadPool[IO]
+    grabberFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.grabberConnPoolSize)
+    grabberCp <- ExecutionContexts.cachedThreadPool[IO]
+    servicesXa <- createTransactor(cfg.db, servicesFp, servicesCp)
+    grabberXa <- createTransactor(cfg.db, grabberFp, grabberCp)
+    system <- Resource.make(IO(ActorSystem("explorer-system")))(x => IO.fromFuture(IO(x.terminate())).as(()))
+    _ <- Resource.liftF(if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit)
+    txPoolRef <- Resource.liftF(Ref.of[IO, TransactionsPool](TransactionsPool.empty))
+    _ <- Resource.liftF(configure(servicesXa, "ServicesPool"))
+    _ <- Resource.liftF(configure(grabberXa, "GrabberPool"))
+    _ <- startApi(txPoolRef, servicesXa, servicesFp, cfg)(system)
 
-  implicit val system: ActorSystem = ActorSystem("explorer-system")
-  implicit val mat: ActorMaterializer = ActorMaterializer()
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
-  val logger = Logger("server")
+    onChainGrabberService = new OnChainGrabberService(grabberXa, cfg)(grabberFp)
+    offChainGrabberService = new OffChainGrabberService(txPoolRef, cfg)(grabberFp)
+  } yield List(onChainGrabberService, offChainGrabberService)
 
-  def main(args: Array[String]): Unit = {
-
-    implicit def eh: ExceptionHandler = ErrorHandler.exceptionHandler
-    implicit def rh: RejectionHandler = ErrorHandler.rejectionHandler
-    val host = cfg.http.host
-    val port = cfg.http.port
-
-    val migrate: IO[Unit] = for {
-      flyway <- IO {
-        val f = new Flyway()
-        f.setSqlMigrationSeparator("__")
-        f.setLocations("classpath:db")
-        f.setDataSource(cfg.db.url, cfg.db.user, cfg.db.pass)
-        f
-      }
-      _ <- IO {
-        flyway.clean()
-      }
-      _ <- IO {
-        flyway.migrate()
-      }
-    } yield ()
-
-    if (cfg.db.migrateOnStart) { migrate.unsafeRunSync() }
-
-    val binding = Http().bindAndHandle(routes, host, port)
-
-    binding.onComplete {
-      case Success(b) =>
-        logger.info(s"HTTP server started at ${b.localAddress}")
-      case Failure(ex) =>
-        logger.error("Could not start HTTP server", ex)
-    }
-
-    val grabberEc = ExecutionContext.fromExecutor(Pools.grabberPool)
-
-    val onChainGrabberService = new OnChainGrabberService(transactor2, grabberEc, cfg)
-    onChainGrabberService.start()
-
-    val offChainGrabberService = new OffChainGrabberService(offChainStorage, cfg)
-    offChainGrabberService.start()
-
-    sys.addShutdownHook {
-      onChainGrabberService.stop()
-      val stop = binding.flatMap(_.unbind())
-      stop.onComplete { _ =>
-        Pools.shutdown()
-        transactor.shutdown.unsafeRunSync()
-        transactor2.shutdown.unsafeRunSync()
-        system.terminate()
-      }
-      Await.result(stop, 5 seconds)
-      ()
-    }
-  }
+  override def run(args: List[String]): IO[ExitCode] =
+    program.use {
+      _.parTraverse(_.start).void
+    }.as(ExitCode.Success)
 
 }

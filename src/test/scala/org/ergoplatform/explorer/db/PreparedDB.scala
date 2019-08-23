@@ -1,13 +1,17 @@
 package org.ergoplatform.explorer.db
 
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.db.mappings.JsonMeta
 import org.flywaydb.core.Flyway
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
+import scala.concurrent.ExecutionContext.Implicits
+
 trait PreparedDB extends JsonMeta { self: TestSuite with BeforeAndAfterAll =>
+
+  implicit val cs: ContextShift[IO] = IO.contextShift(Implicits.global)
 
   val container = {
     val c = PostgreSQLContainer("postgres:latest")

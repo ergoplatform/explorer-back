@@ -1,7 +1,5 @@
 package org.ergoplatform.explorer.grabber
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import cats.effect.IO
 import cats.implicits._
 import com.typesafe.scalalogging.Logger
@@ -16,38 +14,37 @@ import org.ergoplatform.explorer.grabber.http.{NodeAddressService, RequestServic
 import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiNodeInfo}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
-class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionContext, config: ExplorerConfig) {
+class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)
+                           (implicit protected val ec: ExecutionContext)
+  extends LoopedIO {
 
   private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.protocol)
 
-  implicit val ec: ExecutionContext = executionContext
-
-  private val logger = Logger("on-chain-grabber-service")
+  protected val logger = Logger("on-chain-grabber-service")
+  protected val pause: FiniteDuration = config.grabber.onChainPollDelay
 
   private val addressServices = config.grabber.nodes.map(NodeAddressService)
   private val mandatoryAddressService = addressServices.head
   private val requestService = new RequestServiceImpl[IO]
 
   private val dBHelper = new DBHelper(config.protocol)
-
   private val headersDao = new HeadersDao
 
-  private val active = new AtomicBoolean(false)
-  private val pause = config.grabber.onChainPollDelay
   private val MaxRetriesNumber = 4
 
   private def idsAtHeight(height: Long): IO[List[String]] =
     requestService.get[List[String]](mandatoryAddressService.idsAtHeightUri(height))
 
-  private def fullBlocksSafe(id: String): IO[Option[ApiFullBlock]] = {
-    def tryGet(numRetries: Int = 0): IO[Option[ApiFullBlock]] = {
-      if (numRetries < addressServices.size) {
-        val currentService = addressServices(numRetries)
+  private def readFullBlock(id: String): IO[Option[ApiFullBlock]] = {
+    def readWithRetry(attemptsDone: Int): IO[Option[ApiFullBlock]] = {
+      if (attemptsDone < addressServices.size) {
+        val currentService = addressServices(attemptsDone)
         requestService.getSafe[ApiFullBlock](currentService.fullBlockUri(id)).flatMap {
           case Left(f) =>
             logger.error(s"Error while requesting block with id = $id from ${currentService.nodeAddress}", f)
-            tryGet(numRetries + 1)
+            readWithRetry(attemptsDone + 1)
           case Right(v) =>
             IO.pure(Some(v))
         }
@@ -55,17 +52,17 @@ class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionConte
         IO.pure(None)
       }
     }
-    tryGet()
+    readWithRetry(0)
   }
 
   //Looking for a block. In case of error just move forward.
   private def fullBlocksForIds(ids: List[String]): IO[List[ApiFullBlock]] = ids
-    .parTraverse(fullBlocksSafe)
+    .parTraverse(readFullBlock)
     .map(_.flatten.toList)
 
-  def writeBlocksFromHeight(height: Long,
-                            existingHeadersAtHeight: List[Header] = List.empty,
-                            retries: Int = 0): IO[List[BlockInfo]] = {
+  private def writeBlocksFromHeight(height: Long,
+                                    existingHeadersAtHeight: List[Header] = List.empty,
+                                    attemptsDone: Int = 0): IO[List[BlockInfo]] = {
     def updatedBlock(b: ApiFullBlock, isMain: Boolean) = b.copy(header = b.header.copy(mainChain = isMain))
     for {
       ids <- idsAtHeight(height)
@@ -78,12 +75,15 @@ class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionConte
       blockInfos <- blocks.map { block =>
         writeBlock(updatedBlock(block, ids.headOption.contains(block.header.id)))
       }.parSequence
-      retryNeeded <- IO(blocks.isEmpty && retries < MaxRetriesNumber && ids.size > existingHeadersAtHeight.size)
+      retryNeeded <- IO(blocks.isEmpty && attemptsDone < MaxRetriesNumber && ids.size > existingHeadersAtHeight.size)
       _ <- IO {
         val retryInfo = if (retryNeeded) "Retrying.." else ""
         logger.info(s"${blocks.length} block(s) from height $height has been written. $retryInfo")
       }
-      _ <- IO.suspend(if (retryNeeded) writeBlocksFromHeight(height, existingHeadersAtHeight, retries + 1) else IO.unit)
+      _ <- IO.suspend(
+        if (retryNeeded) writeBlocksFromHeight(height, existingHeadersAtHeight, attemptsDone + 1)
+        else IO.unit
+      )
     } yield blockInfos
   }
 
@@ -117,7 +117,7 @@ class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionConte
     }
   } yield blockInfo
 
-  private val syncTask: IO[Unit] = for {
+  protected val task: IO[Unit] = for {
     _ <- IO {
       logger.info("Starting sync task.")
     }
@@ -128,45 +128,13 @@ class OnChainGrabberService(xa: Transactor[IO], executionContext: ExecutionConte
       logger.info(s"Current full height on node ${info.fullHeight}")
     }
     heightsRange <- IO {
-      if (currentHeight == info.fullHeight) {
-        List.empty[Long]
-      } else {
-        Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
-      }
+      if (currentHeight == info.fullHeight) List.empty[Long]
+      else Range.Long.inclusive(currentHeight + 1, info.fullHeight, 1L).toList
     }
-    _ <- heightsRange.map(writeBlocksFromHeight(_).map(_ => ())).sequence[IO, Unit]
+    _ <- heightsRange.traverse(writeBlocksFromHeight(_))
     _ <- IO {
       logger.info(s"Sync task has been finished. Current height now is ${info.fullHeight}.")
     }
   } yield ()
-
-  private def run(io: IO[Unit]): IO[Unit] = io.attempt.flatMap {
-    case Right(_) => IO {
-      ()
-    }
-    case Left(f) => IO {
-      logger.error("An error has occurred: ", f)
-    }
-  } *> IO.sleep(pause) *> IO.suspend {
-    if (active.get) {
-      run(io)
-    } else {
-      IO.raiseError(new InterruptedException("On-chain grabber service has been stopped"))
-    }
-  }
-
-  def stop(): Unit = {
-    logger.info("Stopping service.")
-    active.set(false)
-  }
-
-  def start(): Unit = if (!active.get()) {
-    active.set(true)
-    (IO.shift(ec) *> run(syncTask)).unsafeRunAsync { r =>
-      logger.info(s"Grabber stopped. Cause: $r")
-    }
-  } else {
-    logger.warn("Trying to start service that already has been started.")
-  }
 
 }

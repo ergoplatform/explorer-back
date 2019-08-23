@@ -3,17 +3,22 @@ package org.ergoplatform.explorer.http.handlers
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.data._
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import cats.implicits.catsKernelStdOrderForString
 import cats.syntax.all._
 import org.ergoplatform.explorer.http.protocol.ItemsResponse
 import org.ergoplatform.explorer.services.BlockService
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
+import scala.concurrent.ExecutionContext
 
-class BlocksHandler(bs: BlockService[IO]) extends RouteHandler {
+
+class BlocksHandler(bs: BlockService[IO])(implicit ec: ExecutionContext)
+  extends RouteHandler {
 
   import BlocksHandler._
+
+  implicit val contextShift: ContextShift[IO] = IO.contextShift(ec)
 
   private val oneDayMillis: Long = 24L * 60L * 60L * 1000L
 
