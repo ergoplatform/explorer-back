@@ -13,9 +13,9 @@ import scala.concurrent.duration.FiniteDuration
 
 /** Unconfirmed transactions pool monitoring service.
   */
-class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: ExplorerConfig)
-                            (implicit protected val ec: ExecutionContext)
-  extends LoopedIO {
+class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: ExplorerConfig)(
+  implicit protected val ec: ExecutionContext
+) extends LoopedIO {
 
   protected val logger = Logger("off-chain-grabber-service")
 
@@ -26,10 +26,10 @@ class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: Explo
   private val addressServices = NodeAddressService(config.grabber.nodes.head)
 
   protected val task: IO[Unit] = for {
-    _ <- IO(logger.info("Starting off-chain monitoring task."))
+    _   <- IO(logger.info("Starting off-chain monitoring task."))
     txs <- requestService.get[List[ApiTransaction]](addressServices.memPoolUri)
-    _ <- txPoolRef.update(_ => TransactionsPool.empty.put(txs))
-    _ <- IO(logger.info(s"Got ${txs.size} unconfirmed transactions."))
+    _   <- txPoolRef.update(_ => TransactionsPool.empty.put(txs))
+    _   <- IO(logger.info(s"Got ${txs.size} unconfirmed transactions."))
   } yield ()
 
 }

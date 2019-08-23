@@ -18,15 +18,17 @@ trait RequestService[F[_]] {
 
 }
 
-class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F]) extends RequestService[F] {
+class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F])
+  extends RequestService[F] {
 
   type RequestParser[T] = (Int, Map[String, IndexedSeq[String]], InputStream) => T
 
-  private def getIO[T](uri: String)(implicit d: Decoder[T]): IO[T] = for {
-    r <- makeRequest(uri)
-    json <- executeRequest(r)
-    entity <- decode(json, d)
-  } yield entity
+  private def getIO[T](uri: String)(implicit d: Decoder[T]): IO[T] =
+    for {
+      r      <- makeRequest(uri)
+      json   <- executeRequest(r)
+      entity <- decode(json, d)
+    } yield entity
 
   override def get[T](uri: String)(implicit d: Decoder[T]): F[T] = l.liftIO(getIO[T](uri))
 
@@ -36,7 +38,7 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
   private def inputStreamToJson(is: InputStream): IO[Json] = {
     val str = Source.fromInputStream(is, "UTF8").mkString
     io.circe.parser.parse(str) match {
-      case Right(json) => IO.pure(json)
+      case Right(json)              => IO.pure(json)
       case Left(pf: ParsingFailure) => IO.raiseError[Json](pf.underlying)
     }
   }
@@ -46,19 +48,24 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
       case Right(v) =>
         IO.pure(v)
       case Left(df: DecodingFailure) =>
-        IO.raiseError(new IllegalArgumentException(s"Cannot decode entity from json, failure: ${df.message}"))
+        IO.raiseError(
+          new IllegalArgumentException(s"Cannot decode entity from json, failure: ${df.message}")
+        )
     }
   }
 
   private def executeRequest(r: HttpRequest): IO[Json] = {
-    val requestParser: RequestParser[IO[Json]] = (code, _, is) => code match {
-      case 200 =>
-        inputStreamToJson(is)
-      case _ =>
-        val msg = Source.fromInputStream(is, "UTF8").mkString
-        IO.raiseError(
-          new IllegalStateException(s"Request to ${r.url} has been failed with code $code, and message $msg")
-        )
+    val requestParser: RequestParser[IO[Json]] = (code, _, is) =>
+      code match {
+        case 200 =>
+          inputStreamToJson(is)
+        case _ =>
+          val msg = Source.fromInputStream(is, "UTF8").mkString
+          IO.raiseError(
+            new IllegalStateException(
+              s"Request to ${r.url} has been failed with code $code, and message $msg"
+            )
+          )
     }
 
     r.exec(requestParser).body

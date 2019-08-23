@@ -10,16 +10,16 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
 
   val route: Route = pathPrefix("transactions") {
     submitTransaction ~
-      getOutputsByAddress ~
-      getUnconfirmedByAddress ~
-      getUnconfirmedTxById ~
-      getUnconfirmed ~
-      getUnspentOutputsByErgoTree ~
-      getUnspentOutputsByAddress ~
-      getOutputsByErgoTree ~
-      getOutputsByAddress ~
-      getOutputsById ~
-      getTxById
+    getOutputsByAddress ~
+    getUnconfirmedByAddress ~
+    getUnconfirmedTxById ~
+    getUnconfirmed ~
+    getUnspentOutputsByErgoTree ~
+    getUnspentOutputsByAddress ~
+    getOutputsByErgoTree ~
+    getOutputsByAddress ~
+    getOutputsById ~
+    getTxById
   }
 
   def submitTransaction: Route = (post & entity(as[Json])) {
@@ -38,9 +38,10 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
     service.getUnconfirmed
   }
 
-  def getUnconfirmedByAddress: Route = (pathPrefix("unconfirmed" / "byAddress") & get & base58Segment) {
-    service.getUnconfirmedByAddress
-  }
+  def getUnconfirmedByAddress: Route =
+    (pathPrefix("unconfirmed" / "byAddress") & get & base58Segment) {
+      service.getUnconfirmedByAddress
+    }
 
   def getOutputsById: Route = (pathPrefix("boxes") & get & base16Segment) {
     service.getOutputById
@@ -54,12 +55,14 @@ class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler
     service.getOutputsByAddress(_)
   }
 
-  def getUnspentOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree" / "unspent") & get & base16Segment) {
-    service.getOutputsByErgoTree(_, unspentOnly = true)
-  }
+  def getUnspentOutputsByErgoTree: Route =
+    (pathPrefix("boxes" / "byErgoTree" / "unspent") & get & base16Segment) {
+      service.getOutputsByErgoTree(_, unspentOnly = true)
+    }
 
-  def getUnspentOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress" / "unspent") & get & base58Segment) {
-    service.getOutputsByAddress(_, unspentOnly = true)
-  }
+  def getUnspentOutputsByAddress: Route =
+    (pathPrefix("boxes" / "byAddress" / "unspent") & get & base58Segment) {
+      service.getOutputsByAddress(_, unspentOnly = true)
+    }
 
 }

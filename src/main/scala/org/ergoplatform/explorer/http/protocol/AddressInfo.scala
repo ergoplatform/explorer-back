@@ -4,13 +4,15 @@ import io.circe.{Encoder, Json}
 import io.circe.syntax._
 import org.ergoplatform.explorer.grabber.protocol.ApiAsset
 
-case class AddressInfo(id: String,
-                       confirmedTxsQty: Long,
-                       totalReceived: BigInt,
-                       confirmedBalance: Long,
-                       totalBalance: Long,
-                       confirmedTokensBalance: List[ApiAsset],
-                       totalTokensBalance: List[ApiAsset])
+final case class AddressInfo(
+  id: String,
+  confirmedTxsQty: Long,
+  totalReceived: BigInt,
+  confirmedBalance: Long,
+  totalBalance: Long,
+  confirmedTokensBalance: List[ApiAsset],
+  totalTokensBalance: List[ApiAsset]
+)
 
 object AddressInfo {
 
@@ -18,12 +20,12 @@ object AddressInfo {
     Json.obj(
       "summary" -> Json.obj("id" -> a.id.asJson),
       "transactions" -> Json.obj(
-        "confirmed" -> a.confirmedTxsQty.asJson,
-        "totalReceived" -> a.totalReceived.asJson,
-        "confirmedBalance" ->  a.confirmedBalance.asJson,
-        "totalBalance" ->  a.totalBalance.asJson,
+        "confirmed"              -> a.confirmedTxsQty.asJson,
+        "totalReceived"          -> a.totalReceived.asJson,
+        "confirmedBalance"       -> a.confirmedBalance.asJson,
+        "totalBalance"           -> a.totalBalance.asJson,
         "confirmedTokensBalance" -> a.confirmedTokensBalance.asJson,
-        "totalTokensBalance" -> a.totalTokensBalance.asJson
+        "totalTokensBalance"     -> a.totalTokensBalance.asJson
       )
     )
   }

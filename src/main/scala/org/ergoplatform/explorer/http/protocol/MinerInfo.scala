@@ -2,12 +2,15 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
 
-case class MinerInfo(addressId: String, name: String)
+final case class MinerInfo(addressId: String, name: String)
 
 object MinerInfo {
 
-  implicit val encoder: Encoder[MinerInfo] = (minerInfo: MinerInfo) => Json.obj(
-    "address" -> Json.fromString(minerInfo.addressId),
-    "name" -> Json.fromString(minerInfo.name)
-  )
+  implicit val encoder: Encoder[MinerInfo] = { minerInfo =>
+    Json.obj(
+      "address" -> Json.fromString(minerInfo.addressId),
+      "name"    -> Json.fromString(minerInfo.name)
+    )
+  }
+
 }

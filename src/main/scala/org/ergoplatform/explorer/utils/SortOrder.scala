@@ -3,11 +3,13 @@ package org.ergoplatform.explorer.utils
 trait SortOrder
 
 object SortOrder {
-  def fromString(v: String): Option[SortOrder] = v.trim.toLowerCase match {
-    case "asc" => Some(Asc)
-    case "desc" => Some(Desc)
-    case _ => None
-  }
+
+  def fromString(v: String): Option[SortOrder] =
+    v.trim.toLowerCase match {
+      case "asc"  => Some(Asc)
+      case "desc" => Some(Desc)
+      case _      => None
+    }
 }
 
 case object Asc extends SortOrder {
@@ -17,4 +19,3 @@ case object Asc extends SortOrder {
 case object Desc extends SortOrder {
   override def toString: String = "DESC"
 }
-

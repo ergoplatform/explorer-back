@@ -11,14 +11,12 @@ object Utils {
 
   private val treeSerializer: ErgoTreeSerializer = new ErgoTreeSerializer
 
-  @inline def ergoTreeToAddress(ergoTree: String)
-                               (implicit enc: ErgoAddressEncoder): Try[ErgoAddress] =
+  @inline def ergoTreeToAddress(ergoTree: String)(implicit enc: ErgoAddressEncoder): Try[ErgoAddress] =
     Base16.decode(ergoTree).flatMap { bytes =>
       enc.fromProposition(treeSerializer.deserializeErgoTree(bytes).proposition)
     }
 
-  @inline def addressToErgoTree(address: String)
-                               (implicit enc: ErgoAddressEncoder): Try[ErgoTree] =
+  @inline def addressToErgoTree(address: String)(implicit enc: ErgoAddressEncoder): Try[ErgoTree] =
     enc.fromString(address).map(_.script)
 
 }

@@ -2,13 +2,15 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
 
-case class MiniBlockInfo(id: String, height: Long)
+final case class MiniBlockInfo(id: String, height: Long)
 
 object MiniBlockInfo {
 
-  implicit val encoder: Encoder[MiniBlockInfo] = (mb: MiniBlockInfo) => Json.obj(
-    ("id", Json.fromString(mb.id)),
-    ("height", Json.fromLong(mb.height))
-  )
+  implicit val encoder: Encoder[MiniBlockInfo] = { mb =>
+    Json.obj(
+      ("id", Json.fromString(mb.id)),
+      ("height", Json.fromLong(mb.height))
+    )
+  }
 
 }

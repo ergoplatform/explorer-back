@@ -60,7 +60,6 @@ class OpsSpec extends FlatSpec with Matchers with BeforeAndAfterAll with IOCheck
     check(minerRevenueGroupedByDay(10))
     check(sumTxsGroupedByDay(10))
     check(insert)
-    check(deleteAll)
   }
 
   it should "check all inputs ops" in {

@@ -27,8 +27,8 @@ class TransactionsServiceSpec
     override def areEqual(a: TransactionInfo, b: Any): Boolean = b match {
       case r: TransactionInfo =>
         a.id == r.id &&
-          (a.outputs.sortBy(_.id) == r.outputs.sortBy(_.id)) &&
-          (a.inputs.sortBy(_.id) == r.inputs.sortBy(_.id))
+        (a.outputs.sortBy(_.id) == r.outputs.sortBy(_.id)) &&
+        (a.inputs.sortBy(_.id) == r.inputs.sortBy(_.id))
       case _ => false
     }
   }
@@ -73,7 +73,9 @@ class TransactionsServiceSpec
       }
 
     val outputsWithSpentTx = outputs
-      .map { o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) }
+      .map { o =>
+        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)
+      }
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
@@ -106,12 +108,18 @@ class TransactionsServiceSpec
       val txIds = outputs.filter(_.address == randomHash).map(_.txId).toSet
       val relatedTxs = tx.filter(t => txIds.apply(t.id))
       val height = h.map(_.height).max
-      val confirmations = relatedTxs.map { tx => tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L) }
-      TransactionInfo.extractInfo(relatedTxs, confirmations, inputsWithOutputInfo, outputsWithSpentTx)
+      val confirmations = relatedTxs.map { tx =>
+        tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L)
+      }
+      TransactionInfo.extractInfo(
+        relatedTxs,
+        confirmations,
+        inputsWithOutputInfo,
+        outputsWithSpentTx
+      )
     }
 
     fromService2 should contain theSameElementsAs expected2
-
 
     val randomTxId2 = Random.shuffle(tx).head.id.take(5)
 

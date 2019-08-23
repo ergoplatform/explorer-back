@@ -14,6 +14,7 @@ trait BasicWriter {
 
   def insert(one: ToInsert)(implicit c: Write[ToInsert]): ConnectionIO[Int] = insertOp.run(one)
 
-  def insertMany(list: List[ToInsert])(implicit c: Write[ToInsert]): ConnectionIO[Int] = insertOp.updateMany(list)
+  def insertMany(list: List[ToInsert])(implicit c: Write[ToInsert]): ConnectionIO[Int] =
+    insertOp.updateMany(list)
 
 }

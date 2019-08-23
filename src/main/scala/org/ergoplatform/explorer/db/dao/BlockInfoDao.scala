@@ -7,33 +7,32 @@ import org.ergoplatform.explorer.db.models.BlockInfo
 
 class BlockInfoDao {
 
-  val fields = BlockInfoOps.fields
-
+  val fields: Seq[String] = BlockInfoOps.fields
 
   def find(headerId: String): ConnectionIO[Option[BlockInfo]] = BlockInfoOps.select(headerId).option
 
-  def get(headerId: String): ConnectionIO[BlockInfo] = find(headerId).flatMap{
+  def get(headerId: String): ConnectionIO[BlockInfo] = find(headerId).flatMap {
     case Some(h) => h.pure[ConnectionIO]
-    case None => doobie.free.connection.raiseError(
-      new NoSuchElementException(s"Cannot find block info for block with id = $headerId")
-    )
+    case None =>
+      doobie.free.connection.raiseError(
+        new NoSuchElementException(s"Cannot find block info for block with id = $headerId")
+      )
   }
 
   def insert(bi: BlockInfo): ConnectionIO[BlockInfo] = {
-    BlockInfoOps
-      .insert
+    BlockInfoOps.insert
       .withUniqueGeneratedKeys[BlockInfo](fields: _*)(bi)
   }
 
   def insertMany(list: List[BlockInfo]): ConnectionIO[List[BlockInfo]] = {
-    BlockInfoOps
-      .insert
+    BlockInfoOps.insert
       .updateManyWithGeneratedKeys[BlockInfo](fields: _*)(list)
       .compile
       .to[List]
   }
 
-  def list(headerIds: List[String]): ConnectionIO[List[BlockInfo]] = BlockInfoOps.select(headerIds).to[List]
+  def list(headerIds: List[String]): ConnectionIO[List[BlockInfo]] =
+    BlockInfoOps.select(headerIds).to[List]
 
   def findLast: ConnectionIO[Option[BlockInfo]] = BlockInfoOps.findLast(1).option
 
@@ -63,7 +62,9 @@ class BlockInfoDao {
   def sumDifficultiesGroupedByDay(lastDays: Int): ConnectionIO[List[BlockInfoOps.SingleDataType]] =
     BlockInfoOps.sumDifficultyGroupedByDay(lastDays).to[List]
 
-  def difficultiesSumSince(ts: Long): ConnectionIO[Long] = BlockInfoOps.difficultiesSumSince(ts).unique
+  def difficultiesSumSince(ts: Long): ConnectionIO[Long] =
+    BlockInfoOps.difficultiesSumSince(ts).unique
 
-  def circulatingSupplySince(ts: Long): ConnectionIO[Long] = BlockInfoOps.circulatingSupplySince(ts).unique
+  def circulatingSupplySince(ts: Long): ConnectionIO[Long] =
+    BlockInfoOps.circulatingSupplySince(ts).unique
 }

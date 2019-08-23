@@ -5,6 +5,7 @@ import org.ergoplatform.explorer.db.models.MinerStats
 
 class MinerStatsDao {
 
-  def minerStatsAfter(ts: Long): ConnectionIO[List[MinerStats]] = MinerStatsOps.minerStatsAfter(ts).to[List]
+  def minerStatsAfter(ts: Long): ConnectionIO[List[MinerStats]] =
+    MinerStatsOps.minerStatsAfter(ts).to[List]
 
 }

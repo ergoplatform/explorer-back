@@ -9,19 +9,22 @@ import org.ergoplatform.explorer.db.models.{Input, InputWithOutputInfo}
 
 class InputsDao extends JsonMeta {
 
-  val fields = InputsOps.fields
+  val fields: Seq[String] = InputsOps.fields
 
-  def insert(i: Input): ConnectionIO[Input] = InputsOps.insert.withUniqueGeneratedKeys[Input](fields: _*)(i)
+  def insert(i: Input): ConnectionIO[Input] =
+    InputsOps.insert.withUniqueGeneratedKeys[Input](fields: _*)(i)
 
   def insertMany(list: List[Input]): ConnectionIO[List[Input]] =
     InputsOps.insert.updateManyWithGeneratedKeys[Input](fields: _*)(list).compile.to[List]
 
-  def findAllByTxId(txId: String): ConnectionIO[List[Input]] = InputsOps.findAllByTxId(txId).to[List]
+  def findAllByTxId(txId: String): ConnectionIO[List[Input]] =
+    InputsOps.findAllByTxId(txId).to[List]
 
-  def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Input]] = NonEmptyList.fromList(txsId) match {
-    case Some(ids) => InputsOps.findAllByTxsId(ids).to[List]
-    case None => List.empty[Input].pure[ConnectionIO]
-  }
+  def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Input]] =
+    NonEmptyList.fromList(txsId) match {
+      case Some(ids) => InputsOps.findAllByTxsId(ids).to[List]
+      case None      => List.empty[Input].pure[ConnectionIO]
+    }
 
   def findAllByTxIdWithValue(txId: String): ConnectionIO[List[InputWithOutputInfo]] =
     InputsOps.findAllByTxIdWithValue(txId).to[List]
@@ -29,8 +32,7 @@ class InputsDao extends JsonMeta {
   def findAllByTxsIdWithValue(txsId: List[String]): ConnectionIO[List[InputWithOutputInfo]] =
     NonEmptyList.fromList(txsId) match {
       case Some(ids) => InputsOps.findAllByTxsIdWithValue(ids).to[List]
-      case None => List.empty[InputWithOutputInfo].pure[ConnectionIO]
+      case None      => List.empty[InputWithOutputInfo].pure[ConnectionIO]
     }
-
 
 }

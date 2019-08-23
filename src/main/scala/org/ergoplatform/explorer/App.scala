@@ -14,28 +14,29 @@ import pureconfig.loadConfigOrThrow
 
 object App extends IOApp with DB with RestApi {
 
-  private def program: Resource[IO, List[LoopedIO]] = for {
-    cfg <- Resource.liftF(IO(loadConfigOrThrow[ExplorerConfig]))
-    servicesFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.servicesConnPoolSize)
-    servicesCp <- ExecutionContexts.cachedThreadPool[IO]
-    grabberFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.grabberConnPoolSize)
-    grabberCp <- ExecutionContexts.cachedThreadPool[IO]
-    servicesXa <- createTransactor(cfg.db, servicesFp, servicesCp)
-    grabberXa <- createTransactor(cfg.db, grabberFp, grabberCp)
-    system <- Resource.make(IO(ActorSystem("explorer-system")))(x => IO.fromFuture(IO(x.terminate())).as(()))
-    _ <- Resource.liftF(if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit)
-    txPoolRef <- Resource.liftF(Ref.of[IO, TransactionsPool](TransactionsPool.empty))
-    _ <- Resource.liftF(configure(servicesXa, "ServicesPool"))
-    _ <- Resource.liftF(configure(grabberXa, "GrabberPool"))
-    _ <- startApi(txPoolRef, servicesXa, servicesFp, cfg)(system)
+  private def program: Resource[IO, List[LoopedIO]] =
+    for {
+      cfg        <- Resource.liftF(IO(loadConfigOrThrow[ExplorerConfig]))
+      servicesFp <- ExecutionContexts.fixedThreadPool[IO](cfg.db.servicesConnPoolSize)
+      servicesCp <- ExecutionContexts.cachedThreadPool[IO]
+      grabberFp  <- ExecutionContexts.fixedThreadPool[IO](cfg.db.grabberConnPoolSize)
+      grabberCp  <- ExecutionContexts.cachedThreadPool[IO]
+      servicesXa <- createTransactor(cfg.db, servicesFp, servicesCp)
+      grabberXa  <- createTransactor(cfg.db, grabberFp, grabberCp)
+      system     <- Resource.make(IO(ActorSystem("explorer-system")))(x => IO.fromFuture(IO(x.terminate())).as(()))
+      _          <- Resource.liftF(if (cfg.db.migrateOnStart) migrate(cfg) else IO.unit)
+      txPoolRef  <- Resource.liftF(Ref.of[IO, TransactionsPool](TransactionsPool.empty))
+      _          <- Resource.liftF(configure(servicesXa, "ServicesPool"))
+      _          <- Resource.liftF(configure(grabberXa, "GrabberPool"))
+      _          <- startApi(txPoolRef, servicesXa, servicesFp, cfg)(system)
 
-    onChainGrabberService = new OnChainGrabberService(grabberXa, cfg)(grabberFp)
-    offChainGrabberService = new OffChainGrabberService(txPoolRef, cfg)(grabberFp)
-  } yield List(onChainGrabberService, offChainGrabberService)
+      onChainGrabberService = new OnChainGrabberService(grabberXa, cfg)(grabberFp)
+      offChainGrabberService = new OffChainGrabberService(txPoolRef, cfg)(grabberFp)
+    } yield List(onChainGrabberService, offChainGrabberService)
 
   override def run(args: List[String]): IO[ExitCode] =
-    program.use {
-      _.parTraverse(_.start).void
-    }.as(ExitCode.Success)
+    program
+      .use(_.parTraverse(_.start).void)
+      .as(ExitCode.Success)
 
 }

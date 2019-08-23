@@ -23,7 +23,7 @@ object Constants {
 
   val group: BcDlogGroup[EcPointType] = CryptoConstants.dlogGroup
 
-  val FeePropositionScriptHex: String= {
+  val FeePropositionScriptHex: String = {
     val script = ErgoScriptPredef.feeProposition(MinerRewardDelta)
     Base16.encode(script.bytes)
   }

@@ -40,7 +40,6 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
 
     val random = Random.shuffle(outputs).head.address
 
-
     val addressInfo = service.getAddressInfo(random).unsafeRunSync()
 
     val expected = {
@@ -48,7 +47,12 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
       val txsCount = outputs.count(_.address == random)
       val totalReceived = outputs.filter(_.address == random).map(_.value).sum
       val inputsBoxIds = inputs.map(_.boxId)
-      val balance = outputs.filter{o => o.address == random && !inputsBoxIds.contains(o.boxId)}.map(_.value).sum
+      val balance = outputs
+        .filter { o =>
+          o.address == random && !inputsBoxIds.contains(o.boxId)
+        }
+        .map(_.value)
+        .sum
       val tokensBalance = outputs
         .filter(o => o.address == random && !inputsBoxIds.contains(o.boxId))
         .flatMap(_.encodedAssets.toList)
@@ -61,7 +65,6 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
     }
 
     addressInfo shouldBe expected
-
 
     val random2 = Random.shuffle(outputs).head.address.take(6)
 

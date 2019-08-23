@@ -5,8 +5,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{Directive0, Directives, Route}
 
-/**
-  * Provides tools for handling a Cross-Origin Resource Sharing spec workflow
+/** Provides tools for handling a Cross-Origin Resource Sharing spec workflow
   * (including `OPTIONS` pre-flight requests).
   */
 trait CorsHandler extends Directives {

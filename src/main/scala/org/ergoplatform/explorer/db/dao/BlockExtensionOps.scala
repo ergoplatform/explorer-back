@@ -20,7 +20,8 @@ object BlockExtensionOps extends JsonMeta {
   val insertSql = s"INSERT INTO node_extensions ($fieldsString) VALUES ($holdersString)"
 
   def select(id: String): Query0[BlockExtension] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_extensions WHERE header_id = $id;").query[BlockExtension]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_extensions WHERE header_id = $id;")
+      .query[BlockExtension]
 
   def insert: Update[BlockExtension] = Update[BlockExtension](insertSql)
 

@@ -1,12 +1,13 @@
 package org.ergoplatform.explorer.http.handlers
 
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import org.ergoplatform.explorer.services.StatsService
 
 class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
 
-  val route = pathPrefix("charts") {
+  val route: Route = pathPrefix("charts") {
     totalCoins ~
     avgBlockSize ~
     blockChainSize ~
@@ -18,39 +19,40 @@ class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
     hashrate
   }
 
-  val totalCoins = (get & pathPrefix("total") & duration) { d =>
+  def totalCoins: Route = (get & pathPrefix("total") & duration) { d =>
     ss.totalCoinsForDuration(d)
   }
 
-  val avgBlockSize = (get & pathPrefix("block-size") & duration) { d =>
+  def avgBlockSize: Route = (get & pathPrefix("block-size") & duration) { d =>
     ss.avgBlockSizeForDuration(d)
   }
 
-  val blockChainSize = (get & pathPrefix("blockchain-size") & duration) { d =>
+  def blockChainSize: Route = (get & pathPrefix("blockchain-size") & duration) { d =>
     ss.totalBlockChainSizeForDuration(d)
   }
 
-  val avgTxsPerBlock = (get & pathPrefix("transactions-per-block") & duration) { d =>
+  def avgTxsPerBlock: Route = (get & pathPrefix("transactions-per-block") & duration) { d =>
     ss.avgTxsPerBlockForDuration(d)
   }
 
-  val sumTxsPerBlock = (get & pathPrefix("transactions-number") & duration) { d =>
+  def sumTxsPerBlock: Route = (get & pathPrefix("transactions-number") & duration) { d =>
     ss.sumTxsGroupByDayForDuration(d)
   }
 
-  val avgDifficulty = (get & pathPrefix("difficulty") & duration) { d =>
+  def avgDifficulty: Route = (get & pathPrefix("difficulty") & duration) { d =>
     ss.avgDifficultyForDuration(d)
   }
 
-  val minerRevenue = (get & pathPrefix("miners-revenue") & duration) { d =>
+  def minerRevenue: Route = (get & pathPrefix("miners-revenue") & duration) { d =>
     ss.minerRevenueForDuration(d)
   }
 
-  val hashrate = (get & pathPrefix("hash-rate") & duration) { d =>
+  def hashrate: Route = (get & pathPrefix("hash-rate") & duration) { d =>
     ss.hashrateForDuration(d)
   }
 
-  val hashrateDistribution = (get & pathPrefix("hash-rate-distribution")) {
+  def hashrateDistribution: Route = (get & pathPrefix("hash-rate-distribution")) {
     ss.sharesAcrossMinersFor24H
   }
+
 }

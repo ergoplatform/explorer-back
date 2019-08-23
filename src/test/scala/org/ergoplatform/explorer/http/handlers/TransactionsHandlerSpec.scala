@@ -6,13 +6,19 @@ import cats.effect.IO
 import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
-import org.ergoplatform.explorer.http.protocol.{MiniBlockInfo, OutputInfo, TransactionInfo, TransactionSummaryInfo}
+import org.ergoplatform.explorer.http.protocol.{
+  MiniBlockInfo,
+  OutputInfo,
+  TransactionInfo,
+  TransactionSummaryInfo
+}
 import org.ergoplatform.explorer.services.TransactionsService
 import org.ergoplatform.explorer.utils.Paging
 
 class TransactionsHandlerSpec extends HttpSpec {
 
-  val infoResp = TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
+  val infoResp =
+    TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
 
   private val service = new TransactionsService[IO] {
 
@@ -28,9 +34,15 @@ class TransactionsHandlerSpec extends HttpSpec {
 
     override def getOutputById(id: String): IO[OutputInfo] = ???
 
-    override def getOutputsByAddress(hash: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    override def getOutputsByAddress(
+      hash: String,
+      unspentOnly: Boolean = false
+    ): IO[List[OutputInfo]] = ???
 
-    override def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): IO[List[OutputInfo]] = ???
+    override def getOutputsByErgoTree(
+      ergoTree: String,
+      unspentOnly: Boolean = false
+    ): IO[List[OutputInfo]] = ???
 
     override def submitTransaction(tx: Json): IO[Json] = ???
 
