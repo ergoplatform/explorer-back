@@ -100,7 +100,7 @@ object PreparedData extends App {
       index = data(3).toInt,
       ergoTree = data(4),
       address = data(5),
-      assets = readJson(data(7)),
+      //assets = readJson(data(7)),
       additionalRegisters = readJson(data(6)),
       0L
     )

@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
-import org.ergoplatform.explorer.db.models.MinerStats
+import org.ergoplatform.explorer.db.models.composite.MinerStats
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 

@@ -2,7 +2,8 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.{ExtendedOutput, Output}
+import org.ergoplatform.explorer.db.models.Output
+import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 
 final case class OutputInfo(
   id: String,
@@ -10,7 +11,6 @@ final case class OutputInfo(
   creationHeight: Int,
   ergoTree: String,
   address: String,
-  assets: Json,
   additionalRegisters: Json,
   spentTxIs: Option[String],
   mainChain: Boolean
@@ -24,9 +24,8 @@ object OutputInfo {
     o.output.creationHeight,
     o.output.ergoTree,
     o.output.address,
-    o.output.assets,
     o.output.additionalRegisters,
-    o.spentTxId,
+    o.spentByOpt,
     o.mainChain
   )
 
@@ -36,7 +35,6 @@ object OutputInfo {
     o.creationHeight,
     o.ergoTree,
     o.address,
-    o.assets,
     o.additionalRegisters,
     None,
     mainChain = true
@@ -49,7 +47,6 @@ object OutputInfo {
       "creationHeight"      -> oi.creationHeight.asJson,
       "ergoTree"            -> oi.ergoTree.asJson,
       "address"             -> oi.address.asJson,
-      "assets"              -> oi.assets,
       "additionalRegisters" -> oi.additionalRegisters,
       "spentTransactionId"  -> oi.spentTxIs.asJson,
       "mainChain"           -> oi.mainChain.asJson

@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
 import doobie.util.query.Query0
-import org.ergoplatform.explorer.db.models.MinerStats
+import org.ergoplatform.explorer.db.models.composite.MinerStats
 
 object MinerStatsOps {
 

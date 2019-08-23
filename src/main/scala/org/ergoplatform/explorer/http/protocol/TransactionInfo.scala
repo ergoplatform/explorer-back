@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models._
+import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 
 final case class TransactionInfo(
   id: String,
@@ -24,7 +25,7 @@ object TransactionInfo {
   def extractInfo(
     txs: List[Transaction],
     confirmations: List[(String, Long)],
-    inputs: List[InputWithOutputInfo],
+    inputs: List[ExtendedInput],
     outputs: List[ExtendedOutput]
   ): List[TransactionInfo] =
     txs.map { tx =>

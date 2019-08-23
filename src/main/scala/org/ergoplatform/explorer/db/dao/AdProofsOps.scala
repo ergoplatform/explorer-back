@@ -4,7 +4,9 @@ import doobie.implicits._
 import doobie.util.query.Query0
 import org.ergoplatform.explorer.db.models.AdProof
 
-object AdProofsOps {
+object AdProofsOps extends DaoOps {
+
+  val tableName: String = "node_ad_proofs"
 
   val fields: Seq[String] = Seq(
     "header_id",

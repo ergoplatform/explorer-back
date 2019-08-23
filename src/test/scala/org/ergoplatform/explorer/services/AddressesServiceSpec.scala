@@ -55,10 +55,9 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
         .sum
       val tokensBalance = outputs
         .filter(o => o.address == random && !inputsBoxIds.contains(o.boxId))
-        .flatMap(_.encodedAssets.toList)
         .foldLeft(Map.empty[String, Long]) {
-          case (acc, (assetId, assetAmt)) =>
-            acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+          case (acc, _) =>
+            acc
         }
       val assets = tokensBalance.map(x => ApiAsset(x._1, x._2)).toList
       AddressInfo(id, txsCount, totalReceived, balance, balance, assets, assets)

@@ -1,8 +1,9 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
+import org.ergoplatform.explorer.db.models.composite
+import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
-import org.ergoplatform.explorer.db.models.ExtendedOutput
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
@@ -49,7 +50,7 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val foundAddresses = dao.searchByAddressId(addressPart).transact(xa).unsafeRunSync()
     expectedToFind should contain theSameElementsAs foundAddresses
 
-    val withSpent = outputs.map{ o => ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)}
+    val withSpent = outputs.map{ o => composite.ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)}
 
     dao.findAllByTxsId(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs outputs
     dao.findAllByTxsIdWithSpent(txs.map(_.id)).transact(xa).unsafeRunSync() should contain theSameElementsAs withSpent

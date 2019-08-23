@@ -5,7 +5,8 @@ import cats.implicits._
 import doobie._
 import doobie.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.{ExtendedOutput, Output}
+import org.ergoplatform.explorer.db.models.Output
+import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 
 class OutputsDao extends JsonMeta {
 

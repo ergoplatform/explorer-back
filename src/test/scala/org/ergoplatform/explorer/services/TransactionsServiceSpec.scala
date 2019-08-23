@@ -6,7 +6,7 @@ import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.Config
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
-import org.ergoplatform.explorer.db.models.{ExtendedOutput, InputWithOutputInfo}
+import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.persistence.TransactionsPool
@@ -69,7 +69,7 @@ class TransactionsServiceSpec
     val inputsWithOutputInfo = inputs
       .map { i =>
         val oOpt = outputs.find(_.boxId == i.boxId)
-        InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
+        ExtendedInput(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
       }
 
     val outputsWithSpentTx = outputs

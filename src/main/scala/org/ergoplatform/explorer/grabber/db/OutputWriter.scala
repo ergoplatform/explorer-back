@@ -1,11 +1,12 @@
 package org.ergoplatform.explorer.grabber.db
 
 import io.circe.Json
+import org.ergoplatform.explorer.db.dao.{DaoOps, OutputsOps}
 
 object OutputWriter extends BasicWriter {
 
-  type ToInsert = (String, String, Long, Int, Int, String, String, Json, Json, Long)
+  type ToInsert = (String, String, Long, Int, Int, String, String, Json, Long)
 
-  val insertSql: String = "INSERT INTO node_outputs (box_id, tx_id, value, creation_height, index," +
-    " ergo_tree, address, assets, additional_registers, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  val ops: DaoOps = OutputsOps
+
 }

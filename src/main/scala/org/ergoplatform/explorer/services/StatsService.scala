@@ -8,7 +8,8 @@ import doobie.util.transactor.Transactor
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.{BlockInfo, Header, MinerStats}
+import org.ergoplatform.explorer.db.models.composite.MinerStats
+import org.ergoplatform.explorer.db.models.{BlockInfo, Header}
 import org.ergoplatform.explorer.http.protocol._
 
 import scala.concurrent.ExecutionContext
@@ -257,7 +258,7 @@ class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(
     val (big, other) = list.partition(threshold)
     val otherSumStats = MinerStatSingleInfo("other", other.map(_.blocksMined).sum)
     val bigOnes = big.map { info =>
-      MinerStatSingleInfo(info.printableName, info.blocksMined)
+      MinerStatSingleInfo(info.verboseName, info.blocksMined)
     }
 
     (bigOnes :+ otherSumStats).sortBy(x => -x.value).filterNot(_.value == 0L)

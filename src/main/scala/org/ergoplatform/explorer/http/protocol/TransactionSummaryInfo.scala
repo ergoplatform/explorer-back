@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.{Encoder, Json}
 import io.circe.syntax._
 import org.ergoplatform.explorer.db.models._
+import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 
 final case class TransactionSummaryInfo(
   id: String,
@@ -23,7 +24,7 @@ object TransactionSummaryInfo {
     tx: Transaction,
     height: Long,
     confirmationsCount: Long = 0,
-    inputs: List[InputWithOutputInfo],
+    inputs: List[ExtendedInput],
     outputs: List[ExtendedOutput]
   ): TransactionSummaryInfo = {
     val totalFee = outputs.filter(_.output.ergoTree == "0101").map(_.output.value).sum

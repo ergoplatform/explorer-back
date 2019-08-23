@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.db.dao
 
 import doobie._
 import doobie.implicits._
-import org.ergoplatform.explorer.db.models.RawSearchBlock
+import org.ergoplatform.explorer.db.models.composite.RawSearchBlock
 
 object BlockListOps {
 
