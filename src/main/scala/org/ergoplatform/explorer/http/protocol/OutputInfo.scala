@@ -11,6 +11,7 @@ final case class OutputInfo(
   creationHeight: Int,
   ergoTree: String,
   address: String,
+  assets: Seq[AssetInfo],
   additionalRegisters: Json,
   spentTxIs: Option[String],
   mainChain: Boolean
@@ -24,6 +25,7 @@ object OutputInfo {
     o.output.creationHeight,
     o.output.ergoTree,
     o.output.address,
+    Seq.empty, // todo
     o.output.additionalRegisters,
     o.spentByOpt,
     o.mainChain
@@ -35,6 +37,7 @@ object OutputInfo {
     o.creationHeight,
     o.ergoTree,
     o.address,
+    Seq.empty, // todo
     o.additionalRegisters,
     None,
     mainChain = true
@@ -47,6 +50,7 @@ object OutputInfo {
       "creationHeight"      -> oi.creationHeight.asJson,
       "ergoTree"            -> oi.ergoTree.asJson,
       "address"             -> oi.address.asJson,
+      "assets"              -> oi.assets.asJson,
       "additionalRegisters" -> oi.additionalRegisters,
       "spentTransactionId"  -> oi.spentTxIs.asJson,
       "mainChain"           -> oi.mainChain.asJson

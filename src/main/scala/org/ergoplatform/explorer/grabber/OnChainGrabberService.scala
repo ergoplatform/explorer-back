@@ -135,9 +135,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)(
     } yield blockInfo
 
   protected val task: IO[Unit] = for {
-    _ <- IO {
-      logger.info("Starting sync task.")
-    }
+    _             <- IO(logger.info("Starting sync task."))
     info          <- requestService.get[ApiNodeInfo](mandatoryAddressService.infoUri)
     currentHeight <- dBHelper.readCurrentHeight.transact(xa)
     _ <- IO {
