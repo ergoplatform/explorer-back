@@ -15,11 +15,11 @@ class DbSpec extends FlatSpec with Matchers with DB {
     credentials(dbConfig1).unsafeRunSync() shouldBe "pass"
 
     //Read value from DB_PASS env
-    val dbConfig2 = DbConfig().copy(passOpt = Some("not_empty"))
+    val dbConfig2 = DbConfig().copy(pass = Some("not_empty"))
     credentials(dbConfig2).unsafeRunSync() shouldBe "not_empty"
 
     //Prioritize value from DB_PASS over DB_PASS_FILE
-    val dbConfig3 = dbConfig2.copy(passFilePathOpt = Some("some/file/where"))
+    val dbConfig3 = dbConfig2.copy(passFilePath = Some("some/file/where"))
     credentials(dbConfig3).unsafeRunSync() shouldBe "not_empty"
 
     //Read value from file which has been set in DB_PASS_FILE
@@ -29,7 +29,7 @@ class DbSpec extends FlatSpec with Matchers with DB {
     writer.flush()
     writer.close()
 
-    val dbConfig4 = DbConfig().copy(passFilePathOpt = Some(path.toAbsolutePath.toString))
+    val dbConfig4 = DbConfig().copy(passFilePath = Some(path.toAbsolutePath.toString))
     credentials(dbConfig4).unsafeRunSync() shouldBe "pass_from_file"
   }
 

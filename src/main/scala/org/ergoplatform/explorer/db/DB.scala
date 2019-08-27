@@ -14,7 +14,7 @@ trait DB {
     Resource.fromAutoCloseable(IO(Source.fromFile(path, "UTF8"))).use(s => IO(s.mkString))
 
   private[db] def credentials(cfg: DbConfig): IO[String] =
-    (cfg.passOpt, cfg.passFilePathOpt) match {
+    (cfg.pass, cfg.passFilePath) match {
       case (Some(pass), _) => IO.pure(pass)
       case (_, Some(passFilePath)) => readCredentials(passFilePath)
       case _ => IO.pure("pass")
