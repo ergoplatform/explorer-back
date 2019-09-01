@@ -15,7 +15,7 @@ final case class InputInfo(
 
 object InputInfo {
 
-  def fromInputWithValue(i: ExtendedInput) = InputInfo(
+  def fromExtendedInput(i: ExtendedInput) = InputInfo(
     i.input.boxId,
     i.input.proofBytes,
     i.value,

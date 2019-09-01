@@ -29,9 +29,9 @@ object TransactionInfo {
     outputs: List[ExtendedOutput]
   ): List[TransactionInfo] =
     txs.map { tx =>
-      val relatedInputs = inputs.filter(_.input.txId == tx.id).map(InputInfo.fromInputWithValue)
+      val relatedInputs = inputs.filter(_.input.txId == tx.id).map(InputInfo.fromExtendedInput)
       val relatedOutputs =
-        outputs.filter(_.output.txId == tx.id).map(OutputInfo.fromOutputWithSpent)
+        outputs.filter(_.output.txId == tx.id).map(OutputInfo.fromExtendedOutput)
       val id = tx.id
       val ts = tx.timestamp
       val confirmationCount = confirmations.find(_._1 == id).map(_._2).getOrElse(0L)

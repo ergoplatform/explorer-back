@@ -104,13 +104,13 @@ class TransactionsServiceIOImpl[F[_]](
     outputDao
       .findByBoxId(id)
       .transact(xa)
-      .map(OutputInfo.fromOutputWithSpent)
+      .map(OutputInfo.fromExtendedOutput)
 
   override def getOutputsByAddress(hash: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
     (if (unspentOnly) outputDao.findUnspentByAddress(hash)
      else outputDao.findAllByAddress(hash))
       .transact(xa)
-      .map(_.map(OutputInfo.fromOutputWithSpent))
+      .map(_.map(OutputInfo.fromExtendedOutput))
   }
 
   override def getOutputsByErgoTree(
@@ -120,7 +120,7 @@ class TransactionsServiceIOImpl[F[_]](
     (if (unspentOnly) outputDao.findUnspentByErgoTree(proposition)
      else outputDao.findAllByErgoTree(proposition))
       .transact(xa)
-      .map(_.map(OutputInfo.fromOutputWithSpent))
+      .map(_.map(OutputInfo.fromExtendedOutput))
   }
 
   override def submitTransaction(tx: Json): F[Json] =

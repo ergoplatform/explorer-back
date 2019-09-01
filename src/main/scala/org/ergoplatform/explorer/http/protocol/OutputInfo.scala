@@ -19,7 +19,7 @@ final case class OutputInfo(
 
 object OutputInfo {
 
-  def fromOutputWithSpent(o: ExtendedOutput): OutputInfo = OutputInfo(
+  def fromExtendedOutput(o: ExtendedOutput): OutputInfo = OutputInfo(
     o.output.boxId,
     o.output.value,
     o.output.creationHeight,
@@ -29,18 +29,6 @@ object OutputInfo {
     o.output.additionalRegisters,
     o.spentByOpt,
     o.mainChain
-  )
-
-  def fromOutput(o: Output): OutputInfo = OutputInfo(
-    o.boxId,
-    o.value,
-    o.creationHeight,
-    o.ergoTree,
-    o.address,
-    Seq.empty, // todo
-    o.additionalRegisters,
-    None,
-    mainChain = true
   )
 
   implicit val encoder: Encoder[OutputInfo] = { oi =>
