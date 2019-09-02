@@ -64,10 +64,10 @@ class TransactionsServiceIOImpl[F[_]](
   implicit val addressEncoder: ErgoAddressEncoder = cfg.protocol.addressEncoder
 
   val headersDao = new HeadersDao
-
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
   val outputDao = new OutputsDao
+  val assetsDao = new AssetsDao
 
   override def getUnconfirmedTxInfo(id: String): F[ApiTransaction] =
     txPoolRef.get.flatMap {

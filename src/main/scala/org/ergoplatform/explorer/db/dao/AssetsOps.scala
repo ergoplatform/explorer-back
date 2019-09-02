@@ -1,5 +1,9 @@
 package org.ergoplatform.explorer.db.dao
 
+import doobie._
+import doobie.implicits._
+import org.ergoplatform.explorer.db.models.Asset
+
 object AssetsOps extends DaoOps {
 
 	val tableName: String = "node_assets"
@@ -9,5 +13,8 @@ object AssetsOps extends DaoOps {
 		"box_id",
 		"value"
 	)
+
+	def getByBoxId(boxId: String): Query0[Asset] =
+		(selectAllFr ++ fr"WHERE box_id = $boxId").query
 
 }

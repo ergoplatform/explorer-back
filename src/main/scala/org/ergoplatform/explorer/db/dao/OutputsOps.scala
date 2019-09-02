@@ -23,9 +23,6 @@ object OutputsOps extends DaoOps with JsonMeta {
     "timestamp"
   )
 
-  def allFieldsRefFr(ref: String): Fragment =
-    Fragment.const(fields.map(field => s"$ref.$field").mkString(", "))
-
   private val GenesisAddress = "101004020e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea" +
   "02d192a39a8cc7a7017300730110010204020404040004c0fd4f05808c82f5f6030580b8c9e5ae040580f882ad16040204c0944004c0f407" +
   "040004000580f882ad16d19683030191a38cc7a7019683020193c2b2a57300007473017302830108cdeeac93a38cc7b2a573030001978302" +
