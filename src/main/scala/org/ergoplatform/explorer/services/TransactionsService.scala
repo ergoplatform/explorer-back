@@ -59,7 +59,7 @@ class TransactionsServiceIOImpl[F[_]](
   ec: ExecutionContext,
   cfg: ExplorerConfig
 )(implicit F: Monad[F], A: Async[F], M: MonadError[F, Throwable])
-    extends TransactionsService[F] {
+  extends TransactionsService[F] {
 
   implicit val addressEncoder: ErgoAddressEncoder = cfg.protocol.addressEncoder
 
