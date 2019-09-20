@@ -27,7 +27,7 @@ class InputsDao extends JsonMeta {
       case None      => List.empty[Input].pure[ConnectionIO]
     }
 
-  def findAllByTxIdWithValue(txId: String): ConnectionIO[List[ExtendedInput]] =
+  def findAllByTxIdExtended(txId: String): ConnectionIO[List[ExtendedInput]] =
     InputsOps.findAllByTxIdWithValue(txId).to[List]
 
   def findAllByTxsIdWithValue(txsId: List[String]): ConnectionIO[List[ExtendedInput]] =

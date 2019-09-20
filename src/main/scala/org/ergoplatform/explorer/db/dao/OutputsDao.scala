@@ -42,7 +42,7 @@ class OutputsDao extends JsonMeta {
       case None      => List.empty[Output].pure[ConnectionIO]
     }
 
-  def findAllByTxIdWithSpent(txId: String): ConnectionIO[List[ExtendedOutput]] =
+  def findAllByTxIdExtended(txId: String): ConnectionIO[List[ExtendedOutput]] =
     OutputsOps.findAllByTxIdWithSpent(txId).to[List]
 
   def findAllByTxsIdWithSpent(txsId: List[String]): ConnectionIO[List[ExtendedOutput]] =

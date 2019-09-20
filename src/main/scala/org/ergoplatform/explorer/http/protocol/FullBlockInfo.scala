@@ -21,12 +21,12 @@ object FullBlockInfo {
     txs: List[Transaction],
     confirmations: List[(String, Long)],
     inputs: List[ExtendedInput],
-    outputs: List[ExtendedOutput],
+    outputs: List[(ExtendedOutput, List[Asset])],
     extension: BlockExtension,
     adProof: Option[AdProof],
     blockSize: Long
   ): FullBlockInfo = {
-    val txsInfo = TransactionInfo.extractInfo(txs, confirmations, inputs, outputs)
+    val txsInfo = TransactionInfo.fromBatch(txs, confirmations, inputs, outputs)
     val headerInfo = HeaderInfo(h, blockSize)
     val adProofInfo = adProof.map { AdProofInfo.apply }
     new FullBlockInfo(headerInfo, txsInfo, extension, adProofInfo)

@@ -20,14 +20,14 @@ final case class TransactionSummaryInfo(
 
 object TransactionSummaryInfo {
 
-  def fromDb(
+  def apply(
     tx: Transaction,
     height: Long,
-    confirmationsCount: Long = 0,
+    confirmationsCount: Long,
     inputs: List[ExtendedInput],
-    outputs: List[ExtendedOutput]
+    outputs: List[(ExtendedOutput, List[Asset])]
   ): TransactionSummaryInfo = {
-    val totalFee = outputs.filter(_.output.ergoTree == "0101").map(_.output.value).sum
+    val totalFee = outputs.filter(_._1.output.ergoTree == "0101").map(_._1.output.value).sum // todo: move "0101" to constants
     val feePerByte = if (tx.size == 0) 0L else totalFee / tx.size
 
     TransactionSummaryInfo(
@@ -37,7 +37,7 @@ object TransactionSummaryInfo {
       confirmationsCount = confirmationsCount + 1L,
       size = tx.size,
       inputs = inputs.map(InputInfo.fromExtendedInput),
-      outputs = outputs.map(OutputInfo.fromExtendedOutput),
+      outputs = outputs.map(x => OutputInfo(x._1, x._2)),
       totalCoins = inputs.map(_.value.getOrElse(0L)).sum,
       totalFee = totalFee,
       feePerByte = feePerByte

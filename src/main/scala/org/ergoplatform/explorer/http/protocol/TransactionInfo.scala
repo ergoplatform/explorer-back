@@ -22,21 +22,44 @@ object TransactionInfo {
     * @param inputs  list of all inputs
     * @param outputs list of all outputs
     */
-  def extractInfo(
+  def fromBatch(
     txs: List[Transaction],
     confirmations: List[(String, Long)],
     inputs: List[ExtendedInput],
-    outputs: List[ExtendedOutput]
+    outputs: List[(ExtendedOutput, List[Asset])]
   ): List[TransactionInfo] =
     txs.map { tx =>
-      val relatedInputs = inputs.filter(_.input.txId == tx.id).map(InputInfo.fromExtendedInput)
-      val relatedOutputs =
-        outputs.filter(_.output.txId == tx.id).map(OutputInfo.fromExtendedOutput)
+      val relatedInputs = inputs
+        .filter(_.input.txId == tx.id)
+        .map(InputInfo.fromExtendedInput)
+      val relatedOutputs = outputs
+        .filter(_._1.output.txId == tx.id)
+        .map {
+          case (out, assets) =>
+            OutputInfo(out, assets)
+        }
       val id = tx.id
       val ts = tx.timestamp
-      val confirmationCount = confirmations.find(_._1 == id).map(_._2).getOrElse(0L)
+      val confirmationCount = confirmations
+        .find(_._1 == id)
+        .map(_._2)
+        .getOrElse(0L)
       apply(id, ts, confirmationCount, relatedInputs, relatedOutputs)
     }
+
+  def apply(
+    tx: Transaction,
+    confirmationsQty: Long,
+    inputs: List[ExtendedInput],
+    outputs: List[(ExtendedOutput, List[Asset])]
+  ): TransactionInfo = {
+    val inputsInfo = inputs.map(InputInfo.fromExtendedInput)
+    val outputsInfo = outputs.map {
+      case (out, assets) =>
+        OutputInfo(out, assets)
+    }
+    new TransactionInfo(tx.id, tx.timestamp, confirmationsQty, inputsInfo, outputsInfo)
+  }
 
   implicit val encoder: Encoder[TransactionInfo] = { tx =>
     Json.obj(

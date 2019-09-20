@@ -6,6 +6,7 @@ import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.Config
 import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
+import org.ergoplatform.explorer.db.models.Asset
 import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
@@ -74,7 +75,7 @@ class TransactionsServiceSpec
 
     val outputsWithSpentTx = outputs
       .map { o =>
-        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)
+        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> List.empty[Asset]
       }
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
@@ -85,8 +86,8 @@ class TransactionsServiceSpec
     val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)
     val currentHeight = h.map(_.height).max
     val is = inputsWithOutputInfo.filter(_.input.txId == randomTx1.id)
-    val os = outputsWithSpentTx.filter(_.output.txId == randomTx1.id)
-    val expected1 = TransactionSummaryInfo.fromDb(randomTx1, height, currentHeight - height, is, os)
+    val os = outputsWithSpentTx.filter(_._1.output.txId == randomTx1.id)
+    val expected1 = TransactionSummaryInfo.apply(randomTx1, height, currentHeight - height, is, os)
 
     val fromService1 = service.getTxInfo(randomTx1.id).unsafeRunSync()
 
@@ -111,7 +112,7 @@ class TransactionsServiceSpec
       val confirmations = relatedTxs.map { tx =>
         tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L)
       }
-      TransactionInfo.extractInfo(
+      TransactionInfo.fromBatch(
         relatedTxs,
         confirmations,
         inputsWithOutputInfo,

@@ -70,4 +70,8 @@ object TransactionsOps extends DaoOps {
   def txsHeight(ids: NonEmptyList[String]): Query0[(String, Long)] =
     (fr"SELECT t.id, h.height FROM node_transactions t LEFT JOIN node_headers h ON t.header_id = h.id WHERE" ++
     Fragments.in(fr"t.id", ids)).query[(String, Long)]
+
+  def txHeight(id: String): Query0[Long] =
+    fr"SELECT h.height FROM node_transactions t LEFT JOIN node_headers h ON t.header_id = h.id WHERE t.id = $id"
+      .query[Long]
 }

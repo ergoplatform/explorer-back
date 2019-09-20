@@ -16,6 +16,8 @@ import org.ergoplatform.ErgoAddressEncoder
 import org.ergoplatform.explorer.Utils
 import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.db.dao._
+import org.ergoplatform.explorer.db.models.{Asset, Transaction}
+import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.persistence.TransactionsPool
@@ -100,27 +102,42 @@ class TransactionsServiceIOImpl[F[_]](
   override def searchByIdSubstr(substring: String): F[List[String]] =
     transactionsDao.searchById(substring).transact(xa)
 
-  override def getOutputById(id: String): F[OutputInfo] =
-    outputDao
-      .findByBoxId(id)
-      .transact(xa)
-      .map(OutputInfo.fromExtendedOutput)
+  override def getOutputById(id: String): F[OutputInfo] = {
+    val txn = for {
+      out    <- outputDao.findByBoxId(id)
+      assets <- assetsDao.getByBoxId(id)
+    } yield OutputInfo(out, assets)
+    txn.transact(xa)
+  }
 
-  override def getOutputsByAddress(hash: String, unspentOnly: Boolean): F[List[OutputInfo]] = {
-    (if (unspentOnly) outputDao.findUnspentByAddress(hash)
-     else outputDao.findAllByAddress(hash))
-      .transact(xa)
-      .map(_.map(OutputInfo.fromExtendedOutput))
+  override def getOutputsByAddress(
+    address: String,
+    unspentOnly: Boolean
+  ): F[List[OutputInfo]] = {
+    val txn = for {
+      outputs <- if (unspentOnly) outputDao.findUnspentByAddress(address)
+                 else outputDao.findAllByAddress(address)
+      outputsWithAssets <- outputs
+        .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
+        .sequence
+      outputsInfo = outputsWithAssets.map { case (outs, assets) => OutputInfo(outs, assets) }
+    } yield outputsInfo
+    txn.transact(xa)
   }
 
   override def getOutputsByErgoTree(
-    proposition: String,
+    ergoTree: String,
     unspentOnly: Boolean
   ): F[List[OutputInfo]] = {
-    (if (unspentOnly) outputDao.findUnspentByErgoTree(proposition)
-     else outputDao.findAllByErgoTree(proposition))
-      .transact(xa)
-      .map(_.map(OutputInfo.fromExtendedOutput))
+    val txn = for {
+      outputs <- if (unspentOnly) outputDao.findUnspentByErgoTree(ergoTree)
+                 else outputDao.findAllByErgoTree(ergoTree)
+      outputsWithAssets <- outputs
+        .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
+        .sequence
+      outputsInfo = outputsWithAssets.map { case (outs, assets) => OutputInfo(outs, assets) }
+    } yield outputsInfo
+    txn.transact(xa)
   }
 
   override def submitTransaction(tx: Json): F[Json] =
@@ -146,33 +163,40 @@ class TransactionsServiceIOImpl[F[_]](
         txPoolRef.get.map(_.getByErgoTree(Base16.encode(tree.bytes)))
       }
 
+  private def getOutputsWithAssetsByTxId(
+    id: String
+  ): ConnectionIO[List[(ExtendedOutput, List[Asset])]] =
+    for {
+      outputs <- outputDao.findAllByTxIdExtended(id)
+      outputsWithAssets <- outputs
+        .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
+        .sequence
+    } yield outputsWithAssets
+
   private def getTxInfoResult(id: String): F[TransactionSummaryInfo] =
     (for {
       tx            <- transactionsDao.get(id)
-      is            <- inputDao.findAllByTxIdWithValue(tx.id)
-      os            <- outputDao.findAllByTxIdWithSpent(tx.id)
+      is            <- inputDao.findAllByTxIdExtended(tx.id)
+      os            <- getOutputsWithAssetsByTxId(tx.id)
       h             <- headersDao.getHeightById(tx.headerId)
       currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
-      info = TransactionSummaryInfo.fromDb(tx, h, currentHeight - h, is, os)
+      info = TransactionSummaryInfo(tx, h, currentHeight - h, is, os)
     } yield info).transact(xa)
 
   private def getTxsByAddressIdResult(addressId: String, p: Paging): F[List[TransactionInfo]] =
     (for {
-      txs <- transactionsDao.getTxsByAddressId(addressId, p.offset, p.limit)
-      ids = txs.map(_.id)
+      txs     <- transactionsDao.getTxsByAddressId(addressId, p.offset, p.limit)
+      txsInfo <- txs.map(getTxInfoByTransactions).sequence
+    } yield txsInfo).transact(xa)
+
+  private def getTxInfoByTransactions(tx: Transaction): ConnectionIO[TransactionInfo] =
+    for {
       currentHeight <- headersDao.getLast(1).map(_.headOption.map(_.height).getOrElse(0L))
-      confirmations <- if (ids.isEmpty) {
-        List.empty[(String, Long)].pure[ConnectionIO]
-      } else {
-        transactionsDao
-          .txsHeights(NonEmptyList.fromListUnsafe(ids))
-          .map { list =>
-            list.map(v => v._1 -> (currentHeight - v._2 + 1L))
-          }
-      }
-      is <- inputDao.findAllByTxsIdWithValue(ids)
-      os <- outputDao.findAllByTxsIdWithSpent(ids)
-    } yield TransactionInfo.extractInfo(txs, confirmations, is, os)).transact(xa)
+      txHeight      <- transactionsDao.txHeight(tx.id)
+      is            <- inputDao.findAllByTxIdExtended(tx.id)
+      os            <- getOutputsWithAssetsByTxId(tx.id)
+      confirmations = currentHeight - txHeight + 1
+    } yield TransactionInfo.apply(tx, confirmations, is, os)
 
   private def getTxsCountByAddressIdResult(addressId: String): F[Long] =
     transactionsDao.countTxsByAddressId(addressId).transact(xa)

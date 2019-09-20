@@ -58,4 +58,7 @@ class TransactionsDao {
   def txsHeights(ids: NonEmptyList[String]): ConnectionIO[List[(String, Long)]] =
     TransactionsOps.txsHeight(ids).to[List]
 
+  def txHeight(id: String): ConnectionIO[Long] =
+    TransactionsOps.txHeight(id).unique
+
 }

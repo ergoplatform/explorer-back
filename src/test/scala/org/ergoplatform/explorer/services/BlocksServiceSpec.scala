@@ -6,7 +6,7 @@ import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
-import org.ergoplatform.explorer.db.models.BlockExtension
+import org.ergoplatform.explorer.db.models.{Asset, BlockExtension}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, TransactionInfo}
 import org.ergoplatform.explorer.utils.{Desc, Paging, Sorting}
@@ -78,7 +78,7 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
       }
 
     val outputsWithSpentTx = outputs.map { o =>
-      ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)
+      ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> List.empty[Asset]
     }
 
     val service = new BlocksServiceIOImpl[IO](xa, ec)
