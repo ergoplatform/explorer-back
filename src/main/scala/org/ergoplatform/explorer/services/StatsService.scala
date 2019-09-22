@@ -43,11 +43,11 @@ trait StatsService[F[_]] {
 
 }
 
-class StatsServiceIOImpl[F[_]](protocolConfig: ProtocolConfig)(
+final class StatsServiceImpl[F[_]](protocolConfig: ProtocolConfig)(
   xa: Transactor[F],
   ec: ExecutionContext
 )(implicit F: Monad[F], A: Async[F])
-    extends StatsService[F] {
+  extends StatsService[F] {
 
   private val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
   private val SecondsIn24H: Long = (24 * 60 * 60).toLong

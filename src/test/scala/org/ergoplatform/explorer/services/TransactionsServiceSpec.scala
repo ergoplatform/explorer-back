@@ -80,7 +80,7 @@ class TransactionsServiceSpec
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
-    val service = new TransactionsServiceIOImpl[IO](xa, offChainStore, ec, cfg)
+    val service = new TransactionsServiceImpl[IO](xa, offChainStore, ec, cfg)
 
     val randomTx1 = Random.shuffle(tx).head
     val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)

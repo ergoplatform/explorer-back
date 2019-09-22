@@ -81,7 +81,7 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
       ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> List.empty[Asset]
     }
 
-    val service = new BlocksServiceIOImpl[IO](xa, ec)
+    val service = new BlocksServiceImpl[IO](xa, ec)
 
     val randomBlockId = Random.shuffle(h).head.id
     val fromService1 = service.getBlock(randomBlockId).unsafeRunSync()

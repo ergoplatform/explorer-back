@@ -50,7 +50,7 @@ trait BlockService[F[_]] {
 
 }
 
-class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)(
+final class BlocksServiceImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)(
   implicit F: Monad[F],
   A: Async[F]
 ) extends BlockService[F] {

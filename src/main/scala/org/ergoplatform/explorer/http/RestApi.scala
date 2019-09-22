@@ -18,7 +18,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 trait RestApi extends CorsHandler with ErrorHandler {
 
-  def startApi(
+  final def startApi(
     txPoolRef: Ref[IO, TransactionsPool],
     xa: Transactor[IO],
     servicesEc: ExecutionContext,
@@ -33,11 +33,11 @@ trait RestApi extends CorsHandler with ErrorHandler {
     val host = cfg.http.host
     val port = cfg.http.port
 
-    val blocksService = new BlocksServiceIOImpl[IO](xa, servicesEc)
-    val txService = new TransactionsServiceIOImpl[IO](xa, txPoolRef, servicesEc, cfg)
-    val addressesService = new AddressesServiceIOImpl[IO](xa, txPoolRef, servicesEc, cfg.protocol)
-    val statsService = new StatsServiceIOImpl[IO](cfg.protocol)(xa, servicesEc)
-    val minerService = new MinerServiceIOImpl[IO](xa, servicesEc)
+    val blocksService = new BlocksServiceImpl[IO](xa, servicesEc)
+    val txService = new TransactionsServiceImpl[IO](xa, txPoolRef, servicesEc, cfg)
+    val addressesService = new AddressesServiceImpl[IO](xa, txPoolRef, servicesEc, cfg.protocol)
+    val statsService = new StatsServiceImpl[IO](cfg.protocol)(xa, servicesEc)
+    val minerService = new MinerServiceImpl[IO](xa, servicesEc)
 
     val handlers = List(
       new BlocksHandler(blocksService).route,
@@ -54,10 +54,7 @@ trait RestApi extends CorsHandler with ErrorHandler {
     Resource.make(
       IO.fromFuture(IO(Http().bindAndHandle(routes, host, port)))
         .flatMap { b =>
-          IO {
-            logger.info(s"HTTP server started at ${b.localAddress}")
-            b
-          }
+          IO(logger.info(s"HTTP server started at ${b.localAddress}")) *> IO(b)
         }
     )(x => IO.fromFuture(IO(x.unbind())).as(()))
   }

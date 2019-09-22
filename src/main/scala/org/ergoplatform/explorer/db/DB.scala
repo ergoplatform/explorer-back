@@ -15,19 +15,21 @@ trait DB {
 
   private[db] def credentials(cfg: DbConfig): IO[String] =
     (cfg.pass, cfg.passFilePath) match {
-      case (Some(pass), _) => IO.pure(pass)
+      case (Some(pass), _)         => IO.pure(pass)
       case (_, Some(passFilePath)) => readCredentials(passFilePath)
-      case _ => IO.pure("pass")
+      case _                       => IO.pure("pass")
     }
 
-  def configure(xa: HikariTransactor[IO], name: String): IO[Unit] =
-    xa.configure(c => IO {
-      c.setAutoCommit(false)
-      c.setPoolName(name)
-      c.setMaxLifetime(1200000L)
-    })
+  final def configure(xa: HikariTransactor[IO], name: String): IO[Unit] =
+    xa.configure(c =>
+      IO {
+        c.setAutoCommit(false)
+        c.setPoolName(name)
+        c.setMaxLifetime(1200000L)
+      }
+    )
 
-  def migrate(cfg: ExplorerConfig): IO[Unit] =
+  final def migrate(cfg: ExplorerConfig): IO[Unit] =
     for {
       pass <- credentials(cfg.db)
       flyway <- IO {
@@ -41,7 +43,7 @@ trait DB {
       _ <- IO(flyway.migrate())
     } yield ()
 
-  def createTransactor(
+  final def createTransactor(
     cfg: DbConfig,
     fixedThreadPool: ExecutionContext,
     cachedThreadPool: ExecutionContext

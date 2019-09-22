@@ -33,7 +33,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
     infoDao.insertMany(info.map(_.copy(timestamp = now))).transact(xa).unsafeRunSync()
 
-    val service = new StatsServiceIOImpl[IO](protocolConfig)(xa, ec)
+    val service = new StatsServiceImpl[IO](protocolConfig)(xa, ec)
 
     val expected1 = StatsSummary(
       blocksCount = 21L,

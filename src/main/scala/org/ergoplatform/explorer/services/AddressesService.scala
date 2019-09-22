@@ -27,14 +27,15 @@ trait AddressesService[F[_]] {
 
 }
 
-class AddressesServiceIOImpl[F[_]](
+final class AddressesServiceImpl[F[_]](
   xa: Transactor[F],
   txPoolRef: Ref[F, TransactionsPool],
   ec: ExecutionContext,
   cfg: ProtocolConfig
 )(implicit F: Monad[F], A: Async[F])
-    extends AddressesService[F]
+  extends AddressesService[F]
     with JsonMeta {
+
   val outputsDao = new OutputsDao
   val addressDao = new AddressDao
 

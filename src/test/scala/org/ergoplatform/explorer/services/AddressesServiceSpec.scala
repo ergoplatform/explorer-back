@@ -36,7 +36,7 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
 
     val cfg = ProtocolConfig(testnet = true, monetary = MonetarySettings())
 
-    val service = new AddressesServiceIOImpl[IO](xa, offChainStore, ec, cfg)
+    val service = new AddressesServiceImpl[IO](xa, offChainStore, ec, cfg)
 
     val random = Random.shuffle(outputs).head.address
 
