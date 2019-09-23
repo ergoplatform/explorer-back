@@ -125,6 +125,8 @@ CREATE TABLE node_assets (
     PRIMARY KEY (id, box_id)
 );
 
+CREATE INDEX "node_assets__box_id" on node_assets (box_id);
+
 /*
     Table for storing names for known miners.
  */
