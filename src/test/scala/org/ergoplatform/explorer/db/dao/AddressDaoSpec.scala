@@ -11,7 +11,7 @@ class AddressDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
   it should "get correct address data" in {
 
-    val (h, _, txs, inputs, outputs, _) = PreparedData.data
+    val (h, _, txs, inputs, outputs, _, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao

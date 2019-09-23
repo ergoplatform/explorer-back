@@ -20,7 +20,7 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    val (h, _, tx, inputs, outputs, _) = PreparedData.data
+    val (h, _, tx, inputs, outputs, _, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao

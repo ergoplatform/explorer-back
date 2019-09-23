@@ -12,7 +12,7 @@ import org.ergoplatform.explorer.utils.Paging
 
 import scala.concurrent.ExecutionContext
 
-class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO])(
+final class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[IO])(
   implicit ec: ExecutionContext
 ) extends FailFastCirceSupport
     with CommonDirectives {

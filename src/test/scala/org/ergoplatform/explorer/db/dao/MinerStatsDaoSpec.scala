@@ -9,7 +9,7 @@ class MinerStatsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
   it should "extract miner stats correctly" in {
 
-    val (headers, infos, _, _, _, _) = PreparedData.data
+    val (headers, infos, _, _, _, _, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val iDao = new BlockInfoDao

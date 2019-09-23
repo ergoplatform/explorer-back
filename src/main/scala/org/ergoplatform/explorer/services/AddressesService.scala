@@ -9,8 +9,10 @@ import doobie.util.transactor.Transactor
 import org.ergoplatform.ErgoAddressEncoder
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ProtocolConfig
-import org.ergoplatform.explorer.db.dao.{AddressDao, OutputsDao}
+import org.ergoplatform.explorer.db.dao.{AddressDao, AssetsDao, OutputsDao}
 import org.ergoplatform.explorer.db.mappings.JsonMeta
+import org.ergoplatform.explorer.db.models.Asset
+import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.grabber.protocol.ApiAsset
 import org.ergoplatform.explorer.http.protocol.AddressInfo
 import org.ergoplatform.explorer.persistence.TransactionsPool
@@ -33,11 +35,12 @@ final class AddressesServiceImpl[F[_]](
   ec: ExecutionContext,
   cfg: ProtocolConfig
 )(implicit F: Monad[F], A: Async[F])
-  extends AddressesService[F]
+    extends AddressesService[F]
     with JsonMeta {
 
   val outputsDao = new OutputsDao
   val addressDao = new AddressDao
+  val assetsDao = new AssetsDao
 
   private val addressEncoder: ErgoAddressEncoder =
     ErgoAddressEncoder(if (cfg.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)
@@ -59,64 +62,85 @@ final class AddressesServiceImpl[F[_]](
       .map { _.toString }
       .getOrElse("unable to derive address from given ErgoTree")
 
-  private def getAddressInfoResult(addressId: String): F[AddressInfo] =
-    (outputsDao.findAllByAddress(addressId).transact(xa), txPoolRef.get)
+  private def getOutputsWithAssets(
+    address: String
+  ): F[List[(ExtendedOutput, List[Asset])]] = {
+    val txn = for {
+      outputs <- outputsDao.findAllByAddress(address)
+      outputsWithAssets <- outputs
+        .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
+        .sequence
+    } yield outputsWithAssets
+    txn.transact(xa)
+  }
+
+  private def getAddressInfoResult(address: String): F[AddressInfo] =
+    (getOutputsWithAssets(address), txPoolRef.get)
       .mapN { (outputs, txPool) =>
         val offChainTxs = txPool.getAll
         val offChainInputs = offChainTxs.flatMap(_.inputs.map(_.boxId))
         val (spentOnChainBoxes, unspentOnChainBoxes) = outputs
-          .filter(_.mainChain)
-          .partition(_.spentByOpt.isDefined)
+          .filter(_._1.mainChain)
+          .partition(_._1.spentByOpt.isDefined)
         val spentOffChainBoxes = unspentOnChainBoxes
-          .filter(o => offChainInputs.contains(o.output.boxId))
+          .filter(o => offChainInputs.contains(o._1.output.boxId))
         val unspentOffChainBoxes = offChainTxs
           .flatMap(_.outputs)
-          .filter(x => ergoTreeToAddress(x.ergoTree) == addressId)
+          .filter(x => ergoTreeToAddress(x.ergoTree) == address)
         val confirmedTxsQty = outputs
-          .map(_.output.txId)
+          .map(_._1.output.txId)
           .distinct
           .size
         val spentOnChainBalance = spentOnChainBoxes
-          .map(_.output.value)
+          .map(_._1.output.value)
           .sum
-        val spentOffChainBalance = spentOffChainBoxes.map(_.output.value).sum
+        val spentOffChainBalance = spentOffChainBoxes.map(_._1.output.value).sum
         val onChainBalance = unspentOnChainBoxes
-          .map(_.output.value)
+          .map(_._1.output.value)
           .sum
         val offChainBalance = unspentOffChainBoxes.map(_.value).sum - spentOffChainBalance
         val totalBalance = onChainBalance + offChainBalance
-//        val onChainTokensBalance = unspentOnChainBoxes
-//          .flatMap(_.output.encodedAssets.toSeq)
-//          .foldLeft(Map.empty[String, Long]) {
-//            case (acc, (assetId, assetAmt)) =>
-//              acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
-//          }
-//        val offChainTokensReceived = unspentOffChainBoxes
-//          .flatMap(_.assets)
-//          .foldLeft(Map.empty[String, Long]) {
-//            case (acc, ApiAsset(assetId, assetAmt)) =>
-//              acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
-//          }
-//        val offChainTokensSpent = spentOffChainBoxes
-//          .flatMap(_.output.encodedAssets.toSeq)
-//          .foldLeft(Map.empty[String, Long]) {
-//            case (acc, (assetId, assetAmt)) =>
-//              acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
-//          }
-//        val existingTokens = onChainTokensBalance.keys.toSeq
-//        // new tokens this address received for the first time
-//        val newOffChainTokensBalance = offChainTokensReceived.filterNot(x => existingTokens.contains(x._1))
-//        val totalTokensBalance = newOffChainTokensBalance ++ onChainTokensBalance
-//          .foldLeft(Map.empty[String, Long]) {
-//            case (acc, (assetId, onChainAmt)) =>
-//              val offChainSpent = offChainTokensSpent.getOrElse(assetId, 0L)
-//              val offChainReceived = offChainTokensReceived.getOrElse(assetId, 0L)
-//              acc.updated(assetId, onChainAmt + offChainReceived - offChainSpent)
-//          }
-//        val totalReceived = spentOnChainBalance + onChainBalance
-//        val onChainAssets = onChainTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
-//        val totalAssets = totalTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
-        AddressInfo(addressId, confirmedTxsQty, 0L, onChainBalance, totalBalance, List.empty, List.empty)
+        val onChainTokensBalance = unspentOnChainBoxes
+          .flatMap(_._2)
+          .foldLeft(Map.empty[String, Long]) {
+            case (acc, Asset(assetId, _, assetAmt)) =>
+              acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+          }
+        val offChainTokensReceived = unspentOffChainBoxes
+          .flatMap(_.assets)
+          .foldLeft(Map.empty[String, Long]) {
+            case (acc, ApiAsset(assetId, assetAmt)) =>
+              acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+          }
+        val offChainTokensSpent = spentOffChainBoxes
+          .flatMap(_._2)
+          .foldLeft(Map.empty[String, Long]) {
+            case (acc, Asset(assetId, _, assetAmt)) =>
+              acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+          }
+        val existingTokens = onChainTokensBalance.keys.toSeq
+        // new tokens this address received for the first time
+        val newOffChainTokensBalance =
+          offChainTokensReceived.filterNot(x => existingTokens.contains(x._1))
+        val totalTokensBalance = newOffChainTokensBalance ++ onChainTokensBalance
+          .foldLeft(Map.empty[String, Long]) {
+            case (acc, (assetId, onChainAmt)) =>
+              val offChainSpent = offChainTokensSpent.getOrElse(assetId, 0L)
+              val offChainReceived = offChainTokensReceived.getOrElse(assetId, 0L)
+              acc.updated(assetId, onChainAmt + offChainReceived - offChainSpent)
+          }
+        val totalReceived = spentOnChainBalance + onChainBalance
+        val onChainAssets = onChainTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
+        val totalAssets = totalTokensBalance.map(x => ApiAsset(x._1, x._2)).toList
+        AddressInfo(
+          address,
+          confirmedTxsQty,
+          totalReceived,
+          onChainBalance,
+          totalBalance,
+          onChainAssets,
+          totalAssets
+        )
       }
 
   def searchById(substring: String): F[List[String]] = {

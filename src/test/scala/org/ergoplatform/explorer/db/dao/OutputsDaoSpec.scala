@@ -12,7 +12,7 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val dao = new OutputsDao
     val inputDao = new InputsDao
 
-    val (headers, _, txs, inputs, outputsWithoutTs, _) = PreparedData.data
+    val (headers, _, txs, inputs, outputsWithoutTs, _, _) = PreparedData.data
 
     val outputs = outputsWithoutTs.map { o =>
       val ts = txs.find(_.id == o.txId).map(_.timestamp).getOrElse(0L)

@@ -3,7 +3,6 @@ package org.ergoplatform.explorer.services
 import java.io.InputStream
 
 import cats._
-import cats.data.NonEmptyList
 import cats.effect._
 import cats.effect.concurrent.Ref
 import cats.implicits._
@@ -16,8 +15,8 @@ import org.ergoplatform.ErgoAddressEncoder
 import org.ergoplatform.explorer.Utils
 import org.ergoplatform.explorer.config.ExplorerConfig
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.{Asset, Transaction}
 import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
+import org.ergoplatform.explorer.db.models.{Asset, Transaction}
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.persistence.TransactionsPool
@@ -68,7 +67,7 @@ final class TransactionsServiceImpl[F[_]](
   val headersDao = new HeadersDao
   val transactionsDao = new TransactionsDao
   val inputDao = new InputsDao
-  val outputDao = new OutputsDao
+  val outputsDao = new OutputsDao
   val assetsDao = new AssetsDao
 
   override def getUnconfirmedTxInfo(id: String): F[ApiTransaction] =
@@ -104,7 +103,7 @@ final class TransactionsServiceImpl[F[_]](
 
   override def getOutputById(id: String): F[OutputInfo] = {
     val txn = for {
-      out    <- outputDao.findByBoxId(id)
+      out    <- outputsDao.findByBoxId(id)
       assets <- assetsDao.getByBoxId(id)
     } yield OutputInfo(out, assets)
     txn.transact(xa)
@@ -115,8 +114,8 @@ final class TransactionsServiceImpl[F[_]](
     unspentOnly: Boolean
   ): F[List[OutputInfo]] = {
     val txn = for {
-      outputs <- if (unspentOnly) outputDao.findUnspentByAddress(address)
-                 else outputDao.findAllByAddress(address)
+      outputs <- if (unspentOnly) outputsDao.findUnspentByAddress(address)
+                 else outputsDao.findAllByAddress(address)
       outputsWithAssets <- outputs
         .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
         .sequence
@@ -130,8 +129,8 @@ final class TransactionsServiceImpl[F[_]](
     unspentOnly: Boolean
   ): F[List[OutputInfo]] = {
     val txn = for {
-      outputs <- if (unspentOnly) outputDao.findUnspentByErgoTree(ergoTree)
-                 else outputDao.findAllByErgoTree(ergoTree)
+      outputs <- if (unspentOnly) outputsDao.findUnspentByErgoTree(ergoTree)
+                 else outputsDao.findAllByErgoTree(ergoTree)
       outputsWithAssets <- outputs
         .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
         .sequence
@@ -167,7 +166,7 @@ final class TransactionsServiceImpl[F[_]](
     id: String
   ): ConnectionIO[List[(ExtendedOutput, List[Asset])]] =
     for {
-      outputs <- outputDao.findAllByTxIdExtended(id)
+      outputs <- outputsDao.findAllByTxIdExtended(id)
       outputsWithAssets <- outputs
         .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
         .sequence

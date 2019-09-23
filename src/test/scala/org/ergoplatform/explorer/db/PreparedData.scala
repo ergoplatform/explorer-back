@@ -8,10 +8,11 @@ import scala.io.Source
 
 object PreparedData extends App {
 
-  def readArray(s: String): List[String] = s.replaceAll("\\{","").replaceAll("\\}", "").split(",").toList
+  def readArray(s: String): List[String] =
+    s.replaceAll("\\{", "").replaceAll("\\}", "").split(",").toList
 
   def readJson(s: String): Json = {
-    val sanitizedString = s.drop(1).dropRight(1).replaceAll("'","")
+    val sanitizedString = s.drop(1).dropRight(1).replaceAll("'", "")
     parse(sanitizedString).toOption.getOrElse(Json.Null)
   }
 
@@ -116,7 +117,18 @@ object PreparedData extends App {
     )
   }
 
-  def readData[T](filename: String, f: String => T): List[T] = Source.fromResource(filename).getLines().toList.map(f)
+  def lineToAsset(s: String): Asset = {
+    val data = s.split(";")
+
+    Asset(
+      id = data(0),
+      boxId = data(1),
+      amount = data(2).toLong
+    )
+  }
+
+  def readData[T](filename: String, f: String => T): List[T] =
+    Source.fromResource(filename).getLines().toList.map(f)
 
   def readHeaders: List[Header] = readData("db_dump/headers.csv", lineToHeader)
   def readBlockInfos: List[BlockInfo] = readData("db_dump/bi.csv", lineToBlockInfo)
@@ -124,11 +136,16 @@ object PreparedData extends App {
   def readInputs: List[Input] = readData("db_dump/inputs.csv", lineToInput)
   def readOutputs: List[Output] = readData("db_dump/outputs.csv", lineToOutput)
   def readProofs: List[AdProof] = readData("db_dump/proofs.csv", lineToProof)
+  def readAssets: List[Asset] = readData("db_dump/assets.csv", lineToAsset)
 
-
-
-  lazy val data: (List[Header], List[BlockInfo], List[Transaction], List[Input], List[Output], List[AdProof]) = {
-    (readHeaders, readBlockInfos, readTxs, readInputs, readOutputs, readProofs)
-  }
+  lazy val data: (
+    List[Header],
+    List[BlockInfo],
+    List[Transaction],
+    List[Input],
+    List[Output],
+    List[AdProof],
+    List[Asset]
+  ) = (readHeaders, readBlockInfos, readTxs, readInputs, readOutputs, readProofs, readAssets)
 
 }

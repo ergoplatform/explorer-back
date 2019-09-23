@@ -5,8 +5,8 @@ import cats.effect.concurrent.Ref
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.Config
-import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
-import org.ergoplatform.explorer.db.models.Asset
+import org.ergoplatform.explorer.db.dao.{AssetsDao, HeadersDao, InputsDao, OutputsDao, TransactionsDao}
+import org.ergoplatform.explorer.db.models.{Asset, Output}
 import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
@@ -55,17 +55,19 @@ class TransactionsServiceSpec
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    val (h, _, tx, inputs, outputs, _) = PreparedData.data
+    val (h, _, tx, inputs, outputs, _, assets) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao
     val iDao = new InputsDao
     val oDao = new OutputsDao
+    val aDao = new AssetsDao
 
     hDao.insertMany(h).transact(xa).unsafeRunSync()
     tDao.insertMany(tx).transact(xa).unsafeRunSync()
     oDao.insertMany(outputs).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
+    aDao.insertMany(assets).transact(xa).unsafeRunSync()
 
     val inputsWithOutputInfo = inputs
       .map { i =>
@@ -74,8 +76,12 @@ class TransactionsServiceSpec
       }
 
     val outputsWithSpentTx = outputs
-      .map { o =>
-        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> List.empty[Asset]
+      .foldLeft(List.empty[(Output, List[Asset])]) { case (acc, out) =>
+        val outAssets = assets.find(_.boxId == out.boxId).toList
+        acc :+ (out -> outAssets)
+      }
+      .map { case (o, assets) =>
+        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> assets
       }
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()

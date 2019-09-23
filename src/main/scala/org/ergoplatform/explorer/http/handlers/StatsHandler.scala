@@ -7,7 +7,7 @@ import org.ergoplatform.explorer.services.StatsService
 
 import scala.concurrent.duration._
 
-class StatsHandler(ss: StatsService[IO]) extends RouteHandler {
+final class StatsHandler(ss: StatsService[IO]) extends RouteHandler {
 
   val route: Route = pathPrefix("stats") {
     withRequestTimeout(180.seconds) {

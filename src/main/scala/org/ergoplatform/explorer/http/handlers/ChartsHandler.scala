@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import org.ergoplatform.explorer.services.StatsService
 
-class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
+final class ChartsHandler(ss: StatsService[IO]) extends RouteHandler {
 
   val route: Route = pathPrefix("charts") {
     totalCoins ~

@@ -11,7 +11,7 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
   it should "insert and find" in new {
     val dao = new InputsDao
 
-    val (headers, _, txs, inputs, outputs, _) = PreparedData.data
+    val (headers, _, txs, inputs, outputs, _, _) = PreparedData.data
 
     val head = inputs.head
     val tail = inputs.tail

@@ -14,6 +14,8 @@ object AssetsOps extends DaoOps {
 		"value"
 	)
 
+	def insert: Update[Asset] = Update[Asset](insertSql)
+
 	def getByBoxId(boxId: String): Query0[Asset] =
 		(selectAllFr ++ fr"WHERE box_id = $boxId").query
 

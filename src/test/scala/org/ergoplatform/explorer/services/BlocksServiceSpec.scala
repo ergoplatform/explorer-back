@@ -46,7 +46,7 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    val (h, info, tx, inputs, outputs, _) = PreparedData.data
+    val (h, info, tx, inputs, outputs, _, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao
