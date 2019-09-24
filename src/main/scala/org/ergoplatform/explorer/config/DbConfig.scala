@@ -8,5 +8,5 @@ final case class DbConfig(
   driverClassName: String = "org.postgresql.Driver",
   migrateOnStart: Boolean = false,
   servicesConnPoolSize: Int = 32,
-  grabberConnPoolSize: Int = 16
+  grabberConnPoolSize: Int = 8
 )

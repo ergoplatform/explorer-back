@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import cats.effect.concurrent.Ref
-import cats.effect.{IO, Resource}
+import cats.effect.{ContextShift, IO, Resource}
 import cats.implicits._
 import com.typesafe.scalalogging.Logger
 import doobie.util.transactor.Transactor
@@ -23,40 +23,47 @@ trait RestApi extends CorsHandler with ErrorHandler {
     xa: Transactor[IO],
     servicesEc: ExecutionContext,
     cfg: ExplorerConfig
-  )(implicit system: ActorSystem): Resource[IO, Http.ServerBinding] = {
+  )(implicit cs: ContextShift[IO]): Resource[IO, Http.ServerBinding] =
+    makeSystem("explorer-system").flatMap { implicit system =>
+      implicit val mat: ActorMaterializer = ActorMaterializer()
+      implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    implicit val mat: ActorMaterializer = ActorMaterializer()
-    implicit val ec: ExecutionContextExecutor = system.dispatcher
+      val logger = Logger("server")
 
-    val logger = Logger("server")
+      val host = cfg.http.host
+      val port = cfg.http.port
 
-    val host = cfg.http.host
-    val port = cfg.http.port
+      val blocksService = new BlocksServiceImpl[IO](xa, servicesEc)
+      val txService = new TransactionsServiceImpl[IO](xa, txPoolRef, servicesEc, cfg)
+      val addressesService = new AddressesServiceImpl[IO](xa, txPoolRef, servicesEc, cfg.protocol)
+      val statsService = new StatsServiceImpl[IO](cfg.protocol)(xa, servicesEc)
+      val minerService = new MinerServiceImpl[IO](xa, servicesEc)
 
-    val blocksService = new BlocksServiceImpl[IO](xa, servicesEc)
-    val txService = new TransactionsServiceImpl[IO](xa, txPoolRef, servicesEc, cfg)
-    val addressesService = new AddressesServiceImpl[IO](xa, txPoolRef, servicesEc, cfg.protocol)
-    val statsService = new StatsServiceImpl[IO](cfg.protocol)(xa, servicesEc)
-    val minerService = new MinerServiceImpl[IO](xa, servicesEc)
+      val handlers = List(
+        new BlocksHandler(blocksService).route,
+        new TransactionsHandler(txService).route,
+        new AddressesHandler(addressesService, txService).route,
+        new StatsHandler(statsService).route,
+        new ChartsHandler(statsService).route,
+        new InfoHandler(statsService).route,
+        new SearchHandler(blocksService, txService, addressesService, minerService).route
+      )
 
-    val handlers = List(
-      new BlocksHandler(blocksService).route,
-      new TransactionsHandler(txService).route,
-      new AddressesHandler(addressesService, txService).route,
-      new StatsHandler(statsService).route,
-      new ChartsHandler(statsService).route,
-      new InfoHandler(statsService).route,
-      new SearchHandler(blocksService, txService, addressesService, minerService).route
+      val routes: Route = corsHandler(handlers.reduce(_ ~ _))
+
+      Resource.make(
+        IO.fromFuture(IO(Http().bindAndHandle(routes, host, port)))
+          .flatMap { b =>
+            IO(logger.info(s"HTTP server started at ${b.localAddress}")) *> IO(b)
+          }
+      )(x => IO.fromFuture(IO(x.unbind())).as(()))
+    }
+
+  private def makeSystem(
+    name: String
+  )(implicit cs: ContextShift[IO]): Resource[IO, ActorSystem] =
+    Resource.make(IO(ActorSystem(name)))(
+      x => IO.fromFuture(IO(x.terminate())).as(())
     )
-
-    val routes: Route = corsHandler(handlers.reduce(_ ~ _))
-
-    Resource.make(
-      IO.fromFuture(IO(Http().bindAndHandle(routes, host, port)))
-        .flatMap { b =>
-          IO(logger.info(s"HTTP server started at ${b.localAddress}")) *> IO(b)
-        }
-    )(x => IO.fromFuture(IO(x.unbind())).as(()))
-  }
 
 }

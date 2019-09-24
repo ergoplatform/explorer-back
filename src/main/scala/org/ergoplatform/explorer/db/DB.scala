@@ -1,6 +1,6 @@
 package org.ergoplatform.explorer.db
 
-import cats.effect.{ContextShift, IO, Resource}
+import cats.effect.{Blocker, ContextShift, IO, Resource}
 import doobie.hikari.HikariTransactor
 import org.ergoplatform.explorer.config.{DbConfig, ExplorerConfig}
 import org.flywaydb.core.Flyway
@@ -20,12 +20,16 @@ trait DB {
       case _                       => IO.pure("pass")
     }
 
-  final def configure(xa: HikariTransactor[IO], name: String): IO[Unit] =
+  final def configure(
+    xa: HikariTransactor[IO]
+  )(name: String, maxPoolSize: Int): IO[Unit] =
     xa.configure(c =>
       IO {
         c.setAutoCommit(false)
         c.setPoolName(name)
-        c.setMaxLifetime(1200000L)
+        c.setMaxLifetime(600000)
+        c.setMaximumPoolSize(maxPoolSize)
+        c.setMinimumIdle(math.max(2, maxPoolSize / 2))
       }
     )
 
@@ -46,7 +50,7 @@ trait DB {
   final def createTransactor(
     cfg: DbConfig,
     fixedThreadPool: ExecutionContext,
-    cachedThreadPool: ExecutionContext
+    blocker: Blocker
   )(implicit S: ContextShift[IO]): Resource[IO, HikariTransactor[IO]] =
     for {
       pass <- Resource.liftF(credentials(cfg))
@@ -56,7 +60,7 @@ trait DB {
         user = cfg.user,
         pass = pass,
         connectEC = fixedThreadPool,
-        transactEC = cachedThreadPool
+        blocker = blocker
       )
     } yield xa
 
