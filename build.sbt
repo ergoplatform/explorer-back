@@ -2,9 +2,9 @@ organization := "org.ergoplatform"
 
 name := "ergo-explorer"
 
-version := "0.0.1"
+version := "1.0.0"
 
-scalaVersion := "2.12.9"
+scalaVersion := "2.12.10"
 
 resolvers += Resolver.bintrayRepo("hseeberger", "maven")
 resolvers ++= Seq("Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")

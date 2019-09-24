@@ -47,7 +47,7 @@ final class StatsServiceImpl[F[_]](protocolConfig: ProtocolConfig)(
   xa: Transactor[F],
   ec: ExecutionContext
 )(implicit F: Monad[F], A: Async[F])
-  extends StatsService[F] {
+    extends StatsService[F] {
 
   private val emptyInfoResponse = BlockchainInfo("0.0.0", 0L, 0L, 0L)
   private val SecondsIn24H: Long = (24 * 60 * 60).toLong
@@ -104,10 +104,12 @@ final class StatsServiceImpl[F[_]](protocolConfig: ProtocolConfig)(
 
   override def findLastStats: F[StatsSummary] =
     for {
-      _                <- Async.shift[F](ec)
-      pastTs           <- F.pure(System.currentTimeMillis() - MillisIn24H)
-      totalOutputs     <- outputsDao.sumOfAllUnspentOutputsSince(pastTs).transact[F](xa)
-      estimatedOutputs <- outputsDao.estimateOutputSince(pastTs).transact[F](xa)
+      _            <- Async.shift[F](ec)
+      pastTs       <- F.pure(System.currentTimeMillis() - MillisIn24H)
+      totalOutputs <- outputsDao.sumOfAllUnspentOutputsSince(pastTs).transact[F](xa)
+      estimatedOutputs <- outputsDao
+        .estimateOutputSince(pastTs)(protocolConfig.genesisAddress)
+        .transact[F](xa)
       stats <- infoDao
         .findSince(pastTs)
         .transact[F](xa)

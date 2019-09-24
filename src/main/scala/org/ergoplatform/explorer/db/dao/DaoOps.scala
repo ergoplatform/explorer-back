@@ -20,7 +20,7 @@ trait DaoOps {
 
   lazy val selectAllFr: Fragment = fr"SELECT" ++ fieldsFr ++ fr"FROM" ++ tableNameFr
 
-  def allFieldsRefFr(ref: String): Fragment =
+  final def allFieldsRefFr(ref: String): Fragment =
     Fragment.const(fields.map(field => s"$ref.$field").mkString(", "))
 
 }

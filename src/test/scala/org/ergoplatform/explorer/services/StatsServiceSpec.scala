@@ -25,7 +25,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val now = System.currentTimeMillis()
 
-    val protocolConfig = ProtocolConfig(testnet = true, MonetarySettings())
+    val protocolConfig = ProtocolConfig(testnet = true, "", MonetarySettings())
 
     hDao.insertMany(h.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
     tDao.insertMany(tx.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()

@@ -16,6 +16,7 @@ import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.grabber.protocol.ApiAsset
 import org.ergoplatform.explorer.http.protocol.AddressInfo
 import org.ergoplatform.explorer.persistence.TransactionsPool
+import org.ergoplatform.explorer.utils.Paging
 import scorex.util.encode.Base16
 import sigmastate.serialization.ErgoTreeSerializer
 
@@ -27,6 +28,8 @@ trait AddressesService[F[_]] {
 
   def searchById(query: String): F[List[String]]
 
+  def holdersAddresses(assetId: String, p: Paging): F[List[String]]
+
 }
 
 final class AddressesServiceImpl[F[_]](
@@ -35,7 +38,7 @@ final class AddressesServiceImpl[F[_]](
   ec: ExecutionContext,
   cfg: ProtocolConfig
 )(implicit F: Monad[F], A: Async[F])
-    extends AddressesService[F]
+  extends AddressesService[F]
     with JsonMeta {
 
   val outputsDao = new OutputsDao
@@ -46,6 +49,15 @@ final class AddressesServiceImpl[F[_]](
     ErgoAddressEncoder(if (cfg.testnet) Constants.TestnetPrefix else Constants.MainnetPrefix)
 
   private val treeSerializer: ErgoTreeSerializer = new ErgoTreeSerializer
+
+  override def holdersAddresses(
+    assetId: String,
+    p: Paging
+  ): F[List[String]] =
+    for {
+      _         <- Async.shift[F](ec)
+      addresses <- assetsDao.holderAddresses(assetId, p.offset, p.limit).transact(xa)
+    } yield addresses
 
   override def getAddressInfo(addressId: String): F[AddressInfo] =
     for {

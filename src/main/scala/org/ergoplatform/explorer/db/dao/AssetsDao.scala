@@ -16,4 +16,11 @@ class AssetsDao {
       .compile
       .to[List]
 
+  def holderAddresses(
+    assetId: String,
+    offset: Int = 0,
+    limit: Int = 20
+  ): ConnectionIO[List[String]] =
+    AssetsOps.holderAddresses(assetId, offset, limit).to[List]
+
 }

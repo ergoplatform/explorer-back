@@ -20,7 +20,7 @@ final class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[I
   implicit val contextShift: ContextShift[IO] = IO.contextShift(ec)
 
   val route: Route = pathPrefix("addresses") {
-    getTxsByAddressId ~ getAddressById
+    getTxsByAddressId ~ getAssetHolders ~ getAddressById
   }
 
   def getAddressById: Route = (get & base58Segment) { id =>
@@ -35,6 +35,12 @@ final class AddressesHandler(as: AddressesService[IO], ts: TransactionsService[I
       onSuccess((items, count).parMapN((i, c) => ItemsResponse(i, c)).unsafeToFuture()) {
         complete(_)
       }
+  }
+
+  def getAssetHolders: Route = (get & path("assetHolders" / Segment) & paging) { (assetId, o, l) =>
+    onSuccess(as.holdersAddresses(assetId, Paging(offset = o, limit = l)).unsafeToFuture()) {
+      complete(_)
+    }
   }
 
 }

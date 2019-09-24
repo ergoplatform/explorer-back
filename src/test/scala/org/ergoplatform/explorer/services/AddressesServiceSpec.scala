@@ -34,7 +34,7 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
-    val cfg = ProtocolConfig(testnet = true, monetary = MonetarySettings())
+    val cfg = ProtocolConfig(testnet = true, "", monetary = MonetarySettings())
 
     val service = new AddressesServiceImpl[IO](xa, offChainStore, ec, cfg)
 
