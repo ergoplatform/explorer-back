@@ -77,12 +77,12 @@ class TransactionsServiceSpec
 
     val outputsWithSpentTx = outputs
       .foldLeft(List.empty[(Output, List[Asset])]) { case (acc, out) =>
-        val outAssets = assets.find(_.boxId == out.boxId).toList
+        val outAssets = assets.filter(_.boxId == out.boxId).reverse
         acc :+ (out -> outAssets)
       }
       .map { case (o, assets) =>
         ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> assets
-      }
+      }.reverse
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 

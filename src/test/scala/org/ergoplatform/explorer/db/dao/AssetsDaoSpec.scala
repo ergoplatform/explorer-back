@@ -4,6 +4,8 @@ import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import doobie.implicits._
 
+import scala.util.Try
+
 class AssetsDaoSpec
   extends FlatSpec
     with Matchers
@@ -16,7 +18,7 @@ class AssetsDaoSpec
 
     val assetsDao = new AssetsDao
 
-    assetsDao.insertMany(assets).transact(xa).unsafeRunSync()
+    Try(assetsDao.insertMany(assets).transact(xa).unsafeRunSync())
 
     val asset = assets.head
     val expected = assets.filter(_.boxId == asset.boxId)
@@ -33,12 +35,14 @@ class AssetsDaoSpec
     val outputsDao = new OutputsDao
     val assetsDao = new AssetsDao
 
-    Seq(
-      headersDao.insertMany(h),
-      txsDao.insertMany(txs),
-      outputsDao.insertMany(outputs),
-      assetsDao.insertMany(assets),
-    ).foreach(_.transact(xa).unsafeRunSync())
+    Try {
+      Seq(
+        headersDao.insertMany(h),
+        txsDao.insertMany(txs),
+        outputsDao.insertMany(outputs),
+        assetsDao.insertMany(assets),
+      ).foreach(_.transact(xa).unsafeRunSync())
+    }
 
     val asset = assets.head
     val outputsContainingAsset = assets.filter(_.id == asset.id).map(_.boxId)
