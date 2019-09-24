@@ -9,7 +9,7 @@ import doobie.util.transactor.Transactor
 import org.ergoplatform.ErgoAddressEncoder
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.ProtocolConfig
-import org.ergoplatform.explorer.db.dao.{AddressDao, AssetsDao, OutputsDao}
+import org.ergoplatform.explorer.db.dao.{AssetsDao, OutputsDao}
 import org.ergoplatform.explorer.db.mappings.JsonMeta
 import org.ergoplatform.explorer.db.models.Asset
 import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
@@ -42,7 +42,6 @@ final class AddressesServiceImpl[F[_]](
     with JsonMeta {
 
   val outputsDao = new OutputsDao
-  val addressDao = new AddressDao
   val assetsDao = new AssetsDao
 
   private val addressEncoder: ErgoAddressEncoder =
