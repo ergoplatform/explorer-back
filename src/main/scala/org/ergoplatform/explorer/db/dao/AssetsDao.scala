@@ -7,13 +7,13 @@ import org.ergoplatform.explorer.db.models.Asset
 
 class AssetsDao {
 
-	def getByBoxId(boxId: String): ConnectionIO[List[Asset]] =
-		AssetsOps.getByBoxId(boxId).to[List]
+  def getByBoxId(boxId: String): ConnectionIO[List[Asset]] =
+    AssetsOps.getByBoxId(boxId).to[List]
 
-	def insertMany(list: List[Asset]): ConnectionIO[List[Asset]] =
-		AssetsOps.insert
-			.updateManyWithGeneratedKeys[Asset](AssetsOps.fields: _*)(list)
-			.compile
-			.to[List]
+  def insertMany(list: List[Asset]): ConnectionIO[List[Asset]] =
+    AssetsOps.insert
+      .updateManyWithGeneratedKeys[Asset](AssetsOps.fields: _*)(list)
+      .compile
+      .to[List]
 
 }
