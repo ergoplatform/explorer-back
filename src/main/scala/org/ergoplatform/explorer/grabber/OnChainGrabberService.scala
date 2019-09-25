@@ -74,7 +74,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)(
     for {
       ids    <- idsAtHeight(height)
       blocks <- fullBlocksForIds(ids.filterNot(existingHeadersAtHeight.map(_.id).contains))
-      existingHeadersUpdated <- IO(
+      existingHeadersUpdated <- IO.pure(
         existingHeadersAtHeight.map(h => h.copy(mainChain = ids.headOption.contains(h.id)))
       )
       _ <- {
@@ -85,7 +85,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)(
       blockInfos <- blocks.map { block =>
         writeBlock(updatedBlock(block, ids.headOption.contains(block.header.id)))
       }.parSequence
-      retryNeeded <- IO(
+      retryNeeded <- IO.pure(
         blocks.isEmpty && attemptsDone < MaxRetriesNumber && ids.size > existingHeadersAtHeight.size
       )
       _ <- IO {
@@ -103,16 +103,13 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)(
     for {
       blockInfo <- {
         if (apiBlock.header.height == Constants.GenesisHeight)
-          IO(blockInfoHelper.assembleGenesisInfo(apiBlock))
+          IO.pure(blockInfoHelper.assembleGenesisInfo(apiBlock))
         else
           getBlockInfo(apiBlock.header.parentId, apiBlock.header.height - 1)
             .map(blockInfoHelper.assembleNonGenesisInfo(apiBlock, _))
       }
       _ <- IO(blockInfoHelper.blockInfoCache.put(blockInfo.headerId, blockInfo))
-      _ <- BlockInfoWriter
-        .insert(blockInfo)
-        .flatMap(_ => dBHelper.writeOne(apiBlock))
-        .transact[IO](xa)
+      _ <- (dBHelper.writeOne(apiBlock) *> BlockInfoWriter.insert(blockInfo)).transact[IO](xa)
     } yield blockInfo
 
   private def getBlockInfo(id: String, height: Long): IO[BlockInfo] =
@@ -124,8 +121,8 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)(
           case None =>
             BlockInfoWriter.get(id).transact[IO](xa).flatMap {
               case Some(blockInfoFromDb) =>
-                blockInfoHelper.blockInfoCache.put(id, blockInfoFromDb)
-                IO(blockInfoFromDb)
+                IO(blockInfoHelper.blockInfoCache.put(id, blockInfoFromDb))
+                  .map(_ => blockInfoFromDb)
               case None => // fork occurred, mark blocks we have at this height as non-best
                 IO(logger.info(s"Chain differs at height: $height")).flatMap { _ =>
                   headersDao.getAtHeight(height).transact[IO](xa).flatMap { existingHeaders =>
@@ -138,9 +135,7 @@ class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)(
     } yield blockInfo
 
   protected val task: IO[Unit] = for {
-    _ <- IO {
-      logger.info("Starting sync task.")
-    }
+    _             <- IO(logger.info("Starting sync task."))
     info          <- requestService.get[ApiNodeInfo](mandatoryAddressService.infoUri)
     currentHeight <- dBHelper.readCurrentHeight.transact(xa)
     _ <- IO {

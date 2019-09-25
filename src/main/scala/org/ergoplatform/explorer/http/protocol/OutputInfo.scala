@@ -2,7 +2,8 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.{ExtendedOutput, Output}
+import org.ergoplatform.explorer.db.models.Asset
+import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 
 final case class OutputInfo(
   id: String,
@@ -10,7 +11,7 @@ final case class OutputInfo(
   creationHeight: Int,
   ergoTree: String,
   address: String,
-  assets: Json,
+  assets: Seq[AssetInfo],
   additionalRegisters: Json,
   spentTxIs: Option[String],
   mainChain: Boolean
@@ -18,29 +19,18 @@ final case class OutputInfo(
 
 object OutputInfo {
 
-  def fromOutputWithSpent(o: ExtendedOutput): OutputInfo = OutputInfo(
-    o.output.boxId,
-    o.output.value,
-    o.output.creationHeight,
-    o.output.ergoTree,
-    o.output.address,
-    o.output.assets,
-    o.output.additionalRegisters,
-    o.spentTxId,
-    o.mainChain
-  )
-
-  def fromOutput(o: Output): OutputInfo = OutputInfo(
-    o.boxId,
-    o.value,
-    o.creationHeight,
-    o.ergoTree,
-    o.address,
-    o.assets,
-    o.additionalRegisters,
-    None,
-    mainChain = true
-  )
+  def apply(o: ExtendedOutput, assets: List[Asset]): OutputInfo =
+    OutputInfo(
+      o.output.boxId,
+      o.output.value,
+      o.output.creationHeight,
+      o.output.ergoTree,
+      o.output.address,
+      assets.map(x => AssetInfo(x.id, x.amount)),
+      o.output.additionalRegisters,
+      o.spentByOpt,
+      o.mainChain
+    )
 
   implicit val encoder: Encoder[OutputInfo] = { oi =>
     Json.obj(
@@ -49,7 +39,7 @@ object OutputInfo {
       "creationHeight"      -> oi.creationHeight.asJson,
       "ergoTree"            -> oi.ergoTree.asJson,
       "address"             -> oi.address.asJson,
-      "assets"              -> oi.assets,
+      "assets"              -> oi.assets.asJson,
       "additionalRegisters" -> oi.additionalRegisters,
       "spentTransactionId"  -> oi.spentTxIs.asJson,
       "mainChain"           -> oi.mainChain.asJson

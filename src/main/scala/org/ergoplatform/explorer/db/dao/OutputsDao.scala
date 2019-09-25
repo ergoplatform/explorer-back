@@ -5,7 +5,8 @@ import cats.implicits._
 import doobie._
 import doobie.implicits._
 import org.ergoplatform.explorer.db.mappings.JsonMeta
-import org.ergoplatform.explorer.db.models.{ExtendedOutput, Output}
+import org.ergoplatform.explorer.db.models.Output
+import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 
 class OutputsDao extends JsonMeta {
 
@@ -41,7 +42,7 @@ class OutputsDao extends JsonMeta {
       case None      => List.empty[Output].pure[ConnectionIO]
     }
 
-  def findAllByTxIdWithSpent(txId: String): ConnectionIO[List[ExtendedOutput]] =
+  def findAllByTxIdExtended(txId: String): ConnectionIO[List[ExtendedOutput]] =
     OutputsOps.findAllByTxIdWithSpent(txId).to[List]
 
   def findAllByTxsIdWithSpent(txsId: List[String]): ConnectionIO[List[ExtendedOutput]] =
@@ -63,7 +64,7 @@ class OutputsDao extends JsonMeta {
   def sumOfAllUnspentOutputsSince(ts: Long): ConnectionIO[Long] =
     OutputsOps.sumOfAllUnspentOutputsSince(ts).unique
 
-  def estimateOutputSince(ts: Long): ConnectionIO[BigDecimal] =
-    OutputsOps.estimatedOutputsSince(ts).unique
+  def estimateOutputSince(ts: Long)(genesisAddress: String): ConnectionIO[BigDecimal] =
+    OutputsOps.estimatedOutputsSince(ts)(genesisAddress).unique
 
 }

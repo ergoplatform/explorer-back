@@ -20,7 +20,7 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    val (h, _, tx, inputs, outputs, _) = PreparedData.data
+    val (h, _, tx, inputs, outputs, _, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao
@@ -34,9 +34,9 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
-    val cfg = ProtocolConfig(testnet = true, monetary = MonetarySettings())
+    val cfg = ProtocolConfig(testnet = true, "", monetary = MonetarySettings())
 
-    val service = new AddressesServiceIOImpl[IO](xa, offChainStore, ec, cfg)
+    val service = new AddressesServiceImpl[IO](xa, offChainStore, ec, cfg)
 
     val random = Random.shuffle(outputs).head.address
 
@@ -55,10 +55,9 @@ class AddressesServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
         .sum
       val tokensBalance = outputs
         .filter(o => o.address == random && !inputsBoxIds.contains(o.boxId))
-        .flatMap(_.encodedAssets.toList)
         .foldLeft(Map.empty[String, Long]) {
-          case (acc, (assetId, assetAmt)) =>
-            acc.updated(assetId, acc.getOrElse(assetId, 0L) + assetAmt)
+          case (acc, _) =>
+            acc
         }
       val assets = tokensBalance.map(x => ApiAsset(x._1, x._2)).toList
       AddressInfo(id, txsCount, totalReceived, balance, balance, assets, assets)

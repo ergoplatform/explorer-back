@@ -4,7 +4,10 @@ import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 
 /** Unconfirmed transactions pool.
   */
-final case class TransactionsPool(txs: Map[String, ApiTransaction], indexes: Map[String, List[String]]) {
+final case class TransactionsPool(
+  txs: Map[String, ApiTransaction],
+  indexes: Map[String, List[String]]
+) {
 
   def put(txs: List[ApiTransaction]): TransactionsPool =
     copy(this.txs ++ txs.map(x => x.id -> x), this.indexes ++ extractIndexes(txs))

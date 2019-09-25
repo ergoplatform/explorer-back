@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.{Encoder, Json}
 import io.circe.syntax._
-import org.ergoplatform.explorer.db.models.InputWithOutputInfo
+import org.ergoplatform.explorer.db.models.composite.ExtendedInput
 
 final case class InputInfo(
   id: String,
@@ -15,7 +15,7 @@ final case class InputInfo(
 
 object InputInfo {
 
-  def fromInputWithValue(i: InputWithOutputInfo) = InputInfo(
+  def fromExtendedInput(i: ExtendedInput) = InputInfo(
     i.input.boxId,
     i.input.proofBytes,
     i.value,

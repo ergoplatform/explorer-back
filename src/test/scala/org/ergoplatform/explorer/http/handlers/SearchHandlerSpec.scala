@@ -55,6 +55,10 @@ class SearchHandlerSpec extends HttpSpec {
   val addressService: AddressesService[IO] = new AddressesService[IO] {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = ???
     override def searchById(query: String): IO[List[String]] = IO.pure(address)
+    override def holdersAddresses(
+      assetId: String,
+      p: Paging
+    ): IO[List[String]] = ???
   }
 
   val minerService: MinerService[IO] = (_: String) => IO.pure(address)

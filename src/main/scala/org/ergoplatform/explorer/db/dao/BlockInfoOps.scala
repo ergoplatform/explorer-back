@@ -7,9 +7,11 @@ import doobie.util.fragment.Fragment
 import doobie.util.query.Query0
 import org.ergoplatform.explorer.db.models.BlockInfo
 
-object BlockInfoOps {
+object BlockInfoOps extends DaoOps {
 
   type SingleDataType = (Long, Long, String)
+
+  val tableName: String = "blocks_info"
 
   val fields: Seq[String] = Seq(
     "header_id",
@@ -33,12 +35,6 @@ object BlockInfoOps {
     "total_miners_reward",
     "total_coins_in_txs"
   )
-
-  val fieldsString: String = fields.mkString(", ")
-  val holdersString: String = fields.map(_ => "?").mkString(", ")
-  val insertSql = s"INSERT INTO blocks_info ($fieldsString) VALUES ($holdersString)"
-
-  val fieldsFr: Fragment = Fragment.const(fieldsString)
 
   def insert: Update[BlockInfo] = Update[BlockInfo](insertSql)
 

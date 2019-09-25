@@ -50,7 +50,7 @@ trait BlockService[F[_]] {
 
 }
 
-class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)(
+final class BlocksServiceImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)(
   implicit F: Monad[F],
   A: Async[F]
 ) extends BlockService[F] {
@@ -63,6 +63,7 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)(
   val adProofDao = new AdProofsDao
   val blockInfoDao = new BlockInfoDao
   val extensionDao = new BlockExtensionDao
+  val assetsDao = new AssetsDao
 
   override def getBlock(id: String): F[BlockSummaryInfo] =
     for {
@@ -126,11 +127,17 @@ class BlocksServiceIOImpl[F[_]](xa: Transactor[F], ec: ExecutionContext)(
           }
       }
       blockSize <- blockInfoDao.find(h.id).map(_.map(_.blockSize).getOrElse(0L))
-      is        <- inputDao.findAllByTxsIdWithValue(txsIds)
-      os        <- outputDao.findAllByTxsIdWithSpent(txsIds)
-      ad        <- adProofDao.find(h.id)
-      ext       <- extensionDao.getByHeaderId(h.id)
+      inputs    <- inputDao.findAllByTxsIdWithValue(txsIds)
+      outputs   <- outputDao.findAllByTxsIdWithSpent(txsIds)
+      outputsWithAssets <- outputs
+        .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
+        .sequence
+      ad  <- adProofDao.find(h.id)
+      ext <- extensionDao.getByHeaderId(h.id)
     } yield
-      BlockSummaryInfo(FullBlockInfo(h, txs, confirmations, is, os, ext, ad, blockSize), references)
+      BlockSummaryInfo(
+        FullBlockInfo(h, txs, confirmations, inputs, outputsWithAssets, ext, ad, blockSize),
+        references
+      )
 
 }

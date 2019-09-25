@@ -24,6 +24,11 @@ class AddressesHandlerSpec extends HttpSpec {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = IO.pure(addressInfo)
 
     override def searchById(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
+
+    override def holdersAddresses(
+      assetId: String,
+      p: Paging
+    ): IO[List[String]] = ???
   }
 
   val txServiceStub: TransactionsService[IO] = new TransactionsService[IO] {

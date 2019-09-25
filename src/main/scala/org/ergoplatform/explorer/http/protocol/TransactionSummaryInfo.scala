@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.{Encoder, Json}
 import io.circe.syntax._
 import org.ergoplatform.explorer.db.models._
+import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 
 final case class TransactionSummaryInfo(
   id: String,
@@ -19,15 +20,15 @@ final case class TransactionSummaryInfo(
 
 object TransactionSummaryInfo {
 
-  def fromDb(
+  def apply(
     tx: Transaction,
     height: Long,
-    confirmationsCount: Long = 0,
-    inputs: List[InputWithOutputInfo],
-    outputs: List[ExtendedOutput]
+    confirmationsCount: Long,
+    inputs: List[ExtendedInput],
+    outputs: List[(ExtendedOutput, List[Asset])]
   ): TransactionSummaryInfo = {
-    val totalFee = outputs.filter(_.output.ergoTree == "0101").map(_.output.value).sum
-    val feePerByte = if (tx.size == 0) { 0L } else { totalFee / tx.size }
+    val totalFee = outputs.filter(_._1.output.ergoTree == "0101").map(_._1.output.value).sum // todo: move "0101" to constants
+    val feePerByte = if (tx.size == 0) 0L else totalFee / tx.size
 
     TransactionSummaryInfo(
       id = tx.id,
@@ -35,8 +36,8 @@ object TransactionSummaryInfo {
       timestamp = tx.timestamp,
       confirmationsCount = confirmationsCount + 1L,
       size = tx.size,
-      inputs = inputs.map(InputInfo.fromInputWithValue),
-      outputs = outputs.map(OutputInfo.fromOutputWithSpent),
+      inputs = inputs.map(InputInfo.fromExtendedInput),
+      outputs = outputs.map(x => OutputInfo(x._1, x._2)),
       totalCoins = inputs.map(_.value.getOrElse(0L)).sum,
       totalFee = totalFee,
       feePerByte = feePerByte

@@ -2,7 +2,8 @@ package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
 import org.ergoplatform.explorer.db.PreparedDB
-import org.ergoplatform.explorer.db.models.{BlockInfo, Header, Miner, RawSearchBlock}
+import org.ergoplatform.explorer.db.models.composite.RawSearchBlock
+import org.ergoplatform.explorer.db.models.{BlockInfo, Header, Miner}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class BlockListDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
