@@ -16,6 +16,8 @@ final class InfoHandler(ss: StatsService[IO]) extends RouteHandler {
     ss.findBlockchainInfo
   }
 
+  // This is special method producing `text/plain` response required for exchanges.
+  // Do not change it!
   def totalSupply: Route = (path("supply") & get) {
     onSuccess(ss.findBlockchainInfo.unsafeToFuture())(
       result => complete(HttpEntity(result.supply.toString))
