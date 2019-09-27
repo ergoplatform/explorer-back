@@ -4,6 +4,7 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
+import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.services.StatsService
 
 final class InfoHandler(ss: StatsService[IO]) extends RouteHandler {
@@ -20,7 +21,15 @@ final class InfoHandler(ss: StatsService[IO]) extends RouteHandler {
   // Do not change it!
   def totalSupply: Route = (path("supply") & get) {
     onSuccess(ss.findBlockchainInfo.unsafeToFuture())(
-      result => complete(HttpEntity(result.supply.toString))
+      result =>
+        complete(
+          HttpEntity(
+            BigDecimal
+              .apply(result.supply.toDouble / Constants.CoinsInOneErgo)
+              .setScale(Constants.ErgoDecimalPlacesNum)
+              .toString()
+          )
+      )
     )
   }
 
