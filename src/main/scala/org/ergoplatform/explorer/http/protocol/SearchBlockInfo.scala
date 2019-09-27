@@ -2,7 +2,7 @@ package org.ergoplatform.explorer.http.protocol
 
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.ergoplatform.explorer.db.models.RawSearchBlock
+import org.ergoplatform.explorer.db.models.composite.RawSearchBlock
 
 final case class SearchBlockInfo(
   id: String,

@@ -15,7 +15,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    val (h, info, tx, inputs, outputs, _) = PreparedData.data
+    val (h, info, tx, inputs, outputs, _, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao
@@ -25,7 +25,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     val now = System.currentTimeMillis()
 
-    val protocolConfig = ProtocolConfig(testnet = true, MonetarySettings())
+    val protocolConfig = ProtocolConfig(testnet = true, "", MonetarySettings())
 
     hDao.insertMany(h.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
     tDao.insertMany(tx.map(_.copy(timestamp = now + 1L))).transact(xa).unsafeRunSync()
@@ -33,7 +33,7 @@ class StatsServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
     infoDao.insertMany(info.map(_.copy(timestamp = now))).transact(xa).unsafeRunSync()
 
-    val service = new StatsServiceIOImpl[IO](protocolConfig)(xa, ec)
+    val service = new StatsServiceImpl[IO](protocolConfig)(xa, ec)
 
     val expected1 = StatsSummary(
       blocksCount = 21L,

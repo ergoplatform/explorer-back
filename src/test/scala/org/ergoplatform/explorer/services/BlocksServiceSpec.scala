@@ -5,14 +5,10 @@ import doobie.implicits._
 import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.db.dao._
-import org.ergoplatform.explorer.db.models.{BlockExtension, ExtendedOutput, InputWithOutputInfo}
+import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
+import org.ergoplatform.explorer.db.models.{Asset, BlockExtension}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
-import org.ergoplatform.explorer.http.protocol.{
-  BlockReferencesInfo,
-  BlockSummaryInfo,
-  FullBlockInfo,
-  TransactionInfo
-}
+import org.ergoplatform.explorer.http.protocol.{BlockReferencesInfo, BlockSummaryInfo, FullBlockInfo, TransactionInfo}
 import org.ergoplatform.explorer.utils.{Desc, Paging, Sorting}
 import org.scalactic.Equality
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -50,7 +46,7 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    val (h, info, tx, inputs, outputs, _) = PreparedData.data
+    val (h, info, tx, inputs, outputs, _, _) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao
@@ -78,14 +74,14 @@ class BlocksServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
     val inputsWithOutputInfo = inputs
       .map { i =>
         val oOpt = outputs.find(_.boxId == i.boxId)
-        InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
+        ExtendedInput(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
       }
 
     val outputsWithSpentTx = outputs.map { o =>
-      ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)
+      ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> List.empty[Asset]
     }
 
-    val service = new BlocksServiceIOImpl[IO](xa, ec)
+    val service = new BlocksServiceImpl[IO](xa, ec)
 
     val randomBlockId = Random.shuffle(h).head.id
     val fromService1 = service.getBlock(randomBlockId).unsafeRunSync()

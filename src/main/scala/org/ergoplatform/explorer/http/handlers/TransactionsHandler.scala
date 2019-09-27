@@ -6,7 +6,7 @@ import cats.effect.IO
 import io.circe.Json
 import org.ergoplatform.explorer.services.TransactionsService
 
-class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler {
+final class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler {
 
   val route: Route = pathPrefix("transactions") {
     submitTransaction ~

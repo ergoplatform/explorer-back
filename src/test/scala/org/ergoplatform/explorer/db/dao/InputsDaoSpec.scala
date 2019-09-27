@@ -1,8 +1,9 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
+import org.ergoplatform.explorer.db.models.composite
+import org.ergoplatform.explorer.db.models.composite.ExtendedInput
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
-import org.ergoplatform.explorer.db.models.InputWithOutputInfo
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
@@ -10,7 +11,7 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
   it should "insert and find" in new {
     val dao = new InputsDao
 
-    val (headers, _, txs, inputs, outputs, _) = PreparedData.data
+    val (headers, _, txs, inputs, outputs, _, _) = PreparedData.data
 
     val head = inputs.head
     val tail = inputs.tail
@@ -39,7 +40,7 @@ class InputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with P
       val v = oOpt.map(_.value)
       val otxid = oOpt.map(_.txId)
       val hash = oOpt.map(_.address)
-      InputWithOutputInfo(i, v, otxid, hash)
+      composite.ExtendedInput(i, v, otxid, hash)
     }
 
     val fromDb = dao.findAllByTxsIdWithValue(txs.map(_.id)).transact(xa).unsafeRunSync()

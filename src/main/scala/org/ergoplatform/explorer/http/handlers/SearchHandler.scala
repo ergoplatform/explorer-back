@@ -4,9 +4,14 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import org.ergoplatform.explorer.http.protocol.SearchInfo
-import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
+import org.ergoplatform.explorer.services.{
+  AddressesService,
+  BlockService,
+  MinerService,
+  TransactionsService
+}
 
-class SearchHandler(
+final class SearchHandler(
   blockService: BlockService[IO],
   transactionService: TransactionsService[IO],
   addressService: AddressesService[IO],

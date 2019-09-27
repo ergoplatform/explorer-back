@@ -20,7 +20,7 @@ class MinerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
 
     dao.insertMany(List(miner1, miner2)).transact(xa).unsafeRunSync()
 
-    val service = new MinerServiceIOImpl[IO](xa, ec)
+    val service = new MinerServiceImpl[IO](xa, ec)
 
     service.searchAddress("01111").unsafeRunSync() should contain theSameElementsAs List(
       miner1,

@@ -1,7 +1,7 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.ConnectionIO
-import org.ergoplatform.explorer.db.models.RawSearchBlock
+import org.ergoplatform.explorer.db.models.composite.RawSearchBlock
 
 class BlockListDao {
 

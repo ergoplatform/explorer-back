@@ -5,8 +5,9 @@ import cats.effect.concurrent.Ref
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.Config
-import org.ergoplatform.explorer.db.dao.{HeadersDao, InputsDao, OutputsDao, TransactionsDao}
-import org.ergoplatform.explorer.db.models.{ExtendedOutput, InputWithOutputInfo}
+import org.ergoplatform.explorer.db.dao.{AssetsDao, HeadersDao, InputsDao, OutputsDao, TransactionsDao}
+import org.ergoplatform.explorer.db.models.{Asset, Output}
+import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.ergoplatform.explorer.http.protocol.{TransactionInfo, TransactionSummaryInfo}
 import org.ergoplatform.explorer.persistence.TransactionsPool
@@ -54,39 +55,45 @@ class TransactionsServiceSpec
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    val (h, _, tx, inputs, outputs, _) = PreparedData.data
+    val (h, _, tx, inputs, outputs, _, assets) = PreparedData.data
 
     val hDao = new HeadersDao
     val tDao = new TransactionsDao
     val iDao = new InputsDao
     val oDao = new OutputsDao
+    val aDao = new AssetsDao
 
     hDao.insertMany(h).transact(xa).unsafeRunSync()
     tDao.insertMany(tx).transact(xa).unsafeRunSync()
     oDao.insertMany(outputs).transact(xa).unsafeRunSync()
     iDao.insertMany(inputs).transact(xa).unsafeRunSync()
+    aDao.insertMany(assets).transact(xa).unsafeRunSync()
 
     val inputsWithOutputInfo = inputs
       .map { i =>
         val oOpt = outputs.find(_.boxId == i.boxId)
-        InputWithOutputInfo(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
+        ExtendedInput(i, oOpt.map(_.value), oOpt.map(_.txId), oOpt.map(_.address))
       }
 
     val outputsWithSpentTx = outputs
-      .map { o =>
-        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true)
+      .foldLeft(List.empty[(Output, List[Asset])]) { case (acc, out) =>
+        val outAssets = assets.filter(_.boxId == out.boxId).reverse
+        acc :+ (out -> outAssets)
       }
+      .map { case (o, assets) =>
+        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> assets
+      }.reverse
 
     val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
-    val service = new TransactionsServiceIOImpl[IO](xa, offChainStore, ec, cfg)
+    val service = new TransactionsServiceImpl[IO](xa, offChainStore, ec, cfg)
 
     val randomTx1 = Random.shuffle(tx).head
     val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)
     val currentHeight = h.map(_.height).max
     val is = inputsWithOutputInfo.filter(_.input.txId == randomTx1.id)
-    val os = outputsWithSpentTx.filter(_.output.txId == randomTx1.id)
-    val expected1 = TransactionSummaryInfo.fromDb(randomTx1, height, currentHeight - height, is, os)
+    val os = outputsWithSpentTx.filter(_._1.output.txId == randomTx1.id)
+    val expected1 = TransactionSummaryInfo.apply(randomTx1, height, currentHeight - height, is, os)
 
     val fromService1 = service.getTxInfo(randomTx1.id).unsafeRunSync()
 
@@ -111,7 +118,7 @@ class TransactionsServiceSpec
       val confirmations = relatedTxs.map { tx =>
         tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L)
       }
-      TransactionInfo.extractInfo(
+      TransactionInfo.fromBatch(
         relatedTxs,
         confirmations,
         inputsWithOutputInfo,

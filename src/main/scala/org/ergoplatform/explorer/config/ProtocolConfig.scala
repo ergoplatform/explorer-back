@@ -5,7 +5,11 @@ import org.ergoplatform.explorer.Constants
 import org.ergoplatform.mining.emission.EmissionRules
 import org.ergoplatform.settings.MonetarySettings
 
-final case class ProtocolConfig(testnet: Boolean, monetary: MonetarySettings) {
+final case class ProtocolConfig(
+  testnet: Boolean,
+  genesisAddress: String,
+  monetary: MonetarySettings
+) {
 
   val emission = new EmissionRules(monetary)
 

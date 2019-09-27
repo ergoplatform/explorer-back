@@ -349,6 +349,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/FullAddress'
 
+  '/addresses/assetHolders/{id}':
+    parameters:
+      - name: id
+        description: Asset ID
+        required: true
+        in: path
+        schema:
+          $ref: '#/components/schemas/Digest32'
+    get:
+      summary: Get addresses holding an asset with a given id
+      tags:
+        - addresses
+      parameters:
+        - name: offset
+          in: query
+          description: Offset
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                description: Array of addresses
+                type: array
+                items:
+                  $ref: '#/components/schemas/AddressId'
+
   '/addresses/{id}/transactions':
     parameters:
       - name: id
@@ -431,6 +465,20 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/BlockchainInfo'
+
+  '/info/supply':
+    get:
+      summary: Get current supply
+      tags:
+        - statistics
+      responses:
+        '200':
+          description: Ok
+          content:
+            'text/plain':
+              schema:
+                type: integer
+                example: 55275000000000
 
   '/stats':
     get:

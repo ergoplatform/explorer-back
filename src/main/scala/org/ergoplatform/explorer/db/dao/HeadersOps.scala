@@ -4,7 +4,9 @@ import doobie._
 import doobie.implicits._
 import org.ergoplatform.explorer.db.models.Header
 
-object HeadersOps {
+object HeadersOps extends DaoOps {
+
+  val tableName: String = "node_headers"
 
   val fields: Seq[String] = Seq(
     "id",
@@ -25,14 +27,6 @@ object HeadersOps {
     "votes",
     "main_chain"
   )
-
-  val fieldsString: String = fields.mkString(", ")
-  val holdersString: String = fields.map(_ => "?").mkString(", ")
-  val updateString: String = fields.map(f => s"$f = ?").mkString(", ")
-
-  val fieldsFr: Fragment = Fragment.const(fields.mkString(", "))
-  val insertSql = s"INSERT INTO node_headers($fieldsString) VALUES ($holdersString)"
-  val updateByIdSql = s"UPDATE node_headers SET $updateString WHERE id = ?"
 
   def select(id: String): Query0[Header] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_headers WHERE id = $id;").query[Header]

@@ -2,7 +2,6 @@ package org.ergoplatform.explorer.grabber.db
 
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
-import io.circe.syntax._
 import org.ergoplatform._
 import org.ergoplatform.explorer.config.ProtocolConfig
 import org.ergoplatform.explorer.db.mappings.JsonMeta
@@ -13,19 +12,20 @@ class DBHelper(networkConfig: ProtocolConfig) extends JsonMeta {
 
   implicit val addressEncoder: ErgoAddressEncoder = networkConfig.addressEncoder
 
-  def writeOne(fullBlock: ApiFullBlock): ConnectionIO[Int] =
+  def writeOne(fullBlock: ApiFullBlock): ConnectionIO[Unit] =
     for {
-      hInt <- HeaderWriter.insert(fullBlock.header)
-      txInt <- TransactionWriter.insertMany(
+      _ <- HeaderWriter.insert(fullBlock.header)
+      _ <- TransactionWriter.insertMany(
         btToDb(fullBlock.transactions, fullBlock.header.timestamp)
       )
-      isInt <- InputWriter.insertMany(btToInputs(fullBlock.transactions))
-      osInt <- OutputWriter.insertMany(
+      _ <- InputWriter.insertMany(btToInputs(fullBlock.transactions))
+      _ <- OutputWriter.insertMany(
         btToOutputs(fullBlock.transactions, fullBlock.header.timestamp)
       )
-      adInt <- AdProofsWriter.insertMany(nfbToAd(fullBlock))
-      exInt <- BlockExtensionWriter.insert(fullBlock.extension)
-    } yield hInt + txInt + isInt + osInt + adInt + exInt
+      _ <- AssetsWriter.insertMany(btToAssets(fullBlock.transactions))
+      _ <- AdProofsWriter.insertMany(nfbToAd(fullBlock))
+      _ <- BlockExtensionWriter.insert(fullBlock.extension)
+    } yield ()
 
   def btToDb(bt: ApiBlockTransactions, ts: Long): List[TransactionWriter.ToInsert] = {
     val txs = bt.transactions
@@ -63,7 +63,6 @@ class DBHelper(networkConfig: ProtocolConfig) extends JsonMeta {
             index,
             o.ergoTree,
             address,
-            o.assets.asJson,
             o.additionalRegisters,
             ts
           )
@@ -78,6 +77,13 @@ class DBHelper(networkConfig: ProtocolConfig) extends JsonMeta {
     bt.transactions.flatMap { tx =>
       nodeOutputsToDb(tx.id, tx.outputs, ts)
     }
+
+  def btToAssets(bt: ApiBlockTransactions): List[AssetsWriter.ToInsert] =
+    for {
+      tx <- bt.transactions
+      out <- tx.outputs
+      assets <- out.assets
+    } yield (assets.tokenId, out.boxId, assets.amount)
 
   def nfbToAd(nfb: ApiFullBlock): List[AdProofsWriter.ToInsert] = nfb.adProofs.toList.map { ad =>
     (ad.headerId, ad.proofBytes, ad.digest)

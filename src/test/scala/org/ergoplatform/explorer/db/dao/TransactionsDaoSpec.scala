@@ -15,7 +15,7 @@ class TransactionsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
     val hDao = new HeadersDao
     val oDao = new OutputsDao
 
-    val (headers, _, txs, inputs, outputs, _) = PreparedData.data
+    val (headers, _, txs, inputs, outputs, _, _) = PreparedData.data
 
     hDao.insertMany(headers).transact(xa).unsafeRunSync()
 

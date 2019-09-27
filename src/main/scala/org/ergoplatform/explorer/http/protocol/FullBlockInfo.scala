@@ -3,6 +3,7 @@ package org.ergoplatform.explorer.http.protocol
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.ergoplatform.explorer.db.models._
+import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 
 final case class FullBlockInfo(
   headerInfo: HeaderInfo,
@@ -19,13 +20,13 @@ object FullBlockInfo {
     h: Header,
     txs: List[Transaction],
     confirmations: List[(String, Long)],
-    inputs: List[InputWithOutputInfo],
-    outputs: List[ExtendedOutput],
+    inputs: List[ExtendedInput],
+    outputs: List[(ExtendedOutput, List[Asset])],
     extension: BlockExtension,
     adProof: Option[AdProof],
     blockSize: Long
   ): FullBlockInfo = {
-    val txsInfo = TransactionInfo.extractInfo(txs, confirmations, inputs, outputs)
+    val txsInfo = TransactionInfo.fromBatch(txs, confirmations, inputs, outputs)
     val headerInfo = HeaderInfo(h, blockSize)
     val adProofInfo = adProof.map { AdProofInfo.apply }
     new FullBlockInfo(headerInfo, txsInfo, extension, adProofInfo)

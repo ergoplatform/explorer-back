@@ -11,7 +11,7 @@ trait Config {
 
   val httpConfig = HttpConfig()
 
-  val protocolConfig = ProtocolConfig(testnet = true, MonetarySettings())
+  val protocolConfig = ProtocolConfig(testnet = true, "", MonetarySettings())
 
   val cfg = ExplorerConfig(dbConfig, httpConfig, grabberConfig, protocolConfig)
 

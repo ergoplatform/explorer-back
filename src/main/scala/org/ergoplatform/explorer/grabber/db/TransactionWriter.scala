@@ -1,9 +1,11 @@
 package org.ergoplatform.explorer.grabber.db
 
+import org.ergoplatform.explorer.db.dao.{DaoOps, TransactionsOps}
+
 object TransactionWriter  extends BasicWriter {
 
   type ToInsert = (String, String, Boolean, Long, Long)
 
-  val insertSql = "INSERT INTO node_transactions (id, header_id, coinbase, timestamp, size) VALUES (?, ?, ?, ?, ?)"
+  val ops: DaoOps = TransactionsOps
 
 }
