@@ -28,4 +28,8 @@ object Constants {
     Base16.encode(script.bytes)
   }
 
+  val CoinsInOneErgo: Long = 1000000000L
+
+  val ErgoDecimalPlacesNum: Int = 9
+
 }
