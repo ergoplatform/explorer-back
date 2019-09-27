@@ -8,7 +8,7 @@ final case class AssetInfo(assetId: String, amount: Long)
 object AssetInfo {
   implicit val encoder: Encoder[AssetInfo] = { ai =>
     Json.obj(
-      "assetId" -> ai.assetId.asJson,
+      "tokenId" -> ai.assetId.asJson,
       "amount"  -> ai.amount.asJson
     )
   }
