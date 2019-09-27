@@ -477,8 +477,8 @@ paths:
           content:
             'text/plain':
               schema:
-                type: integer
-                example: 55275000000000
+                type: number
+                example: 55275.000000000
 
   '/stats':
     get:
