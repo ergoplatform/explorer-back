@@ -18,9 +18,7 @@ final case class ApiNodeInfo(
   fullHeight: Long,
   headersHeight: Long,
   stateVersion: String,
-  fullBlocksScore: Long,
   launchTime: Long,
-  headersScore: Long,
   isMining: Boolean
 )
 
