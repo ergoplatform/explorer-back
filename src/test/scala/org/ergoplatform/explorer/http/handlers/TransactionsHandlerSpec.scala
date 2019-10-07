@@ -26,6 +26,8 @@ class TransactionsHandlerSpec extends HttpSpec {
 
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(infoResp)
 
+    override def getTxsSince(height: Int, p: Paging): IO[List[TransactionInfo]] = ???
+
     override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = ???
 
     override def countTxsByAddressId(addressId: String): IO[Long] = ???

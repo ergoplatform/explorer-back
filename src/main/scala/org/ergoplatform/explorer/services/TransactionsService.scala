@@ -18,7 +18,11 @@ import org.ergoplatform.explorer.db.dao._
 import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.db.models.{Asset, Transaction}
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
-import org.ergoplatform.explorer.http.protocol.{OutputInfo, TransactionInfo, TransactionSummaryInfo}
+import org.ergoplatform.explorer.http.protocol.{
+  OutputInfo,
+  TransactionInfo,
+  TransactionSummaryInfo
+}
 import org.ergoplatform.explorer.persistence.TransactionsPool
 import org.ergoplatform.explorer.utils.Paging
 import scalaj.http.Http
@@ -40,15 +44,23 @@ trait TransactionsService[F[_]] {
 
   def getTxsByAddressId(addressId: String, p: Paging): F[List[TransactionInfo]]
 
+  def getTxsSince(height: Int, p: Paging): F[List[TransactionInfo]]
+
   def countTxsByAddressId(addressId: String): F[Long]
 
   def searchByIdSubstr(substring: String): F[List[String]]
 
   def getOutputById(id: String): F[OutputInfo]
 
-  def getOutputsByAddress(address: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
+  def getOutputsByAddress(
+    address: String,
+    unspentOnly: Boolean = false
+  ): F[List[OutputInfo]]
 
-  def getOutputsByErgoTree(ergoTree: String, unspentOnly: Boolean = false): F[List[OutputInfo]]
+  def getOutputsByErgoTree(
+    ergoTree: String,
+    unspentOnly: Boolean = false
+  ): F[List[OutputInfo]]
 
   def submitTransaction(tx: Json): F[Json]
 
@@ -75,7 +87,9 @@ final class TransactionsServiceImpl[F[_]](
       _.get(id)
         .fold[F[ApiTransaction]](
           M.raiseError(
-            new NoSuchElementException(s"Cannot find unconfirmed transaction with id = $id")
+            new NoSuchElementException(
+              s"Cannot find unconfirmed transaction with id = $id"
+            )
           )
         )(F.pure)
     }
@@ -91,6 +105,26 @@ final class TransactionsServiceImpl[F[_]](
       _      <- Async.shift[F](ec)
       result <- getTxsByAddressIdResult(addressId, p)
     } yield result
+
+  override def getTxsSince(
+    height: Int,
+    p: Paging
+  ): F[List[TransactionInfo]] =
+    for {
+      _      <- Async.shift[F](ec)
+      result <- getTxsSinceResult(height, p)
+    } yield result
+
+  private def getTxsSinceResult(
+    height: Int,
+    p: Paging
+  ): F[List[TransactionInfo]] = {
+    val txn = for {
+      txs     <- transactionsDao.getTxsSince(height, p.offset, p.limit)
+      txsInfo <- txs.map(getTxInfoByTransactions).sequence
+    } yield txsInfo
+    txn.transact(xa)
+  }
 
   override def countTxsByAddressId(addressId: String): F[Long] =
     for {
@@ -115,11 +149,13 @@ final class TransactionsServiceImpl[F[_]](
   ): F[List[OutputInfo]] = {
     val txn = for {
       outputs <- if (unspentOnly) outputsDao.findUnspentByAddress(address)
-                 else outputsDao.findAllByAddress(address)
+      else outputsDao.findAllByAddress(address)
       outputsWithAssets <- outputs
         .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
         .sequence
-      outputsInfo = outputsWithAssets.map { case (outs, assets) => OutputInfo(outs, assets) }
+      outputsInfo = outputsWithAssets.map {
+        case (outs, assets) => OutputInfo(outs, assets)
+      }
     } yield outputsInfo
     txn.transact(xa)
   }
@@ -130,11 +166,13 @@ final class TransactionsServiceImpl[F[_]](
   ): F[List[OutputInfo]] = {
     val txn = for {
       outputs <- if (unspentOnly) outputsDao.findUnspentByErgoTree(ergoTree)
-                 else outputsDao.findAllByErgoTree(ergoTree)
+      else outputsDao.findAllByErgoTree(ergoTree)
       outputsWithAssets <- outputs
         .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
         .sequence
-      outputsInfo = outputsWithAssets.map { case (outs, assets) => OutputInfo(outs, assets) }
+      outputsInfo = outputsWithAssets.map {
+        case (outs, assets) => OutputInfo(outs, assets)
+      }
     } yield outputsInfo
     txn.transact(xa)
   }
@@ -182,7 +220,10 @@ final class TransactionsServiceImpl[F[_]](
       info = TransactionSummaryInfo(tx, h, currentHeight - h, is, os)
     } yield info).transact(xa)
 
-  private def getTxsByAddressIdResult(addressId: String, p: Paging): F[List[TransactionInfo]] =
+  private def getTxsByAddressIdResult(
+    addressId: String,
+    p: Paging
+  ): F[List[TransactionInfo]] =
     (for {
       txs     <- transactionsDao.getTxsByAddressId(addressId, p.offset, p.limit)
       txsInfo <- txs.map(getTxInfoByTransactions).sequence
@@ -200,7 +241,8 @@ final class TransactionsServiceImpl[F[_]](
   private def getTxsCountByAddressIdResult(addressId: String): F[Long] =
     transactionsDao.countTxsByAddressId(addressId).transact(xa)
 
-  private val requestParser: (Int, Map[String, IndexedSeq[String]], InputStream) => F[Json] =
+  private val requestParser
+    : (Int, Map[String, IndexedSeq[String]], InputStream) => F[Json] =
     (code, _, is) =>
       code match {
         case 200 =>
@@ -215,7 +257,9 @@ final class TransactionsServiceImpl[F[_]](
         case _ =>
           val msg = Source.fromInputStream(is, "UTF8").mkString
           M.raiseError(
-            new IllegalStateException(s"Request has been failed with code $code, and message $msg")
+            new IllegalStateException(
+              s"Request has been failed with code $code, and message $msg"
+            )
           )
     }
 

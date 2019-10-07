@@ -15,9 +15,9 @@ class AddressesHandlerSpec extends HttpSpec {
   val addressInfo = AddressInfo("test", 1L, 2L, 3L, 4L, List.empty, List.empty)
 
   val txs = List(
-    TransactionInfo("test1", 0L, 1L, List.empty, List.empty),
-    TransactionInfo("test2", 0L, 1L, List.empty, List.empty),
-    TransactionInfo("test3", 0L, 1L, List.empty, List.empty)
+    TransactionInfo("test1", "", 0L, 1L, List.empty, List.empty),
+    TransactionInfo("test2", "", 0L, 1L, List.empty, List.empty),
+    TransactionInfo("test3", "", 0L, 1L, List.empty, List.empty)
   )
 
   val addressServiceStub: AddressesService[IO] = new AddressesService[IO] {
@@ -35,6 +35,8 @@ class AddressesHandlerSpec extends HttpSpec {
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(
       TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
     )
+
+    override def getTxsSince(height: Int, p: Paging): IO[List[TransactionInfo]] = ???
 
     override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] =
       IO.pure(txs)

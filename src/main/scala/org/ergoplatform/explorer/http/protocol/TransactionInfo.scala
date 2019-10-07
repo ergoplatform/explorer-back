@@ -7,6 +7,7 @@ import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOut
 
 final case class TransactionInfo(
   id: String,
+  headerId: String,
   timestamp: Long,
   confirmationsQty: Long,
   inputs: List[InputInfo],
@@ -44,7 +45,7 @@ object TransactionInfo {
         .find(_._1 == id)
         .map(_._2)
         .getOrElse(0L)
-      apply(id, ts, confirmationCount, relatedInputs, relatedOutputs)
+      apply(id, tx.headerId, ts, confirmationCount, relatedInputs, relatedOutputs)
     }
 
   def apply(
@@ -58,12 +59,20 @@ object TransactionInfo {
       case (out, assets) =>
         OutputInfo(out, assets)
     }
-    new TransactionInfo(tx.id, tx.timestamp, confirmationsQty, inputsInfo, outputsInfo)
+    new TransactionInfo(
+      tx.id,
+      tx.headerId,
+      tx.timestamp,
+      confirmationsQty,
+      inputsInfo,
+      outputsInfo
+    )
   }
 
   implicit val encoder: Encoder[TransactionInfo] = { tx =>
     Json.obj(
       "id"                 -> Json.fromString(tx.id),
+      "headerId"           -> Json.fromString(tx.headerId),
       "timestamp"          -> Json.fromLong(tx.timestamp),
       "confirmationsCount" -> Json.fromLong(tx.confirmationsQty),
       "inputs"             -> tx.inputs.asJson,

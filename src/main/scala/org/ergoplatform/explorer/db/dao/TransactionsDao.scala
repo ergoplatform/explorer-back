@@ -38,7 +38,8 @@ class TransactionsDao {
   def countTxsByAddressId(addressId: String): ConnectionIO[Long] =
     TransactionsOps.countTxsByAddressId(addressId).unique
 
-  def find(id: String): ConnectionIO[Option[Transaction]] = TransactionsOps.select(id).option
+  def find(id: String): ConnectionIO[Option[Transaction]] =
+    TransactionsOps.select(id).option
 
   def get(id: String): ConnectionIO[Transaction] = find(id).flatMap {
     case Some(t) => t.pure[ConnectionIO]
@@ -48,12 +49,23 @@ class TransactionsDao {
       )
   }
 
-  /** Search transaction identifiers by the fragment of the identifier */
+  /** Search transaction identifiers by the fragment of the identifier
+    */
   def searchById(substring: String): ConnectionIO[List[String]] = {
     TransactionsOps.searchById(substring).to[List]
   }
 
-  def countTxsSince(ts: Long): ConnectionIO[Long] = TransactionsOps.txsSince(ts).unique
+  /** Get all transactions appeared in the main-chain after given height.
+    */
+  def getTxsSince(
+    height: Int,
+    offset: Int = 0,
+    limit: Int = 20
+  ): ConnectionIO[List[Transaction]] =
+    TransactionsOps.getTxsSince(height, offset, limit).to[List]
+
+  def countTxsSince(ts: Long): ConnectionIO[Long] =
+    TransactionsOps.countTxsSince(ts).unique
 
   def txsHeights(ids: NonEmptyList[String]): ConnectionIO[List[(String, Long)]] =
     TransactionsOps.txsHeight(ids).to[List]

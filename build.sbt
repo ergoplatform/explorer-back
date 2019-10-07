@@ -2,12 +2,14 @@ organization := "org.ergoplatform"
 
 name := "ergo-explorer"
 
-version := "1.0.0"
+version := "1.0.1"
 
 scalaVersion := "2.12.10"
 
 resolvers += Resolver.bintrayRepo("hseeberger", "maven")
-resolvers ++= Seq("Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
+resolvers ++= Seq(
+  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+)
 
 lazy val doobieVersion = "0.8.2"
 lazy val akkaHttpVersion = "10.1.1"
@@ -23,43 +25,43 @@ lazy val doobieDeps = Seq(
 
 lazy val catsDeps = Seq(
   "org.typelevel" %% "cats-effect" % "1.4.0",
-  "org.typelevel" %% "cats-core" % "1.6.1"
+  "org.typelevel" %% "cats-core"   % "1.6.1"
 )
 
 lazy val loggingDeps = Seq(
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
+  "ch.qos.logback"              % "logback-classic" % "1.2.3",
+  "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.0"
 )
 
 lazy val akkaDeps = Seq(
-  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-stream"       % akkaVersion,
+  "com.typesafe.akka" %% "akka-http"         % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
 )
 
 lazy val otherDeps = Seq(
-  "com.github.pureconfig" %% "pureconfig" % "0.9.1",
-  "org.scorexfoundation" %% "scrypto" % "2.1.1",
-  "de.heikoseeberger" %% "akka-http-circe" % "1.20.1",
-  "org.scalaj" %% "scalaj-http" % "2.4.0",
-  "org.flywaydb" % "flyway-core" % "5.1.1",
-  "com.github.blemale" %% "scaffeine" % "2.5.0",
-  ("org.scorexfoundation" %% "sigma-state" % "master-2b4b07a1-SNAPSHOT")
+  "com.github.pureconfig" %% "pureconfig"      % "0.9.1",
+  "org.scorexfoundation"  %% "scrypto"         % "2.1.1",
+  "de.heikoseeberger"     %% "akka-http-circe" % "1.20.1",
+  "org.scalaj"            %% "scalaj-http"     % "2.4.0",
+  "org.flywaydb"           % "flyway-core"     % "5.1.1",
+  "com.github.blemale"    %% "scaffeine"       % "2.5.0",
+  ("org.scorexfoundation" %% "sigma-state"     % "master-2b4b07a1-SNAPSHOT")
     .exclude("ch.qos.logback", "logback-classic")
     .exclude("org.scorexfoundation", "scrypto"),
 )
 lazy val circeDeps = Seq(
-  "io.circe" %% "circe-core" % circeVersion,
-  "io.circe" %% "circe-parser" % circeVersion,
+  "io.circe" %% "circe-core"    % circeVersion,
+  "io.circe" %% "circe-parser"  % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion
 )
 
 lazy val testDeps = Seq(
-  "org.scalacheck" %% "scalacheck" % "1.14.0",
-  "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-  "org.testcontainers" % "postgresql" % "1.7.3" % Test,
-  "com.dimafeng" %% "testcontainers-scala" % "0.18.0" % Test
+  "org.scalacheck"    %% "scalacheck"           % "1.14.0",
+  "org.scalactic"     %% "scalactic"            % "3.0.5",
+  "org.scalatest"     %% "scalatest"            % "3.0.5"  % Test,
+  "org.testcontainers" % "postgresql"           % "1.7.3"  % Test,
+  "com.dimafeng"      %% "testcontainers-scala" % "0.18.0" % Test
 )
 
 libraryDependencies ++= (otherDeps ++ doobieDeps ++ catsDeps ++ loggingDeps ++ akkaDeps ++ circeDeps ++ testDeps)
@@ -78,7 +80,8 @@ flywaySqlMigrationSeparator := "__"
 
 scalacOptions ++= Seq(
   "-deprecation",
-  "-encoding", "UTF-8",
+  "-encoding",
+  "UTF-8",
   "-language:experimental.macros",
   "-language:higherKinds",
   "-language:postfixOps",
@@ -95,9 +98,9 @@ test in assembly := {}
 mainClass in assembly := Some("org.ergoplatform.explorer.App")
 
 assemblyMergeStrategy in assembly := {
-  case "logback.xml" => MergeStrategy.first
+  case "logback.xml"       => MergeStrategy.first
   case "module-info.class" => MergeStrategy.discard
-  case other => (assemblyMergeStrategy in assembly).value(other)
+  case other               => (assemblyMergeStrategy in assembly).value(other)
 }
 
 parallelExecution in Test := false
