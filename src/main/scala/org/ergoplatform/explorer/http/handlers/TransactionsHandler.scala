@@ -7,11 +7,11 @@ import io.circe.Json
 import org.ergoplatform.explorer.services.TransactionsService
 import org.ergoplatform.explorer.utils.Paging
 
-final class TransactionsHandler(service: TransactionsService[IO])
-  extends RouteHandler {
+final class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler {
 
   val route: Route = pathPrefix("transactions") {
     submitTransaction ~
+    getTxsSince ~
     getUnconfirmedByAddress ~
     getUnconfirmedTxById ~
     getUnconfirmed ~
