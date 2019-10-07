@@ -13,9 +13,11 @@ import scala.concurrent.duration.FiniteDuration
 
 /** Unconfirmed transactions pool monitoring service.
   */
-class OffChainGrabberService(txPoolRef: Ref[IO, TransactionsPool], config: ExplorerConfig)(
-  implicit protected val ec: ExecutionContext
-) extends LoopedIO {
+final class OffChainGrabberService(
+  txPoolRef: Ref[IO, TransactionsPool],
+  config: ExplorerConfig
+)(implicit protected val ec: ExecutionContext)
+  extends LoopedIO {
 
   protected val logger = Logger("off-chain-grabber-service")
 

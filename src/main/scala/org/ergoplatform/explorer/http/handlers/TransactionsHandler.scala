@@ -5,8 +5,10 @@ import akka.http.scaladsl.server.Route
 import cats.effect.IO
 import io.circe.Json
 import org.ergoplatform.explorer.services.TransactionsService
+import org.ergoplatform.explorer.utils.Paging
 
-final class TransactionsHandler(service: TransactionsService[IO]) extends RouteHandler {
+final class TransactionsHandler(service: TransactionsService[IO])
+  extends RouteHandler {
 
   val route: Route = pathPrefix("transactions") {
     submitTransaction ~
@@ -29,6 +31,11 @@ final class TransactionsHandler(service: TransactionsService[IO]) extends RouteH
     service.getTxInfo
   }
 
+  def getTxsSince: Route = (pathPrefix("since") & intSegment & get & paging) {
+    (height, offset, limit) =>
+      service.getTxsSince(height, Paging(offset, limit))
+  }
+
   def getUnconfirmedTxById: Route = (pathPrefix("unconfirmed") & get & base16Segment) {
     service.getUnconfirmedTxInfo
   }
@@ -46,13 +53,15 @@ final class TransactionsHandler(service: TransactionsService[IO]) extends RouteH
     service.getOutputById
   }
 
-  def getOutputsByErgoTree: Route = (pathPrefix("boxes" / "byErgoTree") & get & base16Segment) {
-    service.getOutputsByErgoTree(_)
-  }
+  def getOutputsByErgoTree: Route =
+    (pathPrefix("boxes" / "byErgoTree") & get & base16Segment) {
+      service.getOutputsByErgoTree(_)
+    }
 
-  def getOutputsByAddress: Route = (pathPrefix("boxes" / "byAddress") & get & base58Segment) {
-    service.getOutputsByAddress(_)
-  }
+  def getOutputsByAddress: Route =
+    (pathPrefix("boxes" / "byAddress") & get & base58Segment) {
+      service.getOutputsByAddress(_)
+    }
 
   def getUnspentOutputsByErgoTree: Route =
     (pathPrefix("boxes" / "byErgoTree" / "unspent") & get & base16Segment) {

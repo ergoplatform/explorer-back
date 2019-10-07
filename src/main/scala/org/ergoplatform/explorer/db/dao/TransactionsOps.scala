@@ -17,7 +17,9 @@ object TransactionsOps extends DaoOps {
     "size"
   )
 
-  def findAllByBlockId(blockId: String)(implicit r: Read[Transaction]): Query0[Transaction] =
+  def findAllByBlockId(
+    blockId: String
+  )(implicit r: Read[Transaction]): Query0[Transaction] =
     (fr"SELECT" ++ fieldsFr ++ fr"FROM node_transactions WHERE header_id = $blockId")
       .query[Transaction]
 
@@ -30,7 +32,7 @@ object TransactionsOps extends DaoOps {
   ): Query0[Transaction] =
     fr"""
         SELECT t.id, t.header_id, t.coinbase, t.timestamp, t.size
-        FROM node_transactions t LEFT JOIN node_headers h ON h.id  = t.header_id
+        FROM node_transactions t LEFT JOIN node_headers h ON h.id = t.header_id
         WHERE EXISTS (
           SELECT 1
           FROM node_outputs os
@@ -56,15 +58,24 @@ object TransactionsOps extends DaoOps {
          """.query[Long]
   }
 
+  def getTxsSince(height: Int, offset: Int, limit: Int): Query0[Transaction] =
+    (selectAllFr ++ fr"t LEFT JOIN" ++ HeadersOps.tableNameFr ++ fr"h ON h.id = t.header_id" ++
+    fr"WHERE h.height >= height AND h.main_chain = TRUE" ++
+    fr"ORDER BY t.timestamp DESC" ++
+    fr"OFFSET ${offset.toLong} LIMIT ${limit.toLong}")
+      .query[Transaction]
+
   def insert: Update[Transaction] = Update[Transaction](insertSql)
 
   def select(id: String): Query0[Transaction] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_transactions WHERE id = $id").query[Transaction]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM node_transactions WHERE id = $id")
+      .query[Transaction]
 
   def searchById(substring: String): Query0[String] =
-    fr"SELECT id FROM node_transactions WHERE id LIKE ${"%" + substring + "%"}".query[String]
+    fr"SELECT id FROM node_transactions WHERE id LIKE ${"%" + substring + "%"}"
+      .query[String]
 
-  def txsSince(ts: Long): Query0[Long] =
+  def countTxsSince(ts: Long): Query0[Long] =
     fr"SELECT count(*) FROM node_transactions WHERE timestamp >= $ts".query[Long]
 
   def txsHeight(ids: NonEmptyList[String]): Query0[(String, Long)] =

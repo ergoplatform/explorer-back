@@ -24,9 +24,9 @@ class BlocksHandlerSpec extends HttpSpec {
     HeaderInfo("1", "2", 1: Short, 2L, 100L, "a", "b", "c", 0L, 0L, 0L, "d", pow, "0000")
 
   val txs = List(
-    TransactionInfo("test1", 0L, 1L, List.empty, List.empty),
-    TransactionInfo("test2", 0L, 1L, List.empty, List.empty),
-    TransactionInfo("test3", 0L, 1L, List.empty, List.empty)
+    TransactionInfo("test1", "", 0L, 1L, List.empty, List.empty),
+    TransactionInfo("test2", "", 0L, 1L, List.empty, List.empty),
+    TransactionInfo("test3", "", 0L, 1L, List.empty, List.empty)
   )
 
   val extension = BlockExtension(

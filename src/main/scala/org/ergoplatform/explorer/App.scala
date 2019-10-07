@@ -1,6 +1,5 @@
 package org.ergoplatform.explorer
 
-import akka.actor.ActorSystem
 import cats.effect.concurrent.Ref
 import cats.effect.{Blocker, ExitCode, IO, IOApp, Resource}
 import cats.implicits._
