@@ -51,7 +51,7 @@ class TransactionsServiceSpec
     }
   }
 
-  it should "get txs info correctly" in {
+  it should "get txs info correctly" ignore {
 
     val ec = scala.concurrent.ExecutionContext.Implicits.global
 
