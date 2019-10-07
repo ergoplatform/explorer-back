@@ -59,8 +59,9 @@ object TransactionsOps extends DaoOps {
   }
 
   def getTxsSince(height: Int, offset: Int, limit: Int): Query0[Transaction] =
-    (selectAllFr ++ fr"t LEFT JOIN" ++ HeadersOps.tableNameFr ++ fr"h ON h.id = t.header_id" ++
-    fr"WHERE h.height >= height AND h.main_chain = TRUE" ++
+    (fr"SELECT" ++ allFieldsRefFr("t") ++ fr"FROM" ++ tableNameFr ++ fr"t" ++
+    fr"LEFT JOIN" ++ HeadersOps.tableNameFr ++ fr"h ON h.id = t.header_id" ++
+    fr"WHERE h.height >= $height AND h.main_chain = TRUE" ++
     fr"ORDER BY t.timestamp DESC" ++
     fr"OFFSET ${offset.toLong} LIMIT ${limit.toLong}")
       .query[Transaction]

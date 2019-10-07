@@ -134,6 +134,27 @@ class TransactionsServiceSpec
     val expected3 = tx.map(_.id).filter(_.contains(randomTxId2))
 
     fromService3 should contain theSameElementsAs expected3
+
+    val heightSince = 10
+
+    val fromService4 = service.getTxsSince(heightSince, Paging(0, 100)).unsafeRunSync()
+
+    val expected4 = {
+      val headersSince = h.filter(_.height >= heightSince)
+      val relatedTxs = tx.filter(x => headersSince.map(_.id).contains(x.headerId))
+      val height = h.map(_.height).max
+      val confirmations = relatedTxs.map { tx =>
+        tx.id -> (height - h.find(_.id == tx.headerId).get.height + 1L)
+      }
+      TransactionInfo.fromBatch(
+        relatedTxs,
+        confirmations,
+        inputsWithOutputInfo,
+        outputsWithSpentTx
+      )
+    }
+
+    fromService4 should contain theSameElementsAs expected4
   }
 
 }
