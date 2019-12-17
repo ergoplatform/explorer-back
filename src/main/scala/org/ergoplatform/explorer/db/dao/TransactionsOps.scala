@@ -31,17 +31,14 @@ object TransactionsOps extends DaoOps {
     implicit r: Read[Transaction]
   ): Query0[Transaction] =
     fr"""
-        SELECT t.id, t.header_id, t.coinbase, t.timestamp, t.size
-        FROM node_transactions t LEFT JOIN node_headers h ON h.id = t.header_id
-        WHERE EXISTS (
-          SELECT 1
-          FROM node_outputs os
-          FULL JOIN node_inputs i ON i.box_id = os.box_id
-          WHERE (os.tx_id = t.id AND os.address = $addressId)
-          OR (i.box_id = os.box_id AND i.tx_id = t.id AND os.address = $addressId)
-        ) AND h.main_chain = TRUE
-        ORDER BY t.timestamp DESC
-        OFFSET ${offset.toLong} LIMIT ${limit.toLong}
+        SELECT DISTINCT t.id, t.header_id, t.coinbase, t.timestamp, t.size
+            FROM node_outputs os
+            LEFT JOIN node_inputs inp ON inp.box_id = os.box_id
+            LEFT JOIN node_transactions t ON (os.tx_id = t.id OR inp.tx_id = t.id)
+            LEFT JOIN node_headers h ON  h.id = t.header_id
+            WHERE os.address = $addressId AND h.main_chain = TRUE
+            ORDER BY t.timestamp DESC
+            OFFSET ${offset.toLong} LIMIT ${limit.toLong}
       """.query[Transaction]
 
   def countTxsByAddressId(addressId: String): Query0[Long] = {
