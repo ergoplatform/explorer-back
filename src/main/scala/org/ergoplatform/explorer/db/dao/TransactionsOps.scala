@@ -43,15 +43,12 @@ object TransactionsOps extends DaoOps {
 
   def countTxsByAddressId(addressId: String): Query0[Long] = {
     fr"""
-         SELECT COUNT(t.id)
-         FROM node_transactions t LEFT JOIN node_headers h ON h.id  = t.header_id
-         WHERE EXISTS (
-           SELECT 1
-           FROM node_outputs os
-           FULL JOIN node_inputs i ON i.box_id = os.box_id
-           WHERE (os.tx_id = t.id AND os.address = $addressId)
-           OR (i.box_id = os.box_id AND i.tx_id = t.id AND os.address = $addressId)
-         ) AND h.main_chain = TRUE
+         SELECT COUNT(DISTINCT t.id)
+            FROM node_outputs os
+            LEFT JOIN node_inputs inp ON inp.box_id = os.box_id
+            LEFT JOIN node_transactions t ON (os.tx_id = t.id OR inp.tx_id = t.id)
+            LEFT JOIN node_headers h ON  h.id = t.header_id
+            WHERE os.address = $addressId AND h.main_chain = TRUE
          """.query[Long]
   }
 
