@@ -5,8 +5,17 @@ import org.ergoplatform.explorer.db.models.composite
 import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import scorex.util.encode.Base16
+import sigmastate.serialization.{ErgoTreeSerializer, SigmaSerializer}
 
 class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
+
+  private def ergoTreeRootBytes(ergoTree: String): String =
+    Base16.encode(
+      (new ErgoTreeSerializer).deserializeHeaderWithTreeBytes(
+        SigmaSerializer.startReader(Base16.decode(ergoTree).get)
+      )._3
+    )
 
   it should "insert and find" in new {
     val dao = new OutputsDao
@@ -60,6 +69,18 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val unspentSum = unspent.map{_.value}.sum
 
     dao.sumOfAllUnspentOutputsSince(0L).transact(xa).unsafeRunSync() shouldBe unspentSum
+
+    val treeDexSellerContract = outputs(2).ergoTree
+    val treeRootDexSellerContract = ergoTreeRootBytes(treeDexSellerContract)
+
+    dao.findAllByErgoTreeRoot(treeRootDexSellerContract).transact(xa).unsafeRunSync()
+      .map(_.output) should
+      contain theSameElementsAs outputs.filter(_.ergoTree == treeDexSellerContract)
+
+    dao.findUnspentByErgoTreeRoot(treeRootDexSellerContract).transact(xa).unsafeRunSync()
+      .map(_.output) should
+      contain theSameElementsAs outputs.filter(_.ergoTree == treeDexSellerContract)
+        .filterNot(o => inputIds.contains(o.boxId))
   }
 
 }

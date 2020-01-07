@@ -62,6 +62,12 @@ object OutputsOps extends DaoOps with JsonMeta {
     fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
     fr"WHERE o.ergo_tree = $ergoTree").query[ExtendedOutput]
 
+  def findByErgoTreeRoot(ergoTreeRoot: String): Query0[ExtendedOutput] =
+    (fr"SELECT" ++ allFieldsRefFr("o") ++ fr", i.tx_id, h.main_chain" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"LEFT JOIN node_transactions t ON o.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE o.ergo_tree LIKE ${"%" + ergoTreeRoot}").query[ExtendedOutput]
+
   def findUnspentByAddress(address: String): Query0[ExtendedOutput] =
     (fr"SELECT" ++ allFieldsRefFr("o") ++ fr", i.tx_id, h_in.main_chain" ++
     fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
@@ -76,6 +82,14 @@ object OutputsOps extends DaoOps with JsonMeta {
     fr"LEFT JOIN node_transactions t_in ON o.tx_id = t_in.id LEFT JOIN node_headers h_in ON h_in.id = t_in.header_id" ++
     fr"LEFT JOIN node_transactions t ON i.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
     fr"WHERE h_in.main_chain = TRUE AND (i.box_id IS NULL OR h.main_chain = FALSE) AND o.ergo_tree = $ergoTree")
+      .query[ExtendedOutput]
+
+  def findUnspentByErgoTreeRoot(ergoTreeRoot: String): Query0[ExtendedOutput] =
+    (fr"SELECT" ++ allFieldsRefFr("o") ++ fr", i.tx_id, h_in.main_chain" ++
+      fr"FROM node_outputs o LEFT JOIN node_inputs i ON o.box_id = i.box_id" ++
+      fr"LEFT JOIN node_transactions t_in ON o.tx_id = t_in.id LEFT JOIN node_headers h_in ON h_in.id = t_in.header_id" ++
+      fr"LEFT JOIN node_transactions t ON i.tx_id = t.id LEFT JOIN node_headers h ON h.id = t.header_id" ++
+      fr"WHERE h_in.main_chain = TRUE AND (i.box_id IS NULL OR h.main_chain = FALSE) AND o.ergo_tree LIKE ${"%" + ergoTreeRoot}")
       .query[ExtendedOutput]
 
   def findByAddressWithSpent(address: String): Query0[ExtendedOutput] =
