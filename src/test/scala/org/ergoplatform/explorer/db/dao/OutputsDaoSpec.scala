@@ -70,6 +70,8 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
     dao.sumOfAllUnspentOutputsSince(0L).transact(xa).unsafeRunSync() shouldBe unspentSum
 
+    // Token seller contract from AssetsAtomicExchange
+    // http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/contract-verification/src/main/scala/sigmastate/verification/contract/AssetsAtomicExchange.scala#L34-L34
     val treeDexSellerContract = outputs(2).ergoTree
     val treeRootDexSellerContract = ergoTreeRootBytes(treeDexSellerContract)
 
