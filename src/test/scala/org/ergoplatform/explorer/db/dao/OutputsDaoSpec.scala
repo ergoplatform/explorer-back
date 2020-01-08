@@ -1,21 +1,12 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
+import org.ergoplatform.explorer.Utils
 import org.ergoplatform.explorer.db.models.composite
-import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
-import scorex.util.encode.Base16
-import sigmastate.serialization.{ErgoTreeSerializer, SigmaSerializer}
 
 class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
-
-  private def ergoTreeTemplateBytes(ergoTree: String): String =
-    Base16.encode(
-      (new ErgoTreeSerializer).deserializeHeaderWithTreeBytes(
-        SigmaSerializer.startReader(Base16.decode(ergoTree).get)
-      )._3
-    )
 
   it should "insert and find" in new {
     val dao = new OutputsDao
@@ -73,7 +64,7 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     // Token seller contract from AssetsAtomicExchange
     // http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/contract-verification/src/main/scala/sigmastate/verification/contract/AssetsAtomicExchange.scala#L34-L34
     val treeDexSellerContract = outputs(2).ergoTree
-    val treeTemplateDexSellerContract = ergoTreeTemplateBytes(treeDexSellerContract)
+    val treeTemplateDexSellerContract = Utils.ergoTreeTemplateBytes(treeDexSellerContract)
 
     dao.findAllByErgoTreeTemplate(treeTemplateDexSellerContract).transact(xa).unsafeRunSync()
       .map(_.output) should

@@ -3,7 +3,7 @@ package org.ergoplatform.explorer.services
 import cats.effect.IO
 import cats.effect.concurrent.Ref
 import doobie.implicits._
-import org.ergoplatform.explorer.Constants
+import org.ergoplatform.explorer.{Constants, Utils}
 import org.ergoplatform.explorer.config.Config
 import org.ergoplatform.explorer.db.dao.{
   AssetsDao,
@@ -206,7 +206,7 @@ class TransactionsServiceSpec
     // Token seller contract from AssetsAtomicExchange
     // http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/contract-verification/src/main/scala/sigmastate/verification/contract/AssetsAtomicExchange.scala#L34-L34
     val treeDexSellerContract = outputs(2).ergoTree
-//    val treeTemplateDexSellerContract = ergoTreeTemplateBytes(treeDexSellerContract)
+    val treeTemplateDexSellerContract = Utils.ergoTreeTemplateBytes(treeDexSellerContract)
 
     val res1 = service.getOutputsByErgoTree(treeDexSellerContract).unsafeRunSync()
     res1.length shouldBe 1
@@ -218,6 +218,18 @@ class TransactionsServiceSpec
         unspentOnly = true
       )
       .unsafeRunSync() should (not be empty)
+
+    val res2 =
+      service.getOutputsByErgoTreeTemplate(treeTemplateDexSellerContract).unsafeRunSync()
+    res2.length shouldBe 1
+    res2.head.ergoTree shouldEqual treeDexSellerContract
+
+    service
+      .getOutputsByErgoTreeTemplate(
+        treeTemplateDexSellerContract,
+        unspentOnly = true
+      )
+      .unsafeRunSync() shouldBe empty
   }
 
 }
