@@ -10,7 +10,7 @@ import sigmastate.serialization.{ErgoTreeSerializer, SigmaSerializer}
 
 class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with PreparedDB {
 
-  private def ergoTreeRootBytes(ergoTree: String): String =
+  private def ergoTreeTemplateBytes(ergoTree: String): String =
     Base16.encode(
       (new ErgoTreeSerializer).deserializeHeaderWithTreeBytes(
         SigmaSerializer.startReader(Base16.decode(ergoTree).get)
@@ -73,13 +73,13 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     // Token seller contract from AssetsAtomicExchange
     // http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/contract-verification/src/main/scala/sigmastate/verification/contract/AssetsAtomicExchange.scala#L34-L34
     val treeDexSellerContract = outputs(2).ergoTree
-    val treeRootDexSellerContract = ergoTreeRootBytes(treeDexSellerContract)
+    val treeTemplateDexSellerContract = ergoTreeTemplateBytes(treeDexSellerContract)
 
-    dao.findAllByErgoTreeRoot(treeRootDexSellerContract).transact(xa).unsafeRunSync()
+    dao.findAllByErgoTreeTemplate(treeTemplateDexSellerContract).transact(xa).unsafeRunSync()
       .map(_.output) should
       contain theSameElementsAs outputs.filter(_.ergoTree == treeDexSellerContract)
 
-    dao.findUnspentByErgoTreeRoot(treeRootDexSellerContract).transact(xa).unsafeRunSync()
+    dao.findUnspentByErgoTreeTemplate(treeTemplateDexSellerContract).transact(xa).unsafeRunSync()
       .map(_.output) should
       contain theSameElementsAs outputs.filter(_.ergoTree == treeDexSellerContract)
         .filterNot(o => inputIds.contains(o.boxId))
