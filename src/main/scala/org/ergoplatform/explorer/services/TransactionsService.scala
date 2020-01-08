@@ -62,6 +62,11 @@ trait TransactionsService[F[_]] {
     unspentOnly: Boolean = false
   ): F[List[OutputInfo]]
 
+  def getOutputsByErgoTreeTemplate(
+    ergoTree: String,
+    unspentOnly: Boolean = false
+  ): F[List[OutputInfo]]
+
   def submitTransaction(tx: Json): F[Json]
 
 }
@@ -143,13 +148,11 @@ final class TransactionsServiceImpl[F[_]](
     txn.transact(xa)
   }
 
-  override def getOutputsByAddress(
-    address: String,
-    unspentOnly: Boolean
+  private def getOutputsGeneric(
+    fOutputs: => ConnectionIO[List[ExtendedOutput]]
   ): F[List[OutputInfo]] = {
     val txn = for {
-      outputs <- if (unspentOnly) outputsDao.findUnspentByAddress(address)
-      else outputsDao.findAllByAddress(address)
+      outputs <- fOutputs
       outputsWithAssets <- outputs
         .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
         .sequence
@@ -160,22 +163,33 @@ final class TransactionsServiceImpl[F[_]](
     txn.transact(xa)
   }
 
+  override def getOutputsByAddress(
+    address: String,
+    unspentOnly: Boolean
+  ): F[List[OutputInfo]] =
+    getOutputsGeneric(
+      if (unspentOnly) outputsDao.findUnspentByAddress(address)
+      else outputsDao.findAllByAddress(address)
+    )
+
   override def getOutputsByErgoTree(
     ergoTree: String,
     unspentOnly: Boolean
-  ): F[List[OutputInfo]] = {
-    val txn = for {
-      outputs <- if (unspentOnly) outputsDao.findUnspentByErgoTree(ergoTree)
+  ): F[List[OutputInfo]] =
+    getOutputsGeneric(
+      if (unspentOnly) outputsDao.findUnspentByErgoTree(ergoTree)
       else outputsDao.findAllByErgoTree(ergoTree)
-      outputsWithAssets <- outputs
-        .map(out => assetsDao.getByBoxId(out.output.boxId).map(out -> _))
-        .sequence
-      outputsInfo = outputsWithAssets.map {
-        case (outs, assets) => OutputInfo(outs, assets)
-      }
-    } yield outputsInfo
-    txn.transact(xa)
-  }
+    )
+
+  // TODO: scaladoc
+  override def getOutputsByErgoTreeTemplate(
+    ergoTree: String,
+    unspentOnly: Boolean
+  ): F[List[OutputInfo]] =
+    getOutputsGeneric(
+      if (unspentOnly) outputsDao.findUnspentByErgoTreeTemplate(ergoTree)
+      else outputsDao.findAllByErgoTreeTemplate(ergoTree)
+    )
 
   override def submitTransaction(tx: Json): F[Json] =
     cfg.grabber.nodes

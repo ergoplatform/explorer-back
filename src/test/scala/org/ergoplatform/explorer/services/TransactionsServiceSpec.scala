@@ -5,7 +5,13 @@ import cats.effect.concurrent.Ref
 import doobie.implicits._
 import org.ergoplatform.explorer.Constants
 import org.ergoplatform.explorer.config.Config
-import org.ergoplatform.explorer.db.dao.{AssetsDao, HeadersDao, InputsDao, OutputsDao, TransactionsDao}
+import org.ergoplatform.explorer.db.dao.{
+  AssetsDao,
+  HeadersDao,
+  InputsDao,
+  OutputsDao,
+  TransactionsDao
+}
 import org.ergoplatform.explorer.db.models.{Asset, Output}
 import org.ergoplatform.explorer.db.models.composite.{ExtendedInput, ExtendedOutput}
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
@@ -19,10 +25,10 @@ import scala.util.Random
 
 class TransactionsServiceSpec
   extends FlatSpec
-    with Matchers
-    with BeforeAndAfterAll
-    with PreparedDB
-    with Config {
+  with Matchers
+  with BeforeAndAfterAll
+  with PreparedDB
+  with Config {
 
   implicit object TxInfoEquals extends Equality[TransactionInfo] {
     override def areEqual(a: TransactionInfo, b: Any): Boolean = b match {
@@ -76,24 +82,30 @@ class TransactionsServiceSpec
       }
 
     val outputsWithSpentTx = outputs
-      .foldLeft(List.empty[(Output, List[Asset])]) { case (acc, out) =>
-        val outAssets = assets.filter(_.boxId == out.boxId).reverse
-        acc :+ (out -> outAssets)
+      .foldLeft(List.empty[(Output, List[Asset])]) {
+        case (acc, out) =>
+          val outAssets = assets.filter(_.boxId == out.boxId).reverse
+          acc :+ (out -> outAssets)
       }
-      .map { case (o, assets) =>
-        ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> assets
-      }.reverse
+      .map {
+        case (o, assets) =>
+          ExtendedOutput(o, inputs.find(_.boxId == o.boxId).map(_.txId), mainChain = true) -> assets
+      }
+      .reverse
 
-    val offChainStore = Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
+    val offChainStore =
+      Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
 
     val service = new TransactionsServiceImpl[IO](xa, offChainStore, ec, cfg)
 
     val randomTx1 = Random.shuffle(tx).head
-    val height = h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)
+    val height =
+      h.find(_.id == randomTx1.headerId).map(_.height).getOrElse(Constants.GenesisHeight)
     val currentHeight = h.map(_.height).max
     val is = inputsWithOutputInfo.filter(_.input.txId == randomTx1.id)
     val os = outputsWithSpentTx.filter(_._1.output.txId == randomTx1.id)
-    val expected1 = TransactionSummaryInfo.apply(randomTx1, height, currentHeight - height, is, os)
+    val expected1 =
+      TransactionSummaryInfo.apply(randomTx1, height, currentHeight - height, is, os)
 
     val fromService1 = service.getTxInfo(randomTx1.id).unsafeRunSync()
 
@@ -102,14 +114,18 @@ class TransactionsServiceSpec
     val randomHash = Random.shuffle(outputs).head.address
 
     val length = {
-      val txs1 = inputsWithOutputInfo.filter(_.address.contains(randomHash)).map(_.input.txId).toSet
+      val txs1 = inputsWithOutputInfo
+        .filter(_.address.contains(randomHash))
+        .map(_.input.txId)
+        .toSet
       val txs2 = outputs.filter(_.address == randomHash).map(_.txId).toSet
       (txs1 ++ txs2).size
     }
 
     service.countTxsByAddressId(randomHash).unsafeRunSync() shouldBe length.toLong
 
-    val fromService2 = service.getTxsByAddressId(randomHash, Paging(0, 100)).unsafeRunSync()
+    val fromService2 =
+      service.getTxsByAddressId(randomHash, Paging(0, 100)).unsafeRunSync()
 
     val expected2 = {
       val txIds = outputs.filter(_.address == randomHash).map(_.txId).toSet
@@ -155,6 +171,53 @@ class TransactionsServiceSpec
     }
 
     fromService4 should contain theSameElementsAs expected4
+  }
+
+  it should "get outputs by ErgoTree" in {
+
+    val ec = scala.concurrent.ExecutionContext.Implicits.global
+
+    val (h, _, tx, inputs, outputs, _, assets) = PreparedData.data
+
+    val hDao = new HeadersDao
+    val tDao = new TransactionsDao
+    val iDao = new InputsDao
+    val oDao = new OutputsDao
+    val aDao = new AssetsDao
+
+    hDao.insertMany(h).transact(xa).unsafeRunSync()
+    tDao.insertMany(tx).transact(xa).unsafeRunSync()
+    oDao.insertMany(outputs).transact(xa).unsafeRunSync()
+    iDao.insertMany(inputs).transact(xa).unsafeRunSync()
+    aDao.insertMany(assets).transact(xa).unsafeRunSync()
+
+    val offChainStore =
+      Ref.of[IO, TransactionsPool](TransactionsPool.empty).unsafeRunSync()
+
+    val service = new TransactionsServiceImpl[IO](xa, offChainStore, ec, cfg)
+
+    service.getOutputsByErgoTree("31").unsafeRunSync() shouldBe empty
+    service.getOutputsByErgoTree("31", unspentOnly = true).unsafeRunSync() shouldBe empty
+    service.getOutputsByErgoTreeTemplate("31").unsafeRunSync() shouldBe empty
+    service
+      .getOutputsByErgoTreeTemplate("31", unspentOnly = true)
+      .unsafeRunSync() shouldBe empty
+
+    // Token seller contract from AssetsAtomicExchange
+    // http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/contract-verification/src/main/scala/sigmastate/verification/contract/AssetsAtomicExchange.scala#L34-L34
+    val treeDexSellerContract = outputs(2).ergoTree
+//    val treeTemplateDexSellerContract = ergoTreeTemplateBytes(treeDexSellerContract)
+
+    val res1 = service.getOutputsByErgoTree(treeDexSellerContract).unsafeRunSync()
+    res1.length shouldBe 1
+    res1.head.ergoTree shouldEqual treeDexSellerContract
+
+    service
+      .getOutputsByErgoTree(
+        "cd070305faeee1c4605730b42f7bbb8924fe47b1a545b68bbf845f22961e5748ace054",
+        unspentOnly = true
+      )
+      .unsafeRunSync() should (not be empty)
   }
 
 }
