@@ -194,6 +194,7 @@ paths:
           content:
             'application/json':
               schema:
+                type: array
                 $ref: '#/components/schemas/Transaction'
 
   '/transactions/unconfirmed/{id}':
@@ -290,6 +291,7 @@ paths:
           content:
             'application/json':
               schema:
+                type: array
                 $ref: '#/components/schemas/TransactionOutput'
 
   '/transactions/boxes/byErgoTree/{ergoTree}':
@@ -309,6 +311,7 @@ paths:
           content:
             'application/json':
               schema:
+                type: array
                 $ref: '#/components/schemas/TransactionOutput'
 
   '/transactions/boxes/byErgoTreeTemplate/{ergoTreeTemplate}':
@@ -331,6 +334,7 @@ paths:
           content:
             'application/json':
               schema:
+                type: array
                 $ref: '#/components/schemas/TransactionOutput'
 
   '/transactions/boxes/byAddress/unspent/{id}':
@@ -350,6 +354,7 @@ paths:
           content:
             'application/json':
               schema:
+                type: array
                 $ref: '#/components/schemas/TransactionOutput'
 
   '/transactions/boxes/byErgoTree/unspent/{ergoTree}':
@@ -369,6 +374,7 @@ paths:
           content:
             'application/json':
               schema:
+                type: array
                 $ref: '#/components/schemas/TransactionOutput'
 
   '/transactions/boxes/byErgoTreeTemplate/unspent/{ergoTreeTemplate}':
@@ -391,6 +397,7 @@ paths:
           content:
             'application/json':
               schema:
+                type: array
                 $ref: '#/components/schemas/TransactionOutput'
 
   '/addresses/{id}':
