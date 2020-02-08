@@ -72,7 +72,10 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
           )
     }
 
-    r.exec(requestParser).body
+    r.exec(requestParser).body.handleErrorWith { e =>
+      IO.delay(logger.error(s"Request to ${r.url} has been failed. ${e.getMessage}")) >>
+      IO.raiseError(e)
+    }
   }
 
   private def makeRequest(uri: String): IO[HttpRequest] = IO.pure(Http(uri))
