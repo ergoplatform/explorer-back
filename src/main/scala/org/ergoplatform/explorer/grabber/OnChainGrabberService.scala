@@ -16,9 +16,11 @@ import org.ergoplatform.explorer.grabber.protocol.{ApiFullBlock, ApiNodeInfo}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
-class OnChainGrabberService(xa: Transactor[IO], config: ExplorerConfig)(
-  implicit protected val ec: ExecutionContext
-) extends LoopedIO {
+final class OnChainGrabberService(
+  xa: Transactor[IO],
+  config: ExplorerConfig
+)(implicit protected val ec: ExecutionContext)
+  extends LoopedIO {
 
   private val blockInfoHelper: BlockInfoHelper = new BlockInfoHelper(config.protocol)
 

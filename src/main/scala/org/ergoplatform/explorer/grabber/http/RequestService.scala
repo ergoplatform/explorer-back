@@ -4,7 +4,6 @@ import java.io.InputStream
 
 import cats.MonadError
 import cats.effect.{IO, LiftIO}
-import cats.syntax.all._
 import io.circe.{Decoder, DecodingFailure, Json, ParsingFailure}
 import scalaj.http.{Http, HttpRequest}
 

@@ -176,6 +176,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/FullTransaction'
 
+  '/transactions/since/{height}':
+    parameters:
+      - name: height
+        required: true
+        in: path
+        schema:
+          type: integer
+          description: Blockchain height
+    get:
+      summary: Get all transactions appeared in the main-chain after a given {height}
+      tags:
+        - transactions
+      responses:
+        '200':
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
   '/transactions/unconfirmed/{id}':
     parameters:
       - name: id
@@ -830,6 +850,7 @@ components:
       description: Transaction without any lockers and unlockers
       required:
         - id
+        - headerId
         - timestamp
         - confirmationCount
         - inputs
@@ -837,6 +858,8 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/TransactionId'
+        headerId:
+          $ref: '#/components/schemas/ModifierId'
         timestamp:
           $ref: '#/components/schemas/Timestamp'
         confirmationsCount:

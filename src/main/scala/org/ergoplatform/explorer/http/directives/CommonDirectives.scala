@@ -26,6 +26,13 @@ trait CommonDirectives {
     }
   )
 
+  val intSegment: Directive1[Int] = pathPrefix(Segment).flatMap(f = v =>
+    Try(v.toInt) match {
+      case Success(value) => provide(value)
+      case _ => reject(base16ValidationError)
+    }
+  )
+
   val base58Segment: Directive1[String] = pathPrefix(Segment).flatMap(v =>
     if (v.forall(Base58.Alphabet.toSet.contains)) provide(v)
     else reject(base58ValidationError)
