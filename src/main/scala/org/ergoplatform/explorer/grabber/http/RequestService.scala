@@ -3,7 +3,9 @@ package org.ergoplatform.explorer.grabber.http
 import java.io.InputStream
 
 import cats.MonadError
+import cats.syntax.flatMap._
 import cats.effect.{IO, LiftIO}
+import com.typesafe.scalalogging.Logger
 import io.circe.{Decoder, DecodingFailure, Json, ParsingFailure}
 import scalaj.http.{Http, HttpRequest}
 
@@ -19,6 +21,8 @@ trait RequestService[F[_]] {
 
 class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F])
   extends RequestService[F] {
+
+  private val logger = Logger("request-service")
 
   type RequestParser[T] = (Int, Map[String, IndexedSeq[String]], InputStream) => T
 
@@ -60,6 +64,7 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
           inputStreamToJson(is)
         case _ =>
           val msg = Source.fromInputStream(is, "UTF8").mkString
+          IO.delay(logger.error(s"Request to ${r.url} has been failed with code $code, and message $msg")) >>
           IO.raiseError(
             new IllegalStateException(
               s"Request to ${r.url} has been failed with code $code, and message $msg"
