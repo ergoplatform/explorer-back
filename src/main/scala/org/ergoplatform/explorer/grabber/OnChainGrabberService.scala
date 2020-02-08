@@ -34,7 +34,7 @@ final class OnChainGrabberService(
   private val dBHelper = new DBHelper(config.protocol)
   private val headersDao = new HeadersDao
 
-  private val MaxRetriesNumber = 4
+  private val MaxRetriesNumber = 5
 
   private def idsAtHeight(height: Long): IO[List[String]] =
     requestService.get[List[String]](mandatoryAddressService.idsAtHeightUri(height))
