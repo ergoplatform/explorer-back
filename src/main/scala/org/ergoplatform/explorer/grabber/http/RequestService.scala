@@ -64,7 +64,6 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
           inputStreamToJson(is)
         case _ =>
           val msg = Source.fromInputStream(is, "UTF8").mkString
-          IO.delay(logger.error(s"Request to ${r.url} has been failed with code $code, and message $msg")) >>
           IO.raiseError(
             new IllegalStateException(
               s"Request to ${r.url} has been failed with code $code, and message $msg"
@@ -73,7 +72,7 @@ class RequestServiceImpl[F[_]](implicit F: MonadError[F, Throwable], l: LiftIO[F
     }
 
     r.exec(requestParser).body.handleErrorWith { e =>
-      IO.delay(logger.error(s"Request to ${r.url} has been failed. ${e.getMessage}")) >>
+      IO.delay(logger.error(s"Failed to execute request to ${r.url}. ${e.getMessage}")) >>
       IO.raiseError(e)
     }
   }

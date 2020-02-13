@@ -6,7 +6,7 @@ import org.ergoplatform.explorer.db.models.Asset
 
 object AssetsOps extends DaoOps {
 
-  val tableName: String = "node_assets"
+  val tableName: String = "node_assets_replica"
 
   val fields: Seq[String] = Seq(
     "id",

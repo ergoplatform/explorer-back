@@ -7,7 +7,7 @@ import org.ergoplatform.explorer.db.models.composite.RawSearchBlock
 object BlockListOps {
 
   def count(sTs: Long, eTs: Long): Query0[Long] =
-    fr"SELECT count(id) FROM node_headers WHERE (timestamp >= $sTs) AND (timestamp <= $eTs) AND main_chain = TRUE"
+    fr"SELECT count(id) FROM node_headers_replica WHERE (timestamp >= $sTs) AND (timestamp <= $eTs) AND main_chain = TRUE"
       .query[Long]
 
   def list(
@@ -30,7 +30,7 @@ object BlockListOps {
     }
 
     (fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size, h.difficulty, i.miner_reward" ++
-    fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id " ++
+    fr"FROM node_headers_replica h JOIN blocks_info_replica i ON h.id = i.header_id " ++
     fr"LEFT JOIN known_miners m ON i.miner_address = m.miner_address" ++
     fr"WHERE  ((h.timestamp >= $startTs) AND (h.timestamp <= $endTs) AND h.main_chain = TRUE)" ++
     Fragment.const("ORDER BY " + sortByValue + " " + sortOrder) ++
@@ -40,7 +40,7 @@ object BlockListOps {
   def searchById(substring: String): Query0[RawSearchBlock] =
     (
       fr"SELECT h.id, h.height, h.timestamp, i.txs_count, i.miner_address, m.miner_name, i.block_size, h.difficulty, i.miner_reward" ++
-      fr"FROM node_headers h JOIN blocks_info i ON h.id = i.header_id " ++
+      fr"FROM node_headers_replica h JOIN blocks_info_replica i ON h.id = i.header_id " ++
       fr"LEFT JOIN known_miners m ON i.miner_address = m.miner_address" ++
       fr"WHERE h.id LIKE ${"%" + substring + "%"}"
     ).query[RawSearchBlock]

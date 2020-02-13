@@ -90,7 +90,7 @@ class DBHelper(networkConfig: ProtocolConfig) extends JsonMeta {
   }
 
   def readCurrentHeight: ConnectionIO[Long] =
-    fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM blocks_info ORDER BY height DESC LIMIT 1"
+    fr"SELECT COALESCE(height, CAST(0 as BIGINT)) FROM blocks_info_replica ORDER BY height DESC LIMIT 1"
       .query[Long]
       .option
       .map { _.getOrElse(Constants.PreGenesisHeight) }

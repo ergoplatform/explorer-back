@@ -11,7 +11,7 @@ object BlockInfoOps extends DaoOps {
 
   type SingleDataType = (Long, Long, String)
 
-  val tableName: String = "blocks_info"
+  val tableName: String = "blocks_info_replica"
 
   val fields: Seq[String] = Seq(
     "header_id",
@@ -39,27 +39,27 @@ object BlockInfoOps extends DaoOps {
   def insert: Update[BlockInfo] = Update[BlockInfo](insertSql)
 
   def select(headerId: String): Query0[BlockInfo] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE header_id = $headerId").query[BlockInfo]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info_replica WHERE header_id = $headerId").query[BlockInfo]
 
   def select(headerIds: List[String]): Query0[BlockInfo] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE" ++
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info_replica WHERE" ++
     Fragments.in(fr"header_id", NonEmptyList.fromListUnsafe(headerIds))).query[BlockInfo]
 
   def findLast(cnt: Int = 10): Query0[BlockInfo] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info ORDER BY height DESC LIMIT ${cnt.toLong}")
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info_replica ORDER BY height DESC LIMIT ${cnt.toLong}")
       .query[BlockInfo]
 
   def findSince(ts: Long): Query0[BlockInfo] =
-    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info WHERE timestamp >= $ts").query[BlockInfo]
+    (fr"SELECT" ++ fieldsFr ++ fr"FROM blocks_info_replica WHERE timestamp >= $ts").query[BlockInfo]
 
   def difficultiesSumSince(ts: Long): Query0[Long] = {
-    fr"SELECT COALESCE(CAST(SUM(difficulty) as BIGINT), 0) FROM blocks_info WHERE timestamp >= $ts"
+    fr"SELECT COALESCE(CAST(SUM(difficulty) as BIGINT), 0) FROM blocks_info_replica WHERE timestamp >= $ts"
       .query[Long]
   }
 
   def circulatingSupplySince(ts: Long): Query0[Long] = {
     (fr"SELECT COALESCE(CAST(SUM(o.value) as BIGINT), 0) " ++
-    fr"FROM node_transactions t RIGHT JOIN node_outputs o ON t.id = o.tx_id WHERE t.timestamp >= $ts")
+    fr"FROM node_transactions_replica t RIGHT JOIN node_outputs_replica o ON t.id = o.tx_id WHERE t.timestamp >= $ts")
       .query[Long]
   }
 
@@ -116,13 +116,13 @@ object BlockInfoOps extends DaoOps {
     } else {
       val ms = System.currentTimeMillis - limitDaysBack.days.toMillis
       Fragment.const(
-        s"WHERE (timestamp >= $ms AND EXISTS(SELECT 1 FROM node_headers h WHERE h.main_chain = TRUE))"
+        s"WHERE (timestamp >= $ms AND EXISTS(SELECT 1 FROM node_headers_replica h WHERE h.main_chain = TRUE))"
       )
     }
 
     Fragment.const(
       s"SELECT $selectStr, TO_CHAR(TO_TIMESTAMP(timestamp / 1000), 'DD/MM/YYYY') as date " +
-      s"FROM blocks_info"
+      s"FROM blocks_info_replica"
     ) ++ whereFragment ++ Fragment.const("GROUP BY date ORDER BY t ASC")
   }
 
