@@ -7,13 +7,21 @@ import io.circe.Json
 import io.circe.syntax._
 import org.ergoplatform.explorer.grabber.protocol.ApiTransaction
 import org.ergoplatform.explorer.http.protocol._
-import org.ergoplatform.explorer.services.{AddressesService, BlockService, MinerService, TransactionsService}
+import org.ergoplatform.explorer.services.{
+  AddressesService,
+  BlockService,
+  MinerService,
+  TransactionsService
+}
 import org.ergoplatform.explorer.utils.{Paging, Sorting}
 
 class SearchHandlerSpec extends HttpSpec {
 
   val miner = MinerInfo("mock.miner.address", "Mock miner")
-  val block = List(SearchBlockInfo("123123", 1, System.currentTimeMillis(), 42, miner, 100, 0L, 0L))
+
+  val block = List(
+    SearchBlockInfo("123123", 1, System.currentTimeMillis(), 42, miner, 100, 0L, 0L)
+  )
   val transaction = List("fff123")
   val address = List("add123")
 
@@ -36,7 +44,10 @@ class SearchHandlerSpec extends HttpSpec {
     override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
     override def getTxsSince(height: Int, p: Paging): IO[List[TransactionInfo]] = ???
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = ???
-    override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = ???
+    override def getTxsByAddressId(
+      addressId: String,
+      p: Paging
+    ): IO[List[TransactionInfo]] = ???
     override def countTxsByAddressId(addressId: String): IO[Long] = ???
     override def searchByIdSubstr(query: String): IO[List[String]] = IO.pure(transaction)
     override def getOutputById(id: String): IO[OutputInfo] = ???
@@ -47,6 +58,10 @@ class SearchHandlerSpec extends HttpSpec {
     override def getOutputsByErgoTree(
       ergoTree: String,
       unspentOnly: Boolean = false
+    ): IO[List[OutputInfo]] = ???
+    override def getOutputsByErgoTreeTemplate(
+      ergoTree: String,
+      unspentOnly: Boolean
     ): IO[List[OutputInfo]] = ???
     override def submitTransaction(tx: Json): IO[Json] = ???
     override def getUnconfirmed: IO[List[ApiTransaction]] = ???

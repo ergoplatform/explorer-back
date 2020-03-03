@@ -30,11 +30,33 @@ class OutputsDao extends JsonMeta {
   def findAllByErgoTree(ergoTree: String): ConnectionIO[List[ExtendedOutput]] =
     OutputsOps.findByErgoTree(ergoTree).to[List]
 
+  /** Finds all outputs that are protected with given ergo tree template
+    * see [[https://github.com/ScorexFoundation/sigmastate-interpreter/issues/264]]
+    * [[http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/sigmastate/src/main/scala/sigmastate/Values.scala#L828-L828]]
+    *
+    * @param ergoTreeTemplate Base16 encoded bytes of serialized ErgoTree prop after constant segregation
+    * (see [[http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/sigmastate/src/main/scala/sigmastate/serialization/ErgoTreeSerializer.scala#L226-L226]] )
+    * @return
+    */
+  def findAllByErgoTreeTemplate(ergoTreeTemplate: String): ConnectionIO[List[ExtendedOutput]] =
+    OutputsOps.findByErgoTreeTemplate(ergoTreeTemplate).to[List]
+
   def findUnspentByAddress(address: String): ConnectionIO[List[ExtendedOutput]] =
     OutputsOps.findUnspentByAddress(address).to[List]
 
   def findUnspentByErgoTree(ergoTree: String): ConnectionIO[List[ExtendedOutput]] =
     OutputsOps.findUnspentByErgoTree(ergoTree).to[List]
+
+  /** Finds unspent outputs that are protected with given ergo tree template
+    * see [[https://github.com/ScorexFoundation/sigmastate-interpreter/issues/264]]
+    * [[http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/sigmastate/src/main/scala/sigmastate/Values.scala#L828-L828]]
+    *
+    * @param ergoTreeTemplate Base16 encoded bytes of serialized ErgoTree prop after constant segregation
+    * (see [[http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/sigmastate/src/main/scala/sigmastate/serialization/ErgoTreeSerializer.scala#L226-L226]] )
+    * @return
+    */
+  def findUnspentByErgoTreeTemplate(ergoTreeTemplate: String): ConnectionIO[List[ExtendedOutput]] =
+    OutputsOps.findUnspentByErgoTreeTemplate(ergoTreeTemplate).to[List]
 
   def findAllByTxsId(txsId: List[String]): ConnectionIO[List[Output]] =
     NonEmptyList.fromList(txsId) match {

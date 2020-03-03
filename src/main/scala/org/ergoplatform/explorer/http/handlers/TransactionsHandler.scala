@@ -16,8 +16,10 @@ final class TransactionsHandler(service: TransactionsService[IO]) extends RouteH
     getUnconfirmedTxById ~
     getUnconfirmed ~
     getUnspentOutputsByErgoTree ~
+    getUnspentOutputsByErgoTreeTemplate ~
     getUnspentOutputsByAddress ~
     getOutputsByErgoTree ~
+    getOutputsByErgoTreeTemplate ~
     getOutputsByAddress ~
     getOutputsById ~
     getTxById
@@ -58,6 +60,11 @@ final class TransactionsHandler(service: TransactionsService[IO]) extends RouteH
       service.getOutputsByErgoTree(_)
     }
 
+  def getOutputsByErgoTreeTemplate: Route =
+    (pathPrefix("boxes" / "byErgoTreeTemplate") & get & base16Segment) {
+      service.getOutputsByErgoTreeTemplate(_)
+    }
+
   def getOutputsByAddress: Route =
     (pathPrefix("boxes" / "byAddress") & get & base58Segment) {
       service.getOutputsByAddress(_)
@@ -66,6 +73,11 @@ final class TransactionsHandler(service: TransactionsService[IO]) extends RouteH
   def getUnspentOutputsByErgoTree: Route =
     (pathPrefix("boxes" / "byErgoTree" / "unspent") & get & base16Segment) {
       service.getOutputsByErgoTree(_, unspentOnly = true)
+    }
+
+  def getUnspentOutputsByErgoTreeTemplate: Route =
+    (pathPrefix("boxes" / "byErgoTreeTemplate" / "unspent") & get & base16Segment) {
+      service.getOutputsByErgoTreeTemplate(_, unspentOnly = true)
     }
 
   def getUnspentOutputsByAddress: Route =

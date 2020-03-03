@@ -1,8 +1,8 @@
 package org.ergoplatform.explorer.db.dao
 
 import doobie.implicits._
+import org.ergoplatform.explorer.Utils
 import org.ergoplatform.explorer.db.models.composite
-import org.ergoplatform.explorer.db.models.composite.ExtendedOutput
 import org.ergoplatform.explorer.db.{PreparedDB, PreparedData}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
@@ -60,6 +60,20 @@ class OutputsDaoSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
     val unspentSum = unspent.map{_.value}.sum
 
     dao.sumOfAllUnspentOutputsSince(0L).transact(xa).unsafeRunSync() shouldBe unspentSum
+
+    // Token seller contract from AssetsAtomicExchange
+    // http://github.com/ScorexFoundation/sigmastate-interpreter/blob/633efcfd47f2fa4aa240eee2f774cc033cc241a5/contract-verification/src/main/scala/sigmastate/verification/contract/AssetsAtomicExchange.scala#L34-L34
+    val treeDexSellerContract = outputs(2).ergoTree
+    val treeTemplateDexSellerContract = Utils.ergoTreeTemplateBytes(treeDexSellerContract)
+
+    dao.findAllByErgoTreeTemplate(treeTemplateDexSellerContract).transact(xa).unsafeRunSync()
+      .map(_.output) should
+      contain theSameElementsAs outputs.filter(_.ergoTree == treeDexSellerContract)
+
+    dao.findUnspentByErgoTreeTemplate(treeTemplateDexSellerContract).transact(xa).unsafeRunSync()
+      .map(_.output) should
+      contain theSameElementsAs outputs.filter(_.ergoTree == treeDexSellerContract)
+        .filterNot(o => inputIds.contains(o.boxId))
   }
 
 }

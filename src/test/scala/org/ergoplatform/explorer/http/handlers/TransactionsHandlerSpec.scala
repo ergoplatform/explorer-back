@@ -18,7 +18,15 @@ import org.ergoplatform.explorer.utils.Paging
 class TransactionsHandlerSpec extends HttpSpec {
 
   val infoResp =
-    TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
+    TransactionSummaryInfo(
+      "test",
+      0L,
+      1L,
+      2L,
+      MiniBlockInfo("r", 5L),
+      List.empty,
+      List.empty
+    )
 
   private val service = new TransactionsService[IO] {
 
@@ -28,7 +36,10 @@ class TransactionsHandlerSpec extends HttpSpec {
 
     override def getTxsSince(height: Int, p: Paging): IO[List[TransactionInfo]] = ???
 
-    override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] = ???
+    override def getTxsByAddressId(
+      addressId: String,
+      p: Paging
+    ): IO[List[TransactionInfo]] = ???
 
     override def countTxsByAddressId(addressId: String): IO[Long] = ???
 
@@ -44,7 +55,12 @@ class TransactionsHandlerSpec extends HttpSpec {
     override def getOutputsByErgoTree(
       ergoTree: String,
       unspentOnly: Boolean = false
-    ): IO[List[OutputInfo]] = ???
+    ): IO[List[OutputInfo]] = IO.pure(List.empty)
+
+    override def getOutputsByErgoTreeTemplate(
+      ergoTree: String,
+      unspentOnly: Boolean
+    ): IO[List[OutputInfo]] = IO.pure(List.empty)
 
     override def submitTransaction(tx: Json): IO[Json] = ???
 
@@ -62,4 +78,31 @@ class TransactionsHandlerSpec extends HttpSpec {
     }
   }
 
+  it should "find outputs by ErgoTree" in {
+    Get("/transactions/boxes/byErgoTree/31") ~> route ~> check {
+      status shouldBe StatusCodes.OK
+      responseAs[Json] shouldBe Array.empty[OutputInfo].asJson
+    }
+  }
+
+  it should "find unspent outputs by ErgoTree" in {
+    Get("/transactions/boxes/byErgoTree/unspent/31") ~> route ~> check {
+      status shouldBe StatusCodes.OK
+      responseAs[Json] shouldBe Array.empty[OutputInfo].asJson
+    }
+  }
+
+  it should "find outputs by ErgoTree template" in {
+    Get("/transactions/boxes/byErgoTreeTemplate/31") ~> route ~> check {
+      status shouldBe StatusCodes.OK
+      responseAs[Json] shouldBe Array.empty[OutputInfo].asJson
+    }
+  }
+
+  it should "find unspent outputs by ErgoTree template" in {
+    Get("/transactions/boxes/byErgoTreeTemplate/unspent/31") ~> route ~> check {
+      status shouldBe StatusCodes.OK
+      responseAs[Json] shouldBe Array.empty[OutputInfo].asJson
+    }
+  }
 }

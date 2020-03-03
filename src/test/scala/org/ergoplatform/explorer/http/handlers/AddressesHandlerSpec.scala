@@ -23,7 +23,8 @@ class AddressesHandlerSpec extends HttpSpec {
   val addressServiceStub: AddressesService[IO] = new AddressesService[IO] {
     override def getAddressInfo(addressId: String): IO[AddressInfo] = IO.pure(addressInfo)
 
-    override def searchById(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
+    override def searchById(query: String): IO[List[String]] =
+      IO.pure(List("test1", "test2"))
 
     override def holdersAddresses(
       assetId: String,
@@ -33,17 +34,29 @@ class AddressesHandlerSpec extends HttpSpec {
 
   val txServiceStub: TransactionsService[IO] = new TransactionsService[IO] {
     override def getTxInfo(id: String): IO[TransactionSummaryInfo] = IO.pure(
-      TransactionSummaryInfo("test", 0L, 1L, 2L, MiniBlockInfo("r", 5L), List.empty, List.empty)
+      TransactionSummaryInfo(
+        "test",
+        0L,
+        1L,
+        2L,
+        MiniBlockInfo("r", 5L),
+        List.empty,
+        List.empty
+      )
     )
 
     override def getTxsSince(height: Int, p: Paging): IO[List[TransactionInfo]] = ???
 
-    override def getTxsByAddressId(addressId: String, p: Paging): IO[List[TransactionInfo]] =
+    override def getTxsByAddressId(
+      addressId: String,
+      p: Paging
+    ): IO[List[TransactionInfo]] =
       IO.pure(txs)
 
     override def countTxsByAddressId(addressId: String): IO[Long] = IO.pure(3L)
 
-    override def searchByIdSubstr(query: String): IO[List[String]] = IO.pure(List("test1", "test2"))
+    override def searchByIdSubstr(query: String): IO[List[String]] =
+      IO.pure(List("test1", "test2"))
 
     override def getOutputById(id: String): IO[OutputInfo] = ???
 
@@ -59,6 +72,11 @@ class AddressesHandlerSpec extends HttpSpec {
     override def getOutputsByErgoTree(
       ergoTree: String,
       unspentOnly: Boolean = false
+    ): IO[List[OutputInfo]] = ???
+
+    override def getOutputsByErgoTreeTemplate(
+      ergoTree: String,
+      unspentOnly: Boolean
     ): IO[List[OutputInfo]] = ???
 
     override def getUnconfirmedTxInfo(id: String): IO[ApiTransaction] = ???
